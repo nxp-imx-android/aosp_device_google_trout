@@ -22,6 +22,9 @@ PRODUCT_PROPERTY_OVERRIDES += \
 
 $(call inherit-product, device/google/cuttlefish/vsoc_arm64/auto/aosp_cf.mk)
 
+PRODUCT_COPY_FILES += \
+    device/google/trout/rootdir/etc/ueventd.rc:$(TARGET_COPY_OUT_ODM)/ueventd.rc \
+
 PRODUCT_NAME := aosp_trout_arm64
 PRODUCT_DEVICE := vsoc_arm64
 PRODUCT_MODEL := arm64 trout
