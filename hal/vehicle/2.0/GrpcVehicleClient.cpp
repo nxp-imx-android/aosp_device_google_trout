@@ -17,6 +17,7 @@
 
 #include <condition_variable>
 #include <mutex>
+#include <thread>
 
 #include <android-base/logging.h>
 #include <grpc++/grpc++.h>
@@ -38,7 +39,7 @@ static std::shared_ptr<::grpc::ChannelCredentials> getChannelCredentials() {
     return ::grpc::InsecureChannelCredentials();
 }
 
-class GrpcVehicleClientImpl : public EmulatedVehicleClient {
+class GrpcVehicleClientImpl : public VehicleHalClient {
   public:
     GrpcVehicleClientImpl(const std::string& addr)
         : mServiceAddr(addr),
@@ -76,7 +77,7 @@ class GrpcVehicleClientImpl : public EmulatedVehicleClient {
     std::atomic<bool> mShuttingDownFlag{false};
 };
 
-std::unique_ptr<EmulatedVehicleClient> makeGrpcVehicleClient(const std::string& addr) {
+std::unique_ptr<VehicleHalClient> makeGrpcVehicleClient(const std::string& addr) {
     return std::make_unique<GrpcVehicleClientImpl>(addr);
 }
 

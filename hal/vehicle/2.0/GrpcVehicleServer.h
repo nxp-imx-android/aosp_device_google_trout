@@ -17,7 +17,7 @@
 #ifndef android_hardware_automotive_vehicle_V2_0_impl_virtialization_GrpcVehicleServer_H_
 #define android_hardware_automotive_vehicle_V2_0_impl_virtialization_GrpcVehicleServer_H_
 
-#include "vhal_v2_0/EmulatedVehicleConnector.h"
+#include "vhal_v2_0/VehicleHalServer.h"
 
 namespace android {
 namespace hardware {
@@ -28,7 +28,7 @@ namespace V2_0 {
 namespace impl {
 
 // Connect to the Vehicle Client via GRPC
-class GrpcVehicleServer : public EmulatedVehicleServer {
+class GrpcVehicleServer : public VehicleHalServer {
   public:
     // Start listening incoming calls, should never return if working normally
     virtual void Start() = 0;
