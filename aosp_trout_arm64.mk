@@ -17,7 +17,7 @@
 # Vehicle HAL
 LOCAL_VHAL_PRODUCT_PACKAGE := android.hardware.automotive.vehicle@2.0-virtualization-service android.hardware.automotive.vehicle@2.0-virtualization-grpc-server
 PRODUCT_PROPERTY_OVERRIDES += \
-	ro.vendor.vehiclehal.server.cid=3 \
+	ro.vendor.vehiclehal.server.cid=2 \
 	ro.vendor.vehiclehal.server.port=9210 \
 
 $(call inherit-product, device/google/cuttlefish/vsoc_arm64/auto/aosp_cf.mk)
