@@ -30,6 +30,11 @@ PRODUCT_PROPERTY_OVERRIDES += \
 # Disable Vulkan feature flag as it is not supported on trout
 TARGET_VULKAN_SUPPORT := false
 
+# Sensor HAL
+LOCAL_SENSOR_PRODUCT_PACKAGE := android.hardware.sensors@2.0-service.multihal
+LOCAL_SENSOR_PRODUCT_PACKAGE += android.hardware.sensors@2.0-service.multihal.rc
+LOCAL_SENSOR_PRODUCT_PACKAGE += android.hardware.sensors@2.0-Google-IIO-Subhal
+
 $(call inherit-product, device/google/cuttlefish/vsoc_arm64/auto/aosp_cf.mk)
 
 PRODUCT_COPY_FILES += \
@@ -42,6 +47,8 @@ BOARD_SEPOLICY_DIRS += device/google/trout/sepolicy/vendor/google
 
 PRODUCT_PROPERTY_OVERRIDES += \
 	ro.hardware.type=automotive \
+
+PRODUCT_COPY_FILES += device/google/trout/product_files/vendor/etc/sensors/hals.conf:$(TARGET_COPY_OUT_VENDOR)/etc/sensors/hals.conf
 
 PRODUCT_NAME := aosp_trout_arm64
 PRODUCT_DEVICE := vsoc_arm64
