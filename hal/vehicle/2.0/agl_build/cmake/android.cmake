@@ -1,6 +1,6 @@
 set(trout_ANDROID_SYSCORE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/android/system_core")
 
-set(_trout_ANDROID_CXX_FLAGS "-Wall -Wno-unknown-pragmas -Wno-attributes -Werror -Wno-ignored-attributes -Wextra -std=gnu++17 -DPAGE_SIZE=4096")
+set(_trout_ANDROID_CXX_FLAGS -Wall -Werror -Wextra -std=c++17)
 
 set(trout_ANDROID_LIBLOG_DIR ${trout_ANDROID_SYSCORE_DIR}/liblog)
 set(trout_ANDROID_LIBLOG_INCLUDE_DIR ${trout_ANDROID_LIBLOG_DIR}/include)
@@ -13,6 +13,8 @@ set(trout_ANDROID_LIBBASE_LIBRARY "android_libbase")
 set(trout_ANDROID_LIBUTILS_DIR ${trout_ANDROID_SYSCORE_DIR}/libutils)
 set(trout_ANDROID_LIBUTLS_INCLUDE_DIR ${trout_ANDROID_LIBUTILS_DIR}/include)
 set(trout_ANDROID_LIBUTILS_LIBRARY "android_libutils")
+
+set(trout_ANDROID_LIBCUTLS_INCLUDE_DIR ${trout_ANDROID_SYSCORE_DIR}/libcutils/include)
 
 
 # =========== libbase =================
@@ -32,7 +34,7 @@ target_link_libraries(${trout_ANDROID_LIBBASE_LIBRARY}
     ${trout_ANDROID_LIBLOG_LIBRARY}
 )
 
-set_target_properties(${trout_ANDROID_LIBBASE_LIBRARY} PROPERTIES COMPILE_FLAGS ${_trout_ANDROID_CXX_FLAGS})
+target_compile_options(${trout_ANDROID_LIBBASE_LIBRARY} PRIVATE ${_trout_ANDROID_CXX_FLAGS})
 
 
 # =========== liblog =================
@@ -45,10 +47,10 @@ add_library(${trout_ANDROID_LIBLOG_LIBRARY}
 target_include_directories(${trout_ANDROID_LIBLOG_LIBRARY}
     PUBLIC ${trout_ANDROID_LIBLOG_INCLUDE_DIR}
     PRIVATE ${trout_ANDROID_LIBBASE_INCLUDE_DIR}
-    PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/third_party/android-include/libcutils"
+    PRIVATE ${trout_ANDROID_LIBCUTLS_INCLUDE_DIR}
 )
 
-set_target_properties(${trout_ANDROID_LIBLOG_LIBRARY} PROPERTIES COMPILE_FLAGS ${_trout_ANDROID_CXX_FLAGS})
+target_compile_options(${trout_ANDROID_LIBLOG_LIBRARY} PRIVATE ${_trout_ANDROID_CXX_FLAGS})
 
 
 # =========== libutils =================
@@ -60,14 +62,14 @@ add_library(${trout_ANDROID_LIBUTILS_LIBRARY}
 
 target_include_directories(${trout_ANDROID_LIBUTILS_LIBRARY}
     PUBLIC ${trout_ANDROID_LIBUTLS_INCLUDE_DIR}
-    PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/third_party/android-include/libcutils"
+    PRIVATE ${trout_ANDROID_LIBCUTLS_INCLUDE_DIR}
 )
 
 target_link_libraries(${trout_ANDROID_LIBUTILS_LIBRARY}
     ${trout_ANDROID_LIBLOG_LIBRARY}
 )
 
-set_target_properties(${trout_ANDROID_LIBUTILS_LIBRARY} PROPERTIES COMPILE_FLAGS ${_trout_ANDROID_CXX_FLAGS})
+target_compile_options(${trout_ANDROID_LIBUTILS_LIBRARY} PRIVATE ${_trout_ANDROID_CXX_FLAGS})
 
 
 
