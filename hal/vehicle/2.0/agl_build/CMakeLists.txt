@@ -11,7 +11,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin
     CACHE PATH "Path of executables.")
 mark_as_advanced(CMAKE_RUNTIME_OUTPUT_DIRECTORY CMAKE_LIBRARY_OUTPUT_DIRECTORY CMAKE_ARCHIVE_OUTPUT_DIRECTORY)
 
-set(_trout_CXX_FLAGS "-Wall -Wno-unknown-pragmas -Wno-attributes -Werror -std=c++17")
+set(_trout_CXX_FLAGS -Wall -Werror -std=c++17)
 
 set(_trout_GRPCXX_LIBRARY_NAME "grpc++")
 
@@ -73,17 +73,27 @@ trout_generate_grpc_cpp_from_proto(
     ${trout_VHAL_SRC_ROOT}/agl_build/third_party/default_native_vhal/impl/vhal_v2_0/proto/VehicleHalProto.proto
     ${trout_VHAL_SRC_ROOT}/agl_build/third_party/default_native_vhal/impl/vhal_v2_0/proto/VehicleServer.proto)
 
+# ========== Protobuf generated code ==================
+
+add_library(vehicle_hal_protobuf_gen
+    ${trout_GENS_DIR}/VehicleHalProto.pb.cc
+    ${trout_GENS_DIR}/VehicleHalProto.grpc.pb.cc
+    ${trout_GENS_DIR}/VehicleServer.pb.cc
+    ${trout_GENS_DIR}/VehicleServer.grpc.pb.cc
+)
+
+target_link_libraries(vehicle_hal_protobuf_gen
+    ${trout_GRPCXX_LIBRARIES}
+)
+
+target_compile_options(vehicle_hal_protobuf_gen PRIVATE ${_trout_CXX_FLAGS} -Wno-array-bounds)
+
 # ========== vehicle_hal_grpc_server ==============
 
 add_executable(vehicle_hal_grpc_server
     ${trout_VHAL_SRC_ROOT}/VirtualizationGrpcServer.cpp
     ${trout_VHAL_SRC_ROOT}/GrpcVehicleServer.cpp
     ${trout_VHAL_SRC_ROOT}/Utils.cpp
-
-    ${trout_GENS_DIR}/VehicleHalProto.pb.cc
-    ${trout_GENS_DIR}/VehicleHalProto.grpc.pb.cc
-    ${trout_GENS_DIR}/VehicleServer.pb.cc
-    ${trout_GENS_DIR}/VehicleServer.grpc.pb.cc
 
     ${trout_NATIVE_VHAL_ROOT_DIR}/common/src/Obd2SensorStore.cpp
     ${trout_NATIVE_VHAL_ROOT_DIR}/common/src/VehicleObjectPool.cpp
@@ -105,9 +115,9 @@ target_include_directories(vehicle_hal_grpc_server
 )
 
 target_link_libraries(vehicle_hal_grpc_server
+    vehicle_hal_protobuf_gen
     ${trout_ANDROID_LIBRARIES}
-    ${trout_GRPCXX_LIBRARIES}
     ${trout_JSONCPP_LIBRARIES}
 )
 
-set_target_properties(vehicle_hal_grpc_server PROPERTIES COMPILE_FLAGS ${_trout_CXX_FLAGS})
+target_compile_options(vehicle_hal_grpc_server PRIVATE ${_trout_CXX_FLAGS})
