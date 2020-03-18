@@ -30,6 +30,9 @@ PRODUCT_COPY_FILES += \
 
 BOARD_SEPOLICY_DIRS += device/google/trout/sepolicy/vendor/google
 
+PRODUCT_PROPERTY_OVERRIDES += \
+	ro.hardware.type=automotive \
+
 PRODUCT_NAME := aosp_trout_arm64
 PRODUCT_DEVICE := vsoc_arm64
 PRODUCT_MODEL := arm64 trout
