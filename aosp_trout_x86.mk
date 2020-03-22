@@ -27,6 +27,15 @@ TARGET_VULKAN_SUPPORT := false
 
 $(call inherit-product, device/google/cuttlefish/vsoc_x86/auto/device.mk)
 
+include packages/services/Car/computepipe/products/computepipe.mk
+
+DEVICE_MANIFEST_FILE += device/google/trout/manifest_x86.xml
+DEVICE_MATRIX_FILE += device/google/trout/compatibility_matrix.xml
+DEVICE_FRAMEWORK_COMPATIBILITY_MATRIX_FILE := device/google/trout/framework_compatibility_matrix.xml
+
+PRODUCT_COPY_FILES += \
+    packages/services/Car/computepipe/products/init.computepipe.rc:$(TARGET_COPY_OUT_SYSTEM)/etc/init/computepipe.rc
+
 PRODUCT_COPY_FILES += \
     device/google/trout/product_files/odm/ueventd.rc:$(TARGET_COPY_OUT_ODM)/ueventd.rc \
 
