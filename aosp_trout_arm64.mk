@@ -16,9 +16,14 @@
 
 # Vehicle HAL
 LOCAL_VHAL_PRODUCT_PACKAGE := android.hardware.automotive.vehicle@2.0-virtualization-service android.hardware.automotive.vehicle@2.0-virtualization-grpc-server
+
+# Dumpstate HAL
+LOCAL_DUMPSTATE_PRODUCT_PACKAGE := android.hardware.dumpstate@1.1-service.trout
+
 PRODUCT_PROPERTY_OVERRIDES += \
 	ro.vendor.vehiclehal.server.cid=2 \
 	ro.vendor.vehiclehal.server.port=9210 \
+	ro.vendor.helpersystem.log_loc=/data/bugreport_test \
 
 $(call inherit-product, device/google/cuttlefish/vsoc_arm64/auto/aosp_cf.mk)
 
