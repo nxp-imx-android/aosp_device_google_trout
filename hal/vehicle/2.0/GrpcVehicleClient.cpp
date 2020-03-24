@@ -22,8 +22,10 @@
 #include <android-base/logging.h>
 #include <grpc++/grpc++.h>
 
+#include "GarageModeHandler.h"
 #include "VehicleServer.grpc.pb.h"
 #include "VehicleServer.pb.h"
+#include "vhal_v2_0/DefaultConfig.h"
 #include "vhal_v2_0/ProtoMessageConverter.h"
 
 namespace android {
@@ -41,16 +43,19 @@ static std::shared_ptr<::grpc::ChannelCredentials> getChannelCredentials() {
 
 class GrpcVehicleClientImpl : public VehicleHalClient {
   public:
-    GrpcVehicleClientImpl(const std::string& addr)
+    explicit GrpcVehicleClientImpl(const std::string& addr)
         : mServiceAddr(addr),
           mGrpcChannel(::grpc::CreateChannel(mServiceAddr, getChannelCredentials())),
-          mGrpcStub(vhal_proto::VehicleServer::NewStub(mGrpcChannel)) {
+          mGrpcStub(vhal_proto::VehicleServer::NewStub(mGrpcChannel)),
+          mGarageModeHandler(makeVirtualizedGarageModeHandler(
+                  std::bind(&GrpcVehicleClientImpl::SendGarageModeHeartbeat, this))) {
         StartValuePollingThread();
     }
 
     ~GrpcVehicleClientImpl() {
         mShuttingDownFlag.store(true);
         mShutdownCV.notify_all();
+
         if (mPollingThread.joinable()) {
             mPollingThread.join();
         }
@@ -65,12 +70,16 @@ class GrpcVehicleClientImpl : public VehicleHalClient {
   private:
     void StartValuePollingThread();
 
+    bool SendGarageModeHeartbeat();
+
     // private data members
 
     std::string mServiceAddr;
     std::shared_ptr<::grpc::Channel> mGrpcChannel;
     std::unique_ptr<vhal_proto::VehicleServer::Stub> mGrpcStub;
     std::thread mPollingThread;
+
+    std::unique_ptr<VirtualizedGarageModeHandler> mGarageModeHandler;
 
     std::mutex mShutdownMutex;
     std::condition_variable mShutdownCV;
@@ -102,6 +111,10 @@ std::vector<VehiclePropConfig> GrpcVehicleClientImpl::getAllPropertyConfig() con
 }
 
 StatusCode GrpcVehicleClientImpl::setProperty(const VehiclePropValue& value, bool updateStatus) {
+    if (value.prop == AP_POWER_STATE_REPORT) {
+        mGarageModeHandler->HandlePowerStateChange(value);
+    }
+
     ::grpc::ClientContext context;
     vhal_proto::WrappedVehiclePropValue wrappedProtoValue;
     vhal_proto::VehicleHalCallStatus vhal_status;
@@ -152,6 +165,12 @@ void GrpcVehicleClientImpl::StartValuePollingThread() {
             // try to reconnect
         }
     });
+}
+
+// TODO(chenhaosjtuacm): Send heatbeat to VHAL server instead of logging)
+bool GrpcVehicleClientImpl::SendGarageModeHeartbeat() {
+    LOG(WARNING) << __func__ << ": hb";
+    return true;
 }
 
 }  // namespace impl
