@@ -20,6 +20,9 @@ PRODUCT_PROPERTY_OVERRIDES += \
 	ro.vendor.vehiclehal.server.cid=2 \
 	ro.vendor.vehiclehal.server.port=9210 \
 
+# Disable Vulkan feature flag as it is not supported on trout
+TARGET_VULKAN_SUPPORT := false
+
 $(call inherit-product, device/google/cuttlefish/vsoc_arm64/auto/aosp_cf.mk)
 
 PRODUCT_COPY_FILES += \

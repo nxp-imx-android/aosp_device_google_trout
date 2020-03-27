@@ -22,6 +22,9 @@
 # 	ro.vendor.vehiclehal.server.port=9210 \
 # BOARD_SEPOLICY_DIRS += device/google/trout/sepolicy/vendor/google
 
+# Disable Vulkan feature flag as it is not supported on trout
+TARGET_VULKAN_SUPPORT := false
+
 $(call inherit-product, device/google/cuttlefish/vsoc_x86/auto/device.mk)
 
 PRODUCT_COPY_FILES += \
