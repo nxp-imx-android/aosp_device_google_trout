@@ -92,6 +92,7 @@ target_compile_options(vehicle_hal_protobuf_gen PRIVATE ${_trout_CXX_FLAGS} -Wno
 
 add_executable(vehicle_hal_grpc_server
     ${trout_VHAL_SRC_ROOT}/VirtualizationGrpcServer.cpp
+    ${trout_VHAL_SRC_ROOT}/GarageModeServerSideHandler.cpp
     ${trout_VHAL_SRC_ROOT}/GrpcVehicleServer.cpp
     ${trout_VHAL_SRC_ROOT}/Utils.cpp
 

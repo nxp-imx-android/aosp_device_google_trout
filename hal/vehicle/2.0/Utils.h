@@ -29,14 +29,16 @@ namespace vehicle {
 namespace V2_0 {
 namespace impl {
 
-struct VsockServerInfo {
+struct VirtualizedVhalServerInfo {
     unsigned int serverCid{0};
     unsigned int serverPort{0};
 
-    static std::optional<VsockServerInfo> fromCommandLine(int argc, char* argv[]);
-    static std::optional<VsockServerInfo> fromRoPropertyStore();
+    std::string powerStateMarkerFilePath;
 
-    std::string toUri();
+    static std::optional<VirtualizedVhalServerInfo> fromCommandLine(int argc, char* argv[]);
+    static std::optional<VirtualizedVhalServerInfo> fromRoPropertyStore();
+
+    std::string getServerUri() const;
 };
 
 }  // namespace impl

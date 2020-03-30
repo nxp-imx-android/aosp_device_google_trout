@@ -73,6 +73,7 @@ cc_binary {
     vendor: true,
     relative_install_path: "hw",
     srcs: [
+        "GarageModeServerSideHandler.cpp",
         "GrpcVehicleServer.cpp",
         "VirtualizationGrpcServer.cpp",
     ],
