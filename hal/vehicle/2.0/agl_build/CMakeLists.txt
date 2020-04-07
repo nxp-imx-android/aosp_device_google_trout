@@ -41,9 +41,7 @@ function(trout_generate_grpc_cpp_from_proto)
     return()
   endif()
 
-  set(_protobuf_include_path -I . -I ${_trout_PROTOBUF_WELLKNOWN_INCLUDE_DIR}
-      -I ${trout_VHAL_SRC_ROOT}/agl_build/third_party/default_native_vhal/impl/vhal_v2_0/proto)
-
+  set(_protobuf_include_path -I . -I ${_trout_PROTOBUF_WELLKNOWN_INCLUDE_DIR})
   foreach(FIL ${ARGN})
     get_filename_component(ABS_FIL ${FIL} ABSOLUTE)
     get_filename_component(ABS_DIR ${ABS_FIL} DIRECTORY)
@@ -73,7 +71,7 @@ endfunction()
 
 trout_generate_grpc_cpp_from_proto(
     ${trout_VHAL_SRC_ROOT}/agl_build/third_party/default_native_vhal/impl/vhal_v2_0/proto/VehicleHalProto.proto
-    ${trout_VHAL_SRC_ROOT}/proto/VehicleServer.proto)
+    ${trout_VHAL_SRC_ROOT}/agl_build/third_party/default_native_vhal/impl/vhal_v2_0/proto/VehicleServer.proto)
 
 # ========== Protobuf generated code ==================
 
