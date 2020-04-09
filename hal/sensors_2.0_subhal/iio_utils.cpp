@@ -220,7 +220,7 @@ int load_iio_devices(std::vector<iio_device_data>* iio_data,
     std::string path_device;
     std::string iio_name;
     std::ifstream iio_file;
-    int iio_base_len = strlen(iio_base);
+    auto iio_base_len = strlen(iio_base);
     err = sysfs_opendir(DEVICE_IIO_DIR, &dp);
     if (err) return err;
     while (ent = readdir(dp), ent != nullptr) {
@@ -235,7 +235,7 @@ int load_iio_devices(std::vector<iio_device_data>* iio_data,
             }
             std::getline(iio_file, iio_name);
             iio_file.close();
-            for (int i = 0; i < supported_sensors.size(); i++) {
+            for (auto i = 0u; i < supported_sensors.size(); i++) {
                 if (supported_sensors[i].name.compare(iio_name) == 0) {
                     iio_device_data iio_dev_data;
                     iio_dev_data.name = iio_name;
