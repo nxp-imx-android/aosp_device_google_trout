@@ -85,6 +85,7 @@ class GarageModeServerSideHandlerImpl : public GarageModeServerSideHandler {
 };
 
 void GarageModeServerSideHandlerImpl::HandleHeartbeat() {
+    LOG(DEBUG) << __func__ << ": received heartbeat from the client";
     mLastHeartbeatTime.store(steady_clock::now());
 }
 

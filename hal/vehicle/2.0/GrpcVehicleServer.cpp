@@ -64,6 +64,10 @@ class GrpcVehicleServerImpl : public GrpcVehicleServer, public vhal_proto::Vehic
             ::grpc::ServerContext* context, const ::google::protobuf::Empty* request,
             ::grpc::ServerWriter<vhal_proto::WrappedVehiclePropValue>* stream) override;
 
+    ::grpc::Status GargeModeHeartbeat(::grpc::ServerContext* context,
+                                      const ::google::protobuf::Empty* emptyRequest,
+                                      ::google::protobuf::Empty* emptyReturn) override;
+
   private:
     // We keep long-lasting connection for streaming the prop values.
     // For us, each connection can be represented as a function to send the new value, and
@@ -223,6 +227,13 @@ void GrpcVehicleServerImpl::onPropertyValueFromCar(const VehiclePropValue& value
     LOG(ERROR) << __func__ << ": Stream lost, ID : " << conn.mConnectionID;
 
     return ::grpc::Status(::grpc::StatusCode::ABORTED, "Connection lost.");
+}
+
+::grpc::Status GrpcVehicleServerImpl::GargeModeHeartbeat(
+        ::grpc::ServerContext* context, const ::google::protobuf::Empty* emptyRequest,
+        ::google::protobuf::Empty* emptyReturn) {
+    mGarageModeHandler->HandleHeartbeat();
+    return ::grpc::Status::OK;
 }
 
 }  // namespace impl
