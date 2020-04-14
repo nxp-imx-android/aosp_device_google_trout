@@ -57,16 +57,19 @@ std::optional<VirtualizedVhalServerInfo> VirtualizedVhalServerInfo::fromCommandL
     std::optional<unsigned int> cid;
     std::optional<unsigned int> port;
     std::optional<std::string> powerStateMarkerFilePath;
+    std::optional<std::string> powerStateSocketPath;
 
     // unique values to identify the options
     constexpr int OPT_VHAL_SERVER_CID = 1001;
     constexpr int OPT_VHAL_SERVER_PORT_NUMBER = 1002;
     constexpr int OPT_VHAL_SERVER_POWER_STATE_FILE = 1003;
+    constexpr int OPT_VHAL_SERVER_POWER_STATE_SOCKET = 1004;
 
     struct option longOptions[] = {
             {"server_cid", 1, 0, OPT_VHAL_SERVER_CID},
             {"server_port", 1, 0, OPT_VHAL_SERVER_PORT_NUMBER},
             {"power_state_file", 1, 0, OPT_VHAL_SERVER_POWER_STATE_FILE},
+            {"power_state_socket", 1, 0, OPT_VHAL_SERVER_POWER_STATE_SOCKET},
             {},
     };
 
@@ -81,6 +84,9 @@ std::optional<VirtualizedVhalServerInfo> VirtualizedVhalServerInfo::fromCommandL
                 break;
             case OPT_VHAL_SERVER_POWER_STATE_FILE:
                 powerStateMarkerFilePath = std::string(optarg);
+                break;
+            case OPT_VHAL_SERVER_POWER_STATE_SOCKET:
+                powerStateSocketPath = std::string(optarg);
                 break;
             default:
                 // ignore other options
@@ -97,9 +103,13 @@ std::optional<VirtualizedVhalServerInfo> VirtualizedVhalServerInfo::fromCommandL
     if (!powerStateMarkerFilePath.has_value() && error) {
         *error += "Missing power state marker file path. ";
     }
+    if (!powerStateSocketPath.has_value() && error) {
+        *error += "Missing power state socket path. ";
+    }
 
-    if (cid && port && powerStateMarkerFilePath) {
-        return VirtualizedVhalServerInfo{*cid, *port, *powerStateMarkerFilePath};
+    if (cid && port && powerStateMarkerFilePath && powerStateSocketPath) {
+        return VirtualizedVhalServerInfo{*cid, *port, *powerStateMarkerFilePath,
+                                         *powerStateSocketPath};
     }
     return std::nullopt;
 }
@@ -124,7 +134,7 @@ std::optional<VirtualizedVhalServerInfo> VirtualizedVhalServerInfo::fromRoProper
     const auto port = getNumberFromProperty(VHAL_SERVER_PORT_PROPERTY_KEY);
 
     if (cid && port) {
-        return VirtualizedVhalServerInfo{*cid, *port, ""};
+        return VirtualizedVhalServerInfo{*cid, *port, "", ""};
     }
     return std::nullopt;
 }
