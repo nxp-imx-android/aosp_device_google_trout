@@ -52,8 +52,8 @@ static std::optional<unsigned> parseUnsignedIntFromString(const char* optarg, co
     return std::nullopt;
 }
 
-std::optional<VirtualizedVhalServerInfo> VirtualizedVhalServerInfo::fromCommandLine(int argc,
-                                                                                    char* argv[]) {
+std::optional<VirtualizedVhalServerInfo> VirtualizedVhalServerInfo::fromCommandLine(
+        int argc, char* argv[], std::string* error) {
     std::optional<unsigned int> cid;
     std::optional<unsigned int> port;
     std::optional<std::string> powerStateMarkerFilePath;
@@ -86,6 +86,16 @@ std::optional<VirtualizedVhalServerInfo> VirtualizedVhalServerInfo::fromCommandL
                 // ignore other options
                 break;
         }
+    }
+
+    if (!cid.has_value() && error) {
+        *error += "Missing server CID. ";
+    }
+    if (!port.has_value() && error) {
+        *error += "Missing server port number. ";
+    }
+    if (!powerStateMarkerFilePath.has_value() && error) {
+        *error += "Missing power state marker file path. ";
     }
 
     if (cid && port && powerStateMarkerFilePath) {

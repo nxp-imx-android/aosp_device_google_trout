@@ -35,7 +35,8 @@ struct VirtualizedVhalServerInfo {
 
     std::string powerStateMarkerFilePath;
 
-    static std::optional<VirtualizedVhalServerInfo> fromCommandLine(int argc, char* argv[]);
+    static std::optional<VirtualizedVhalServerInfo> fromCommandLine(int argc, char* argv[],
+                                                                    std::string* error);
     static std::optional<VirtualizedVhalServerInfo> fromRoPropertyStore();
 
     std::string getServerUri() const;
