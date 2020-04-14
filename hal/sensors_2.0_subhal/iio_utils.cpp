@@ -22,9 +22,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <algorithm>
 #include <fstream>
 #include <iostream>
 
+static const char* IIO_DEVICE_BASE = "iio:device";
 static const char* DEVICE_IIO_DIR = "/sys/bus/iio/devices/";
 static const char* IIO_SCAN_ELEMENTS_EN = "_en";
 static const char* IIO_SFA_FILENAME = "sampling_frequency_available";
@@ -38,6 +40,24 @@ namespace sensors {
 namespace V2_0 {
 namespace subhal {
 namespace implementation {
+
+static bool str_has_prefix(const char* s, const char* prefix) {
+    if (!s || !prefix) return false;
+
+    const auto len_s = strlen(s);
+    const auto len_prefix = strlen(prefix);
+    if (len_s < len_prefix) return false;
+    return std::equal(s, s + len_prefix, prefix);
+}
+
+static bool str_has_suffix(const char* s, const char* suffix) {
+    if (!s || !suffix) return false;
+
+    const auto len_s = strlen(s);
+    const auto len_suffix = strlen(suffix);
+    if (len_s < len_suffix) return false;
+    return std::equal(s + len_s - len_suffix, s + len_s, suffix);
+}
 
 static int sysfs_opendir(const std::string& name, DIR** dp);
 static int sysfs_write_uint(const std::string& file, const unsigned int val);
@@ -174,9 +194,7 @@ int set_sampling_frequency(const std::string& device_dir, const unsigned int fre
     int ret = sysfs_opendir(device_dir, &dp);
     if (ret) return ret;
     while (ent = readdir(dp), ent != nullptr) {
-        if ((strlen(ent->d_name) > strlen(IIO_SAMPLING_FREQUENCY)) &&
-            (strcmp(ent->d_name + strlen(ent->d_name) - strlen(IIO_SAMPLING_FREQUENCY),
-                    IIO_SAMPLING_FREQUENCY) == 0)) {
+        if (str_has_suffix(ent->d_name, IIO_SAMPLING_FREQUENCY)) {
             std::string filename = device_dir;
             filename += "/";
             filename += ent->d_name;
@@ -198,9 +216,7 @@ int get_scale(const std::string& device_dir, float* resolution) {
     err = sysfs_opendir(device_dir, &dp);
     if (err) return err;
     while (ent = readdir(dp), ent != nullptr) {
-        if ((strlen(ent->d_name) > strlen(IIO_SCALE_FILENAME)) &&
-            (strcmp(ent->d_name + strlen(ent->d_name) - strlen(IIO_SCALE_FILENAME),
-                    IIO_SCALE_FILENAME) == 0)) {
+        if (str_has_suffix(ent->d_name, IIO_SCALE_FILENAME)) {
             filename = device_dir;
             filename += "/";
             filename += ent->d_name;
@@ -211,58 +227,65 @@ int get_scale(const std::string& device_dir, float* resolution) {
     return err;
 }
 
+static bool is_supported_sensor(const std::string& path,
+                                const std::vector<sensors_supported_hal>& supported_sensors,
+                                std::string* name, sensors_supported_hal* sensor) {
+    std::string name_file = path + "/name";
+    std::ifstream iio_file(name_file.c_str());
+    if (!iio_file) return false;
+    std::string iio_name;
+    std::getline(iio_file, iio_name);
+    auto iter = std::find_if(
+            supported_sensors.begin(), supported_sensors.end(),
+            [&iio_name](const auto& candidate) -> bool { return candidate.name == iio_name; });
+    if (iter == supported_sensors.end()) return false;
+    *sensor = *iter;
+    *name = iio_name;
+    return true;
+}
+
 int load_iio_devices(std::vector<iio_device_data>* iio_data,
                      const std::vector<sensors_supported_hal>& supported_sensors) {
     DIR* dp;
     const struct dirent* ent;
     int err;
-    const char* iio_base = "iio:device";
-    std::string path_device;
-    std::string iio_name;
+
     std::ifstream iio_file;
-    auto iio_base_len = strlen(iio_base);
+    const auto iio_base_len = strlen(IIO_DEVICE_BASE);
     err = sysfs_opendir(DEVICE_IIO_DIR, &dp);
     if (err) return err;
     while (ent = readdir(dp), ent != nullptr) {
-        if (!strstr(ent->d_name, ".") && (strlen(ent->d_name) > iio_base_len) &&
-            strncmp(ent->d_name, iio_base, iio_base_len) == 0) {
-            path_device = DEVICE_IIO_DIR;
-            path_device += ent->d_name;
-            path_device += "/name";
-            iio_file.open(path_device.c_str());
-            if (!iio_file) {
-                continue;
-            }
-            std::getline(iio_file, iio_name);
-            iio_file.close();
-            for (auto i = 0u; i < supported_sensors.size(); i++) {
-                if (supported_sensors[i].name.compare(iio_name) == 0) {
-                    iio_device_data iio_dev_data;
-                    iio_dev_data.name = iio_name;
-                    iio_dev_data.type = supported_sensors[i].type;
-                    iio_dev_data.sysfspath.append(path_device, 0,
-                                                  strlen(DEVICE_IIO_DIR) + strlen(ent->d_name));
-                    err = get_sampling_frequency_available(iio_dev_data.sysfspath,
-                                                           &iio_dev_data.sampling_freq_avl);
-                    if (err == 0) {
-                        std::sort(iio_dev_data.sampling_freq_avl.begin(),
-                                  iio_dev_data.sampling_freq_avl.end());
-                        err = get_scale(iio_dev_data.sysfspath, &iio_dev_data.resolution);
-                        if (err == 0) {
-                            sscanf(ent->d_name + iio_base_len, "%hhu", &iio_dev_data.iio_dev_num);
-                            iio_data->push_back(iio_dev_data);
-                        } else {
-                            ALOGE("iio_utils: load_iio_devices.get_scale returned error %d", err);
-                        }
-                    } else {
-                        ALOGE("iio_utils: load_iio_devices.get_sampling_frequency_available "
-                              "returned error %d",
-                              err);
-                    }
-                    break;
-                }
-            }
+        if (!str_has_prefix(ent->d_name, IIO_DEVICE_BASE)) continue;
+
+        std::string path_device = DEVICE_IIO_DIR;
+        path_device += ent->d_name;
+        sensors_supported_hal sensor_match;
+        std::string iio_name;
+        if (!is_supported_sensor(path_device, supported_sensors, &iio_name, &sensor_match))
+            continue;
+
+        ALOGI("found sensor %s at path %s", iio_name.c_str(), path_device.c_str());
+        iio_device_data iio_dev_data;
+        iio_dev_data.name = iio_name;
+        iio_dev_data.type = sensor_match.type;
+        iio_dev_data.sysfspath.append(path_device, 0, strlen(DEVICE_IIO_DIR) + strlen(ent->d_name));
+        err = get_sampling_frequency_available(iio_dev_data.sysfspath,
+                                               &iio_dev_data.sampling_freq_avl);
+        if (err) {
+            ALOGE("get_sampling_frequency_available for %s returned error %d", path_device.c_str(),
+                  err);
+            continue;
         }
+
+        std::sort(iio_dev_data.sampling_freq_avl.begin(), iio_dev_data.sampling_freq_avl.end());
+        err = get_scale(iio_dev_data.sysfspath, &iio_dev_data.resolution);
+        if (err) {
+            ALOGE("get_scale for %s returned error %d", path_device.c_str(), err);
+            continue;
+        }
+        sscanf(ent->d_name + iio_base_len, "%hhu", &iio_dev_data.iio_dev_num);
+
+        iio_data->push_back(iio_dev_data);
     }
     closedir(dp);
     return err;
@@ -316,7 +339,6 @@ int scan_elements(const std::string& device_dir, struct iio_device_data* iio_dat
     const struct dirent* ent;
     std::string scan_dir;
     std::string filename;
-    const char* tmp;
     uint8_t temp;
     int ret;
 
@@ -328,8 +350,7 @@ int scan_elements(const std::string& device_dir, struct iio_device_data* iio_dat
     ret = sysfs_opendir(scan_dir, &dp);
     if (ret) return ret;
     while (ent = readdir(dp), ent != nullptr) {
-        tmp = &ent->d_name[strlen(ent->d_name) - strlen(IIO_SCAN_ELEMENTS_EN)];
-        if (strncmp(tmp, IIO_SCAN_ELEMENTS_EN, strlen(IIO_SCAN_ELEMENTS_EN)) == 0) {
+        if (str_has_suffix(ent->d_name, IIO_SCAN_ELEMENTS_EN)) {
             filename = scan_dir;
             filename += "/";
             filename += ent->d_name;
