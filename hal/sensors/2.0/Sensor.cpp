@@ -53,7 +53,7 @@ SensorBase::SensorBase(int32_t sensorHandle, ISensorsEventCallback* callback, Se
             break;
     }
     // TODO(jbhayana) : Make the threading policy configurable
-    mRunThread = std::thread(startThread, this);
+    mRunThread = std::thread(std::bind(&SensorBase::run, this));
 }
 
 SensorBase::~SensorBase() {
@@ -120,9 +120,6 @@ Result SensorBase::flush() {
     return Result::OK;
 }
 
-void SensorBase::startThread(SensorBase* sensor) {
-    sensor->run();
-}
 void HWSensorBase::processScanData(uint8_t* data, Event* evt) {
     float channelData[NUM_OF_CHANNEL_SUPPORTED - 1];
     int64_t ts;
