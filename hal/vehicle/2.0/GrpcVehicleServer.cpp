@@ -23,6 +23,7 @@
 #include <grpc++/grpc++.h>
 
 #include "GarageModeServerSideHandler.h"
+#include "PowerStateListener.h"
 #include "VehicleServer.grpc.pb.h"
 #include "VehicleServer.pb.h"
 #include "vhal_v2_0/ProtoMessageConverter.h"
@@ -40,7 +41,8 @@ class GrpcVehicleServerImpl : public GrpcVehicleServer, public vhal_proto::Vehic
     explicit GrpcVehicleServerImpl(const VirtualizedVhalServerInfo& serverInfo)
         : mServiceAddr(serverInfo.getServerUri()),
           mGarageModeHandler(makeGarageModeServerSideHandler(this, &mValueObjectPool,
-                                                             serverInfo.powerStateMarkerFilePath)) {
+                                                             serverInfo.powerStateMarkerFilePath)),
+          mPowerStateListener(serverInfo.powerStateSocket, serverInfo.powerStateMarkerFilePath) {
         setValuePool(&mValueObjectPool);
     }
 
@@ -103,6 +105,7 @@ class GrpcVehicleServerImpl : public GrpcVehicleServer, public vhal_proto::Vehic
     std::string mServiceAddr;
     VehiclePropValuePool mValueObjectPool;
     std::unique_ptr<GarageModeServerSideHandler> mGarageModeHandler;
+    PowerStateListener mPowerStateListener;
     mutable std::shared_mutex mConnectionMutex;
     mutable std::shared_mutex mWriterMutex;
     std::list<ConnectionDescriptor> mValueStreamingConnections;
@@ -125,7 +128,10 @@ void GrpcVehicleServerImpl::Start() {
     builder.AddListeningPort(mServiceAddr, getServerCredentials());
     std::unique_ptr<::grpc::Server> server(builder.BuildAndStart());
 
+    std::thread powerStateListenerThread([this]() { mPowerStateListener.Listen(); });
+
     server->Wait();
+    powerStateListenerThread.join();
 }
 
 void GrpcVehicleServerImpl::onPropertyValueFromCar(const VehiclePropValue& value,
