@@ -122,6 +122,7 @@ cc_binary {
     cflags: [
         "-Wno-unused-parameter",
     ],
+    vintf_fragments: ["manifest_android.hardware.automotive.vehicle@2.0-virtualization-service.xml"],
 }
 
 cc_binary {
