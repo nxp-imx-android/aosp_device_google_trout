@@ -31,4 +31,5 @@ cc_binary {
         "liblog",
         "libutils",
     ],
+    vintf_fragments: ["manifest_android.hardware.audiocontrol@2.0-service.trout.xml"],
 }
