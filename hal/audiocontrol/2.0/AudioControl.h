@@ -28,6 +28,8 @@ namespace android::hardware::automotive::audiocontrol::V2_0::implementation {
 
 class AudioControl : public IAudioControl {
   public:
+    bool isHealthy();
+
     // Methods from ::android::hardware::automotive::audiocontrol::V2_0::IAudioControl follow.
     Return<sp<ICloseHandle>> registerFocusListener(const sp<IFocusListener>& listener);
     Return<void> onAudioFocusChange(hidl_bitfield<AudioUsage> usage, int zoneId,
