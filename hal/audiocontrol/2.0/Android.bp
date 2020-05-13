@@ -22,11 +22,14 @@ cc_binary {
     srcs: [
         "AudioControl.cpp",
         "service.cpp",
+        "WatchdogClient.cpp"
     ],
     init_rc: ["android.hardware.audiocontrol@2.0-service.trout.rc"],
     shared_libs: [
         "android.hardware.automotive.audiocontrol@2.0",
+        "carwatchdog_aidl_interface-ndk_platform",
         "libbase",
+        "libbinder_ndk",
         "libhidlbase",
         "liblog",
         "libutils",

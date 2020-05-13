@@ -7,3 +7,8 @@ hal_server_domain(hal_audiocontrol_impl, hal_audiocontrol)
 init_daemon_domain(hal_audiocontrol_impl)
 
 set_prop(hal_audiocontrol_impl, hal_audiocontrol_prop)
+
+carwatchdog_client_domain(hal_audiocontrol_impl)
+binder_use(hal_audiocontrol_impl)
+
+allow system_server hal_audiocontrol_server:process sigkill;
