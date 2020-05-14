@@ -14,11 +14,49 @@
  * limitations under the License.
  */
 
+genrule {
+    name: "DumpstateServerProtoStub_h",
+    tools: [
+        "aprotoc",
+        "protoc-gen-grpc-cpp-plugin",
+    ],
+    cmd: "$(location aprotoc) -I$$(dirname $(in)) -Iexternal/protobuf/src --plugin=protoc-gen-grpc=$(location protoc-gen-grpc-cpp-plugin) $(in) --grpc_out=$(genDir) --cpp_out=$(genDir)",
+    srcs: [
+        "proto/DumpstateServer.proto",
+    ],
+    out: [
+        "DumpstateServer.pb.h",
+        "DumpstateServer.grpc.pb.h",
+    ],
+}
+
+genrule {
+    name: "DumpstateServerProtoStub_cc",
+    tools: [
+        "aprotoc",
+        "protoc-gen-grpc-cpp-plugin",
+    ],
+    cmd: "$(location aprotoc) -I$$(dirname $(in)) -Iexternal/protobuf/src --plugin=protoc-gen-grpc=$(location protoc-gen-grpc-cpp-plugin) $(in) --grpc_out=$(genDir) --cpp_out=$(genDir)",
+    srcs: [
+        "proto/DumpstateServer.proto",
+    ],
+    out: [
+        "DumpstateServer.pb.cc",
+        "DumpstateServer.grpc.pb.cc",
+    ],
+}
+
 cc_binary {
     name: "android.hardware.dumpstate@1.1-service.trout",
     srcs: [
         "DumpstateDevice.cpp",
         "service.cpp",
+    ],
+    generated_headers: [
+        "DumpstateServerProtoStub_h",
+    ],
+    generated_sources: [
+        "DumpstateServerProtoStub_cc",
     ],
     static_libs: [
         "android.hardware.automotive@libc++fs",
@@ -29,9 +67,14 @@ cc_binary {
         "libbase",
         "libcutils",
         "libdumpstateutil",
+        "libgrpc++",
         "libhidlbase",
         "liblog",
+        "libprotobuf-cpp-full",
         "libutils",
+    ],
+    cflags: [
+        "-Wno-unused-parameter",
     ],
     relative_install_path: "hw",
     init_rc: [
