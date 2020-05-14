@@ -32,6 +32,7 @@ if (CMAKE_CROSSCOMPILING)
     set(trout_PROTOBUF_ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/third_party/protobuf)
 
     add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/vehicle_hal_server/agl_build)
+
 else()
     # ========== grpc host tools ===================
     add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/third_party/grpc-grpc)
