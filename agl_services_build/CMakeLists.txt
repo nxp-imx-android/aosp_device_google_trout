@@ -12,8 +12,6 @@ mark_as_advanced(CMAKE_RUNTIME_OUTPUT_DIRECTORY CMAKE_LIBRARY_OUTPUT_DIRECTORY C
 
 get_filename_component(trout_SRC_ROOT ${CMAKE_CURRENT_SOURCE_DIR} ABSOLUTE)
 
-set(_trout_CXX_FLAGS -Wall -Werror -std=c++17)
-
 # ========== grpc build settings ===================
 set(BORINGSSL_ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/third_party/boringssl)
 set(CARES_ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/third_party/cares)
@@ -31,6 +29,7 @@ if (CMAKE_CROSSCOMPILING)
     set(trout_NATIVE_VHAL_ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/third_party/default_native_vehicle_hal)
     set(trout_PROTOBUF_ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/third_party/protobuf)
 
+    add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/dumpstate_server/agl_build)
     add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/vehicle_hal_server/agl_build)
 else()
     # ========== grpc host tools ===================
