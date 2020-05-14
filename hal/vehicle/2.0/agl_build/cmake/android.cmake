@@ -2,7 +2,7 @@ if(NOT trout_ANDROID_SYSCORE_DIR)
     set(trout_ANDROID_SYSCORE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/android/system_core")
 endif()
 
-set(_trout_ANDROID_CXX_FLAGS -Wall -Werror -Wextra -Wno-c99-designator -std=c++17)
+set(_trout_ANDROID_CXX_FLAGS -Wall -Werror -Wextra -Wno-unknown-warning-option -Wno-c99-designator -std=c++17)
 
 set(trout_ANDROID_LIBLOG_DIR ${trout_ANDROID_SYSCORE_DIR}/liblog)
 set(trout_ANDROID_LIBLOG_INCLUDE_DIR ${trout_ANDROID_LIBLOG_DIR}/include)
