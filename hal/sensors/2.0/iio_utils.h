@@ -59,6 +59,7 @@ struct iio_device_data {
     std::vector<iio_info_channel> channelInfo;
     std::vector<float> sampling_freq_avl;
     uint8_t iio_dev_num;
+    unsigned int power_microwatts;
 };
 
 int load_iio_devices(std::vector<iio_device_data>* iio_data,
