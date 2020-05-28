@@ -91,6 +91,7 @@ void GarageModeServerSideHandlerImpl::HandleHeartbeat() {
 
 void GarageModeServerSideHandlerImpl::HeartbeatTimeoutWatcher() {
     constexpr auto kHeartbeatTimeout = duration_cast<steady_clock::duration>(5s);
+    constexpr auto kHeartbeatCheckPeriod = 1s;
     while (!mShuttingDownFlag.load()) {
         if (!mSystemShuttingDownPrepareFlag.load()) {
             std::unique_lock<std::mutex> heartbeatLock(mHeartbeatMutex);
@@ -107,6 +108,7 @@ void GarageModeServerSideHandlerImpl::HeartbeatTimeoutWatcher() {
             // TODO(chenhaosjtuacm): Shutdown AGL
             break;
         }
+        std::this_thread::sleep_for(kHeartbeatCheckPeriod);
     }
 }
 
