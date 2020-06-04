@@ -15,6 +15,7 @@
 cc_library_static {
     name: "android.hardware.automotive.vehicle@2.0-virtualization-utils",
     vendor: true,
+    host_supported: true,
     defaults: ["vhal_v2_0_defaults"],
     srcs: [
         "Utils.cpp",
@@ -30,6 +31,7 @@ cc_library_static {
 cc_library_static {
     name: "android.hardware.automotive.vehicle@2.0-grpc-trout",
     vendor: true,
+    host_supported: true,
     include_dirs: [
         "external/protobuf/src",
     ],
@@ -87,7 +89,7 @@ genrule {
 
 cc_binary {
     name: "android.hardware.automotive.vehicle@2.0-virtualization-service",
-    defaults: ["vhal_v2_0_defaults"],
+    defaults: ["vhal_v2_0_target_defaults"],
     init_rc: ["android.hardware.automotive.vehicle@2.0-virtualization-service.rc"],
     vendor: true,
     relative_install_path: "hw",
@@ -122,8 +124,8 @@ cc_binary {
     name: "android.hardware.automotive.vehicle@2.0-virtualization-grpc-server",
     init_rc: ["android.hardware.automotive.vehicle@2.0-virtualization-grpc-server.rc"],
     defaults: ["vhal_v2_0_defaults"],
+    host_supported: true,
     vendor: true,
-    relative_install_path: "hw",
     srcs: [
         "GarageModeServerSideHandler.cpp",
         "GrpcVehicleServer.cpp",
@@ -138,8 +140,7 @@ cc_binary {
     ],
     static_libs: [
         "android.hardware.automotive.utils.vsockinfo",
-        "android.hardware.automotive.vehicle@2.0-manager-lib",
-        "android.hardware.automotive.vehicle@2.0-default-impl-lib",
+        "android.hardware.automotive.vehicle@2.0-server-impl-lib",
         "android.hardware.automotive.vehicle@2.0-grpc-trout",
         "android.hardware.automotive.vehicle@2.0-virtualization-utils",
     ],
