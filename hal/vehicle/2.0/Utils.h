@@ -20,9 +20,11 @@
 #include <optional>
 #include <string>
 
+#ifdef __BIONIC__
 #include <android-base/logging.h>
 
 #include <vsockinfo.h>
+#endif  // __BIONIC__
 
 namespace android {
 namespace hardware {
@@ -32,14 +34,24 @@ namespace V2_0 {
 namespace impl {
 
 struct VirtualizedVhalServerInfo {
+#ifdef __BIONIC__
     android::hardware::automotive::utils::VsockConnectionInfo vsock;
+#else
+    struct {
+        unsigned cid = 0;
+        unsigned port = 0;
+    } vsock;
+#endif
 
     std::string powerStateMarkerFilePath;
     std::string powerStateSocket;
 
     static std::optional<VirtualizedVhalServerInfo> fromCommandLine(int argc, char* argv[],
                                                                     std::string* error);
+
+#ifdef __BIONIC__
     static std::optional<VirtualizedVhalServerInfo> fromRoPropertyStore();
+#endif
 
     std::string getServerUri() const;
 };
