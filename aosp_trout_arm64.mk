@@ -15,10 +15,10 @@
 #
 
 # Vehicle HAL
-LOCAL_VHAL_PRODUCT_PACKAGE := android.hardware.automotive.vehicle@2.0-virtualization-service android.hardware.automotive.vehicle@2.0-virtualization-grpc-server
+LOCAL_VHAL_PRODUCT_PACKAGE ?= android.hardware.automotive.vehicle@2.0-virtualization-service android.hardware.automotive.vehicle@2.0-virtualization-grpc-server
 
 # Dumpstate HAL
-LOCAL_DUMPSTATE_PRODUCT_PACKAGE := android.hardware.dumpstate@1.1-service.trout
+LOCAL_DUMPSTATE_PRODUCT_PACKAGE ?= android.hardware.dumpstate@1.1-service.trout
 
 DEVICE_MANIFEST_FILE += device/google/trout/manifest.xml
 
@@ -31,12 +31,13 @@ PRODUCT_PROPERTY_OVERRIDES += \
 TARGET_VULKAN_SUPPORT := false
 
 # Sensor HAL
-LOCAL_SENSOR_PRODUCT_PACKAGE := android.hardware.sensors@2.0-service.multihal
-LOCAL_SENSOR_PRODUCT_PACKAGE += android.hardware.sensors@2.0-service.multihal.rc
-LOCAL_SENSOR_PRODUCT_PACKAGE += android.hardware.sensors@2.0-Google-IIO-Subhal
+LOCAL_SENSOR_PRODUCT_PACKAGE ?= \
+    android.hardware.sensors@2.0-service.multihal \
+    android.hardware.sensors@2.0-service.multihal.rc \
+    android.hardware.sensors@2.0-Google-IIO-Subhal \
 
 # Audio Control HAL
-LOCAL_AUDIOCONTROL_HAL_PRODUCT_PACKAGE := android.hardware.audiocontrol@2.0-service.trout
+LOCAL_AUDIOCONTROL_HAL_PRODUCT_PACKAGE ?= android.hardware.audiocontrol@2.0-service.trout
 
 $(call inherit-product, device/google/cuttlefish/vsoc_arm64/auto/aosp_cf.mk)
 
