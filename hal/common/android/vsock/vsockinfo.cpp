@@ -16,6 +16,7 @@
 
 #include "vsockinfo.h"
 
+#ifdef __BIONIC__
 #include <sstream>
 
 #include <android-base/logging.h>
@@ -64,3 +65,4 @@ std::string VsockConnectionInfo::str() const {
 }
 
 }  // namespace android::hardware::automotive::utils
+#endif  // __BIONIC__
