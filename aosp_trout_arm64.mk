@@ -64,3 +64,5 @@ PRODUCT_COPY_FILES += device/google/trout/product_files/vendor/etc/sensors/hals.
 PRODUCT_NAME := aosp_trout_arm64
 PRODUCT_DEVICE := vsoc_arm64
 PRODUCT_MODEL := arm64 trout
+
+TARGET_BOARD_INFO_FILE ?= device/google/trout/board-info.txt
