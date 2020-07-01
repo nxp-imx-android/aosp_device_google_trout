@@ -14,9 +14,77 @@
  * limitations under the License.
  */
 
+cc_defaults {
+    name: "audio_control_hal_v2_0_default_trout",
+    defaults: [
+        "hidl_defaults",
+    ],
+    shared_libs: [
+        "android.hardware.automotive.audiocontrol@2.0",
+        "libbase",
+        "libhidlbase",
+        "liblog",
+        "libutils",
+    ],
+}
+
+genrule {
+    name: "AudioFocusControlProtoStub_h",
+    tools: [
+        "aprotoc",
+        "protoc-gen-grpc-cpp-plugin",
+    ],
+    cmd: "$(location aprotoc) -I$$(dirname $(in)) -Iexternal/protobuf/src --plugin=protoc-gen-grpc=$(location protoc-gen-grpc-cpp-plugin) $(in) --grpc_out=$(genDir) --cpp_out=$(genDir)",
+    srcs: [
+        "proto/AudioFocusControl.proto",
+    ],
+    out: [
+        "AudioFocusControl.pb.h",
+        "AudioFocusControl.grpc.pb.h",
+    ],
+}
+
+genrule {
+    name: "AudioFocusControlProtoStub_cc",
+    tools: [
+        "aprotoc",
+        "protoc-gen-grpc-cpp-plugin",
+    ],
+    cmd: "$(location aprotoc) -I$$(dirname $(in)) -Iexternal/protobuf/src --plugin=protoc-gen-grpc=$(location protoc-gen-grpc-cpp-plugin) $(in) --grpc_out=$(genDir) --cpp_out=$(genDir)",
+    srcs: [
+        "proto/AudioFocusControl.proto",
+    ],
+    out: [
+        "AudioFocusControl.pb.cc",
+        "AudioFocusControl.grpc.pb.cc",
+    ],
+}
+
+cc_library {
+    name: "android.hardware.audiocontrol@2.0-service-audio-control-grpc-server",
+    vendor: true,
+    defaults: ["audio_control_hal_v2_0_default_trout"],
+    srcs: [
+        "AudioControlServer.cpp",
+    ],
+    generated_headers: [
+        "AudioFocusControlProtoStub_h",
+    ],
+    generated_sources: [
+        "AudioFocusControlProtoStub_cc",
+    ],
+    shared_libs: [
+        "libgrpc++",
+        "libprotobuf-cpp-full",
+    ],
+    cflags: [
+        "-Wno-unused-parameter",
+    ],
+}
+
 cc_binary {
     name: "android.hardware.audiocontrol@2.0-service.trout",
-    defaults: ["hidl_defaults"],
+    defaults: ["audio_control_hal_v2_0_default_trout"],
     vendor: true,
     relative_install_path: "hw",
     srcs: [
@@ -26,14 +94,10 @@ cc_binary {
     ],
     init_rc: ["android.hardware.audiocontrol@2.0-service.trout.rc"],
     shared_libs: [
-        "android.hardware.automotive.audiocontrol@2.0",
+        "android.hardware.audiocontrol@2.0-service-audio-control-grpc-server",
         "android.hardware.automotive.utils.watchdog",
         "carwatchdog_aidl_interface-ndk_platform",
-        "libbase",
         "libbinder_ndk",
-        "libhidlbase",
-        "liblog",
-        "libutils",
     ],
     vintf_fragments: ["manifest_android.hardware.audiocontrol@2.0-service.trout.xml"],
 }

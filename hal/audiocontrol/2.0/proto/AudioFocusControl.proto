@@ -26,6 +26,7 @@ message AudioFocusRequest {
     int32 zone_id = 3;
     bool allow_duck = 4;
     bool is_transient = 5;
+    bool is_exclusive = 6;
 }
 
 message AudioFocusControlMessage {
