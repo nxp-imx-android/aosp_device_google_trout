@@ -89,15 +89,20 @@ cc_binary {
     relative_install_path: "hw",
     srcs: [
         "AudioControl.cpp",
+        "CloseHandle.cpp",
         "service.cpp",
         "WatchdogClient.cpp"
     ],
     init_rc: ["android.hardware.audiocontrol@2.0-service.trout.rc"],
+    static_libs: [
+        "android.hardware.automotive.utils.vsockinfo",
+    ],
     shared_libs: [
         "android.hardware.audiocontrol@2.0-service-audio-control-grpc-server",
         "android.hardware.automotive.utils.watchdog",
         "carwatchdog_aidl_interface-ndk_platform",
         "libbinder_ndk",
+        "libcutils",
     ],
     vintf_fragments: ["manifest_android.hardware.audiocontrol@2.0-service.trout.xml"],
 }
