@@ -236,6 +236,26 @@ Return<bool> DumpstateDevice::getVerboseLoggingEnabled() {
     return android::base::GetBoolProperty(VENDOR_VERBOSE_LOGGING_ENABLED_PROPERTY, false);
 }
 
+Return<void> DumpstateDevice::debug(const hidl_handle& h, const hidl_vec<hidl_string>& options) {
+    if (h.getNativeHandle() == nullptr || h->numFds == 0) {
+        LOG(ERROR) << "Invalid FD passed to debug() function";
+        return Void();
+    }
+
+    const int fd = h->data[0];
+    auto pf = [fd](std::string s) -> void { dprintf(fd, "%s\n", s.c_str()); };
+    debugDumpServices(pf);
+
+    return Void();
+}
+
+void DumpstateDevice::debugDumpServices(std::function<void(std::string)> f) {
+    f("Available services for Dumpstate:");
+    for (const auto& svc : getAvailableServices()) {
+        f("  " + svc);
+    }
+}
+
 sp<DumpstateDevice> makeVirtualizationDumpstateDevice(const std::string& addr) {
     return new DumpstateDevice(addr);
 }
