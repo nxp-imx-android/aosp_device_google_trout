@@ -16,6 +16,12 @@
 
 $(call inherit-product, device/google/cuttlefish/vsoc_arm64/auto/aosp_cf.mk)
 
+# Audio Control HAL
+# TODO (chenhaosjtuacm, egranata): move them to kernel command line
+LOCAL_AUDIOCONTROL_PROPERTIES ?= \
+    ro.vendor.audiocontrol.server.cid=1000 \
+    ro.vendor.audiocontrol.server.port=9410 \
+
 include device/google/trout/aosp_trout_common.mk
 
 DEVICE_MANIFEST_FILE += device/google/trout/manifest.xml
