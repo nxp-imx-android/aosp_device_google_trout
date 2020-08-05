@@ -29,7 +29,7 @@ DEVICE_MATRIX_FILE += device/google/trout/compatibility_matrix.xml
 DEVICE_FRAMEWORK_COMPATIBILITY_MATRIX_FILE := device/google/trout/framework_compatibility_matrix.xml
 
 PRODUCT_COPY_FILES += \
-    packages/services/Car/computepipe/products/init.computepipe.rc:$(TARGET_COPY_OUT_SYSTEM)/etc/init/computepipe.rc
+    packages/services/Car/cpp/computepipe/products/init.computepipe.rc:$(TARGET_COPY_OUT_SYSTEM)/etc/init/computepipe.rc
 
 PRODUCT_NAME := aosp_trout_x86
 PRODUCT_DEVICE := vsoc_x86
