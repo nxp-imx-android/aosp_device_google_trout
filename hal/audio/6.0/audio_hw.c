@@ -430,8 +430,8 @@ static ssize_t out_write(struct audio_stream_out *stream, const void *buffer, si
     }
 
     size_t frames_written = frames;
-    if (out->dev->master_mute) {
-        ALOGV("%s: ignored due to master mute", __func__);
+    if (out->dev->main_mute) {
+        ALOGV("%s: ignored due to main mute", __func__);
     } else {
         out_apply_gain(out, buffer, bytes);
         frames_written = audio_vbuffer_write(&out->buffer, buffer, frames);
@@ -1168,27 +1168,27 @@ static int adev_set_voice_volume(struct audio_hw_device *dev, float volume) {
     return 0;
 }
 
-static int adev_set_master_volume(struct audio_hw_device *dev, float volume) {
+static int adev_set_main_volume(struct audio_hw_device *dev, float volume) {
     return -ENOSYS;
 }
 
-static int adev_get_master_volume(struct audio_hw_device *dev, float *volume) {
+static int adev_get_main_volume(struct audio_hw_device *dev, float *volume) {
     return -ENOSYS;
 }
 
-static int adev_set_master_mute(struct audio_hw_device *dev, bool muted) {
+static int adev_set_main_mute(struct audio_hw_device *dev, bool muted) {
     ALOGD("%s: %s", __func__, _bool_str(muted));
     struct generic_audio_device *adev = (struct generic_audio_device *)dev;
     pthread_mutex_lock(&adev->lock);
-    adev->master_mute = muted;
+    adev->main_mute = muted;
     pthread_mutex_unlock(&adev->lock);
     return 0;
 }
 
-static int adev_get_master_mute(struct audio_hw_device *dev, bool *muted) {
+static int adev_get_main_mute(struct audio_hw_device *dev, bool *muted) {
     struct generic_audio_device *adev = (struct generic_audio_device *)dev;
     pthread_mutex_lock(&adev->lock);
-    *muted = adev->master_mute;
+    *muted = adev->main_mute;
     pthread_mutex_unlock(&adev->lock);
     ALOGD("%s: %s", __func__, _bool_str(*muted));
     return 0;
@@ -1496,10 +1496,10 @@ static int adev_open(const hw_module_t *module,
 
     adev->device.init_check = adev_init_check;               // no op
     adev->device.set_voice_volume = adev_set_voice_volume;   // no op
-    adev->device.set_master_volume = adev_set_master_volume; // no op
-    adev->device.get_master_volume = adev_get_master_volume; // no op
-    adev->device.set_master_mute = adev_set_master_mute;
-    adev->device.get_master_mute = adev_get_master_mute;
+    adev->device.set_master_volume = adev_set_main_volume; // no op
+    adev->device.get_master_volume = adev_get_main_volume; // no op
+    adev->device.set_master_mute = adev_set_main_mute;
+    adev->device.get_master_mute = adev_get_main_mute;
     adev->device.set_mode = adev_set_mode;                   // no op
     adev->device.set_mic_mute = adev_set_mic_mute;
     adev->device.get_mic_mute = adev_get_mic_mute;
