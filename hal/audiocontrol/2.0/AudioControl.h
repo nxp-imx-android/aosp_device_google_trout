@@ -22,13 +22,21 @@
 #include <hidl/MQDescriptor.h>
 #include <hidl/Status.h>
 
+#include "AudioControlServer.h"
+
 using android::hardware::audio::common::V6_0::AudioUsage;
 
 namespace android::hardware::automotive::audiocontrol::V2_0::implementation {
 
 class AudioControl : public IAudioControl {
   public:
+    explicit AudioControl(const std::string& audio_control_server_addr);
+
     bool isHealthy();
+
+    void ServerStart();
+
+    void ServerJoin();
 
     // Methods from ::android::hardware::automotive::audiocontrol::V2_0::IAudioControl follow.
     Return<sp<ICloseHandle>> registerFocusListener(const sp<IFocusListener>& listener);
@@ -38,7 +46,8 @@ class AudioControl : public IAudioControl {
     Return<void> setFadeTowardFront(float value) override;
     Return<void> debug(const hidl_handle& fd, const hidl_vec<hidl_string>& options) override;
 
-    AudioControl() = default;
+  private:
+    std::unique_ptr<AudioControlServer> mAudioControlServer;
 };
 
 }  // namespace android::hardware::automotive::audiocontrol::V2_0::implementation

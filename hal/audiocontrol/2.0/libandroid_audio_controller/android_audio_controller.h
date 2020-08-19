@@ -16,6 +16,8 @@
 
 #pragma once
 
+#include <stdbool.h>
+
 #include "utils.h"
 
 #ifdef __cplusplus
@@ -25,8 +27,9 @@ extern "C" {
 typedef struct {
     aafc_audio_usage_t audio_usage;
     aafc_zone_id_t zone_id;
-    int allow_duck;
-    int is_transient;
+    bool allow_duck;
+    bool is_transient;
+    bool is_exclusive;
 } aafc_audio_focus_request_t;
 
 /* Initialize the audio focus controller before using, return 0 when success.
