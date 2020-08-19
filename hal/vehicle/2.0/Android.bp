@@ -19,6 +19,9 @@ cc_library_static {
     srcs: [
         "Utils.cpp",
     ],
+    static_libs: [
+        "android.hardware.automotive.utils.vsockinfo",
+    ],
     shared_libs: [
         "libbase",
     ],
@@ -102,6 +105,7 @@ cc_binary {
         "libgrpc++",
     ],
     static_libs: [
+        "android.hardware.automotive.utils.vsockinfo",
         "android.hardware.automotive.vehicle@2.0-manager-lib",
         "android.hardware.automotive.vehicle@2.0-default-impl-lib",
         "android.hardware.automotive.vehicle@2.0-grpc-trout",
@@ -133,6 +137,7 @@ cc_binary {
         "libgrpc++",
     ],
     static_libs: [
+        "android.hardware.automotive.utils.vsockinfo",
         "android.hardware.automotive.vehicle@2.0-manager-lib",
         "android.hardware.automotive.vehicle@2.0-default-impl-lib",
         "android.hardware.automotive.vehicle@2.0-grpc-trout",
