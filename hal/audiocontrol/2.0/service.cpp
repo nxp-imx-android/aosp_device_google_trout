@@ -24,6 +24,7 @@
 
 #include "AudioControl.h"
 #include "WatchdogClient.h"
+#include "vsockinfo.h"
 
 // libhidl:
 using android::hardware::configureRpcThreadpool;
@@ -36,17 +37,38 @@ using android::Looper;
 using android::OK;
 using android::hardware::automotive::audiocontrol::V2_0::implementation::AudioControl;
 using android::hardware::automotive::audiocontrol::V2_0::implementation::WatchdogClient;
+using android::hardware::automotive::utils::VsockConnectionInfo;
 
 // Main service entry point
 int main() {
+    const auto si = VsockConnectionInfo::fromRoPropertyStore(
+            {
+                    "ro.boot.vendor.audiocontrol.server.cid",
+                    "ro.vendor.audiocontrol.server.cid",
+            },
+            {
+                    "ro.boot.vendor.audiocontrol.server.port",
+                    "ro.vendor.audiocontrol.server.port",
+            });
+
+    if (!si) {
+        LOG(ERROR) << "failed to get server connection cid/port; configure and try again.";
+        return 1;
+    } else {
+        LOG(INFO) << "Creating audio control server at " << si->str();
+    }
+
     // Create an instance of our service class
-    android::sp<AudioControl> service = new AudioControl();
+    android::sp<AudioControl> service = new AudioControl(si->str());
     configureRpcThreadpool(4, false /*callerWillJoin*/);
 
     if (service->registerAsService() != OK) {
         LOG(ERROR) << "registerAsService failed";
         return 1;
     }
+
+    // Start audio control server
+    service->ServerStart();
 
     // Setup a binder thread pool to be a car watchdog client.
     ABinderProcess_setThreadPoolMaxThreadCount(1);
@@ -62,6 +84,7 @@ int main() {
     while (true) {
         looper->pollAll(-1 /* timeoutMillis */);
     }
+    service->ServerJoin();
 
     // We don't ever actually expect to return, so return an error if we do get here
     return 2;

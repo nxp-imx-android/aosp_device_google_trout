@@ -12,3 +12,10 @@ carwatchdog_client_domain(hal_audiocontrol_impl)
 binder_use(hal_audiocontrol_impl)
 
 allow system_server hal_audiocontrol_server:process sigkill;
+
+allow hal_audiocontrol_impl self:vsock_socket { create_socket_perms_no_ioctl listen accept };
+
+# TODO(b/130668487): Label the vsock sockets.
+allow hal_audiocontrol_impl unlabeled:vsock_socket { read shutdown write };
+
+allow hal_audiocontrol_impl proc_net:file { getattr open read };
