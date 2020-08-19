@@ -16,6 +16,7 @@
 
 #include "DumpstateGrpcServer.h"
 
+#include <iostream>
 #include <unordered_set>
 
 #include <grpc++/grpc++.h>
@@ -121,5 +122,12 @@ void DumpstateGrpcServer::Start() {
     builder.RegisterService(this);
     builder.AddListeningPort(mServiceAddr, getServerCredentials());
     std::unique_ptr<::grpc::Server> server(builder.BuildAndStart());
+
+    if (!server) {
+        std::cerr << __func__ << ": failed to create the GRPC server, "
+                  << "please make sure the configuration and permissions are correct" << std::endl;
+        std::abort();
+    }
+
     server->Wait();
 }
