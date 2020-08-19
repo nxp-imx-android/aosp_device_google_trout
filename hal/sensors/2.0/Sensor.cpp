@@ -83,7 +83,7 @@ void HWSensorBase::batch(int32_t samplingPeriodNs) {
         unsigned int sampling_frequency = ns_to_frequency(samplingPeriodNs);
         int i = 0;
         mSamplingPeriodNs = samplingPeriodNs;
-        std::vector<float>::iterator low =
+        std::vector<double>::iterator low =
                 std::lower_bound(miio_data.sampling_freq_avl.begin(),
                                  miio_data.sampling_freq_avl.end(), sampling_frequency);
         i = low - miio_data.sampling_freq_avl.begin();
