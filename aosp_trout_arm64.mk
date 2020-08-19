@@ -39,9 +39,6 @@ PRODUCT_COPY_FILES += \
 
 PRODUCT_COPY_FILES += device/google/trout/product_files/vendor/etc/sensors/hals.conf:$(TARGET_COPY_OUT_VENDOR)/etc/sensors/hals.conf
 
-BOARD_VENDOR_KERNEL_MODULES += \
-    $(wildcard device/google/trout-kernel/5.4-arm64/*.ko) \
-
 PRODUCT_NAME := aosp_trout_arm64
 PRODUCT_DEVICE := vsoc_arm64
 PRODUCT_MODEL := arm64 trout
