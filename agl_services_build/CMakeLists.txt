@@ -31,7 +31,7 @@ if (CMAKE_CROSSCOMPILING)
 
     add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/dumpstate_server/agl_build)
     add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/vehicle_hal_server/agl_build)
-
+    add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/watchdog_test_server)
 else()
     # ========== grpc host tools ===================
     add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/third_party/grpc-grpc)
