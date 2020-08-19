@@ -35,6 +35,7 @@ static const char* IIO_SCALE_FILENAME = "_scale";
 static const char* IIO_SAMPLING_FREQUENCY = "_sampling_frequency";
 static const char* IIO_BUFFER_ENABLE = "buffer/enable";
 static const char* IIO_POWER_FILENAME = "sensor_power";
+static const char* IIO_MAX_RANGE_FILENAME = "sensor_max_range";
 
 namespace android {
 namespace hardware {
@@ -131,6 +132,10 @@ static int sysfs_read_float(const std::string& file, float* val) {
     return sysfs_read_val(file, "%f\n", val);
 }
 
+static int sysfs_read_int64(const std::string& file, int64_t* val) {
+    return sysfs_read_val(file, "%lld\n", val);
+}
+
 static int sysfs_read_str(const std::string& file, std::string* str) {
     std::ifstream infile(file);
     if (!infile.is_open()) return -EINVAL;
@@ -185,6 +190,14 @@ static int get_sensor_power(const std::string& device_dir, unsigned int* power) 
     filename += IIO_POWER_FILENAME;
 
     return sysfs_read_uint(filename, power);
+}
+
+static int get_sensor_max_range(const std::string& device_dir, int64_t* max_range) {
+    std::string filename = device_dir;
+    filename += "/";
+    filename += IIO_MAX_RANGE_FILENAME;
+
+    return sysfs_read_int64(filename, max_range);
 }
 
 int set_sampling_frequency(const std::string& device_dir, const double frequency) {
@@ -286,7 +299,11 @@ int load_iio_devices(std::vector<iio_device_data>* iio_data,
             ALOGE("get_sensor_power for %s returned error %d", path_device.c_str(), err);
             continue;
         }
-
+        err = get_sensor_max_range(iio_dev_data.sysfspath, &iio_dev_data.max_range);
+        if (err) {
+            ALOGE("get_sensor_max_range for %s returned error %d", path_device.c_str(), err);
+            continue;
+        }
         sscanf(ent->d_name + iio_base_len, "%hhu", &iio_dev_data.iio_dev_num);
 
         iio_data->push_back(iio_dev_data);
