@@ -15,6 +15,8 @@
 # limitations under the License.
 #
 
+set -e
+
 build_common() {
     local current_dir=`pwd`
     local bash_src_dir=$(realpath $(dirname ${BASH_SOURCE[0]}))
@@ -43,4 +45,7 @@ if [[ ! $(which aprotoc) && ! $(which protoc-gen-grpc-cpp-plugin) ]]; then
     build_host_tools protoc grpc_cpp_plugin
 fi
 
-build_agl_service vehicle_hal_grpc_server dumpstate_grpc_server watchdog_test_service
+build_agl_service dumpstate_grpc_server
+build_agl_service garage_mode_helper
+build_agl_service vehicle_hal_grpc_server
+build_agl_service watchdog_test_service
