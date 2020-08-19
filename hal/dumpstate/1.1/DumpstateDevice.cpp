@@ -119,14 +119,14 @@ bool DumpstateDevice::dumpRemoteLogs(
     return true;
 }
 
-bool DumpstateDevice::dumpHelperSystem(int textFd, int binFd) {
+void DumpstateDevice::dumpHelperSystem(int textFd, int binFd) {
     std::string helperSystemLogDir =
             android::base::GetProperty(VENDOR_HELPER_SYSTEM_LOG_LOC_PROPERTY, "");
 
     if (helperSystemLogDir.empty()) {
         LOG(ERROR) << "Helper system log location '" << VENDOR_HELPER_SYSTEM_LOG_LOC_PROPERTY
                    << "' not set";
-        return false;
+        return;
     }
 
     std::error_code error;
@@ -135,21 +135,13 @@ bool DumpstateDevice::dumpHelperSystem(int textFd, int binFd) {
     if (!fs::create_directories(helperSysLogPath, error)) {
         LOG(ERROR) << "Failed to create the dumping log directory " << helperSystemLogDir << ": "
                    << error;
-        return false;
+        return;
     }
 
     if (!fs::is_directory(helperSysLogPath)) {
         LOG(ERROR) << helperSystemLogDir << " is not a directory";
-        return false;
+        return;
     }
-
-    if (!isHealthy()) {
-        LOG(ERROR) << "Failed to connect to the dumpstate server";
-        return false;
-    }
-
-    // When start dumping, we always return success to keep dumped logs
-    // even if some of them are failed
 
     {
         // Dumping system logs
@@ -178,7 +170,6 @@ bool DumpstateDevice::dumpHelperSystem(int textFd, int binFd) {
         LOG(ERROR) << "Failed to clear the dumping log directory " << helperSystemLogDir << ": "
                    << error;
     }
-    return true;
 }
 
 bool DumpstateDevice::isHealthy() {
@@ -231,9 +222,7 @@ Return<DumpstateStatus> DumpstateDevice::dumpstateBoard_1_1(const hidl_handle& h
     const int textFd = handle->data[0];
     const int binFd = handle->numFds >= 2 ? handle->data[1] : -1;
 
-    if (!dumpHelperSystem(textFd, binFd)) {
-        return DumpstateStatus::DEVICE_LOGGING_NOT_ENABLED;
-    }
+    dumpHelperSystem(textFd, binFd);
 
     return DumpstateStatus::OK;
 }
