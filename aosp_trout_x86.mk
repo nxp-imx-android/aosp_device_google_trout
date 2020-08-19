@@ -15,12 +15,8 @@
 #
 
 # Vehicle HAL
-# TODO(egranata, chenhaosjtuacm): this does not work on crosvm for now
-# LOCAL_VHAL_PRODUCT_PACKAGE := android.hardware.automotive.vehicle@2.0-virtualization-service android.hardware.automotive.vehicle@2.0-virtualization-grpc-server
-# PRODUCT_PROPERTY_OVERRIDES += \
-# 	ro.vendor.vehiclehal.server.cid=2 \
-# 	ro.vendor.vehiclehal.server.port=9210 \
-# BOARD_SEPOLICY_DIRS += device/google/trout/sepolicy/vendor/google
+LOCAL_VHAL_PRODUCT_PACKAGE := android.hardware.automotive.vehicle@2.0-virtualization-service
+BOARD_SEPOLICY_DIRS += device/google/trout/sepolicy/vendor/google
 
 # Disable Vulkan feature flag as it is not supported on trout
 TARGET_VULKAN_SUPPORT := false
