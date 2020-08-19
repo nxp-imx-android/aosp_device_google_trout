@@ -48,6 +48,11 @@ static constexpr unsigned int ns_to_frequency(unsigned int x) {
     return (1E9 / x);
 }
 
+// SCMI IIO driver gives sensor power in microwatts. Sensor HAL expects
+// it in mA. Conversion process needs the input voltage for the IMU.
+// Based on commonly used IMUs, 3.6V is picked as the default.
+constexpr auto SENSOR_VOLTAGE_DEFAULT = 3.6f;
+
 class ISensorsEventCallback {
   public:
     virtual ~ISensorsEventCallback() = default;

@@ -34,6 +34,7 @@ static const char* IIO_SFA_FILENAME = "sampling_frequency_available";
 static const char* IIO_SCALE_FILENAME = "_scale";
 static const char* IIO_SAMPLING_FREQUENCY = "_sampling_frequency";
 static const char* IIO_BUFFER_ENABLE = "buffer/enable";
+static const char* IIO_POWER_FILENAME = "sensor_power";
 
 namespace android {
 namespace hardware {
@@ -114,7 +115,20 @@ int sysfs_read_uint8(const std::string& file, uint8_t* val) {
     FilePtr fp = {fopen(file.c_str(), "r"), fclose};
     if (nullptr == fp) return -errno;
 
-    return fscanf(fp.get(), "%hhu\n", val);
+    const int ret = fscanf(fp.get(), "%hhu\n", val);
+    return (ret == 1) ? 0 : -EINVAL;
+}
+
+int sysfs_read_uint(const std::string& file, unsigned int* val) {
+    if (val == nullptr) {
+        return -EINVAL;
+    }
+
+    FilePtr fp = {fopen(file.c_str(), "r"), fclose};
+    if (nullptr == fp) return -errno;
+
+    const int ret = fscanf(fp.get(), "%u\n", val);
+    return (ret == 1) ? 0 : -EINVAL;
 }
 
 int sysfs_read_str(const std::string& file, std::string* str) {
@@ -126,6 +140,7 @@ int sysfs_read_str(const std::string& file, std::string* str) {
     else
         return 0;
 }
+
 int sysfs_read_float(const std::string& file, float* val) {
     if (val == nullptr) {
         return -EINVAL;
@@ -173,6 +188,14 @@ int get_sampling_frequency_available(const std::string& device_dir, std::vector<
     }
 
     return ret < 0 ? ret : 0;
+}
+
+int get_sensor_power(const std::string& device_dir, unsigned int* power) {
+    std::string filename = device_dir;
+    filename += "/";
+    filename += IIO_POWER_FILENAME;
+
+    return sysfs_read_uint(filename, power);
 }
 
 int set_sampling_frequency(const std::string& device_dir, const unsigned int frequency) {
@@ -269,6 +292,12 @@ int load_iio_devices(std::vector<iio_device_data>* iio_data,
             ALOGE("get_scale for %s returned error %d", path_device.c_str(), err);
             continue;
         }
+        err = get_sensor_power(iio_dev_data.sysfspath, &iio_dev_data.power_microwatts);
+        if (err) {
+            ALOGE("get_sensor_power for %s returned error %d", path_device.c_str(), err);
+            continue;
+        }
+
         sscanf(ent->d_name + iio_base_len, "%hhu", &iio_dev_data.iio_dev_num);
 
         iio_data->push_back(iio_dev_data);
@@ -335,7 +364,7 @@ int scan_elements(const std::string& device_dir, struct iio_device_data* iio_dat
             ret = sysfs_write_uint(filename, ENABLE_CHANNEL);
             if (ret == 0) {
                 ret = sysfs_read_uint8(filename, &temp);
-                if ((ret > 0) && (temp == 1)) {
+                if ((ret == 0) && (temp == 1)) {
                     iio_info_channel chan_info;
                     chan_info.name = strndup(ent->d_name,
                                              strlen(ent->d_name) - strlen(IIO_SCAN_ELEMENTS_EN));
@@ -343,10 +372,28 @@ int scan_elements(const std::string& device_dir, struct iio_device_data* iio_dat
                     filename += "/";
                     filename += chan_info.name;
                     filename += "_index";
-                    sysfs_read_uint8(filename, &chan_info.index);
+                    ret = sysfs_read_uint8(filename, &chan_info.index);
+                    if (ret) {
+                        ALOGE("Getting index for channel %s for sensor %s returned error %d",
+                              chan_info.name.c_str(), device_dir.c_str(), ret);
+                        return ret;
+                    }
                     ret = get_scan_type(device_dir, &chan_info);
+                    if (ret) {
+                        ALOGE("Getting scan type for channel %s sensor %s returned error %d",
+                              chan_info.name.c_str(), device_dir.c_str(), ret);
+                        return ret;
+                    }
                     iio_data->channelInfo.push_back(chan_info);
+                } else {
+                    ALOGE("Not able to successfully enable channel %s for sensor %s error %d",
+                          ent->d_name, device_dir.c_str(), ret);
+                    return ret;
                 }
+            } else {
+                ALOGE("Enabling scan channel %s for sensor %s returned error %d", ent->d_name,
+                      device_dir.c_str(), ret);
+                return ret;
             }
         }
     }
