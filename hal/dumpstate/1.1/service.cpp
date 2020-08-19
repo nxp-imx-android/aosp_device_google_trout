@@ -13,8 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include <cutils/properties.h>
 #include <hidl/HidlSupport.h>
 #include <hidl/HidlTransportSupport.h>
+
+#include <sstream>
 
 #include "DumpstateDevice.h"
 
@@ -23,10 +26,18 @@ using ::android::sp;
 using ::android::hardware::configureRpcThreadpool;
 using ::android::hardware::joinRpcThreadpool;
 using ::android::hardware::dumpstate::V1_1::IDumpstateDevice;
-using ::android::hardware::dumpstate::V1_1::implementation::DumpstateDevice;
+using ::android::hardware::dumpstate::V1_1::implementation::makeVirtualizationDumpstateDevice;
 
 int main() {
-    sp<IDumpstateDevice> dumpstate = new DumpstateDevice;
+    constexpr const char* DUMPSTATE_SERVER_CID_PROPERTY_KEY = "ro.vendor.dumpstate.server.cid";
+    constexpr const char* DUMPSTATE_SERVER_PORT_PROPERTY_KEY = "ro.vendor.dumpstate.server.port";
+
+    std::stringstream serverAddrStream;
+
+    serverAddrStream << "vsock:" << property_get_int64(DUMPSTATE_SERVER_CID_PROPERTY_KEY, -1) << ":"
+                     << property_get_int64(DUMPSTATE_SERVER_PORT_PROPERTY_KEY, -1);
+
+    sp<IDumpstateDevice> dumpstate = makeVirtualizationDumpstateDevice(serverAddrStream.str());
     // This method MUST be called before interacting with any HIDL interfaces.
     configureRpcThreadpool(1, true);
     if (dumpstate->registerAsService() != OK) {
