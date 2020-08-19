@@ -32,8 +32,21 @@ endif()
 
 # ========== grpc proto prebuilts =================
 
-find_program(trout_PROTOC aprotoc REQUIRED)
-find_program(trout_GRPC_CPP_PLUGIN protoc-gen-grpc-cpp-plugin REQUIRED)
+if (NOT trout_HOST_PROGRAM_PATH)
+    set(trout_HOST_PROGRAM_PATH ${trout_SRC_ROOT}/host_build/bin)
+endif()
+
+# find Android prebuilt programs first
+find_program(trout_PROTOC aprotoc)
+find_program(trout_GRPC_CPP_PLUGIN protoc-gen-grpc-cpp-plugin)
+
+# If not found in Android prebuilts, then find in the host program path
+find_program(trout_PROTOC protoc
+             PATHS ${trout_HOST_PROGRAM_PATH}
+             NO_DEFAULT_PATH)
+find_program(trout_GRPC_CPP_PLUGIN grpc_cpp_plugin
+             PATHS ${trout_HOST_PROGRAM_PATH}
+             NO_DEFAULT_PATH)
 
 if(NOT _trout_PROTOBUF_WELLKNOWN_INCLUDE_DIR)
   message(FATAL_ERROR "_trout_PROTOBUF_WELLKNOWN_INCLUDE_DIR not set")
