@@ -22,7 +22,6 @@
 #include <android-base/logging.h>
 #include <grpc++/grpc++.h>
 
-#include "GarageModeHandler.h"
 #include "VehicleServer.grpc.pb.h"
 #include "VehicleServer.pb.h"
 #include "vhal_v2_0/DefaultConfig.h"
@@ -46,9 +45,7 @@ class GrpcVehicleClientImpl : public VehicleHalClient {
     explicit GrpcVehicleClientImpl(const std::string& addr)
         : mServiceAddr(addr),
           mGrpcChannel(::grpc::CreateChannel(mServiceAddr, getChannelCredentials())),
-          mGrpcStub(vhal_proto::VehicleServer::NewStub(mGrpcChannel)),
-          mGarageModeHandler(makeVirtualizedGarageModeHandler(
-                  std::bind(&GrpcVehicleClientImpl::SendGarageModeHeartbeat, this))) {
+          mGrpcStub(vhal_proto::VehicleServer::NewStub(mGrpcChannel)) {
         StartValuePollingThread();
     }
 
@@ -70,16 +67,12 @@ class GrpcVehicleClientImpl : public VehicleHalClient {
   private:
     void StartValuePollingThread();
 
-    bool SendGarageModeHeartbeat();
-
     // private data members
 
     std::string mServiceAddr;
     std::shared_ptr<::grpc::Channel> mGrpcChannel;
     std::unique_ptr<vhal_proto::VehicleServer::Stub> mGrpcStub;
     std::thread mPollingThread;
-
-    std::unique_ptr<VirtualizedGarageModeHandler> mGarageModeHandler;
 
     std::mutex mShutdownMutex;
     std::condition_variable mShutdownCV;
@@ -111,10 +104,6 @@ std::vector<VehiclePropConfig> GrpcVehicleClientImpl::getAllPropertyConfig() con
 }
 
 StatusCode GrpcVehicleClientImpl::setProperty(const VehiclePropValue& value, bool updateStatus) {
-    if (value.prop == AP_POWER_STATE_REPORT) {
-        mGarageModeHandler->HandlePowerStateChange(value);
-    }
-
     ::grpc::ClientContext context;
     vhal_proto::WrappedVehiclePropValue wrappedProtoValue;
     vhal_proto::VehicleHalCallStatus vhal_status;
@@ -166,21 +155,6 @@ void GrpcVehicleClientImpl::StartValuePollingThread() {
             // try to reconnect
         }
     });
-}
-
-bool GrpcVehicleClientImpl::SendGarageModeHeartbeat() {
-    ::grpc::ClientContext context;
-    ::google::protobuf::Empty emptyReturn;
-
-    LOG(DEBUG) << __func__ << ": sending heartbeat";
-    auto grpc_status =
-            mGrpcStub->GargeModeHeartbeat(&context, ::google::protobuf::Empty(), &emptyReturn);
-    if (!grpc_status.ok()) {
-        LOG(ERROR) << __func__
-                   << ": GRPC SendGarageModeHeartbeat Failed: " << grpc_status.error_message();
-        return false;
-    }
-    return true;
 }
 
 }  // namespace impl
