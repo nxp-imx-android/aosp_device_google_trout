@@ -26,6 +26,7 @@
 #include "PowerStateListener.h"
 #include "VehicleServer.grpc.pb.h"
 #include "VehicleServer.pb.h"
+#include "vhal_v2_0/DefaultConfig.h"
 #include "vhal_v2_0/ProtoMessageConverter.h"
 
 namespace android {
@@ -49,8 +50,10 @@ class GrpcVehicleServerImpl : public GrpcVehicleServer, public vhal_proto::Vehic
     // method from GrpcVehicleServer
     void Start() override;
 
-    // method from IVehicleServer
+    // methods from IVehicleServer
     void onPropertyValueFromCar(const VehiclePropValue& value, bool updateStatus) override;
+
+    StatusCode onSetProperty(const VehiclePropValue& value, bool updateStatus) override;
 
     // methods from vhal_proto::VehicleServer::Service
 
@@ -65,10 +68,6 @@ class GrpcVehicleServerImpl : public GrpcVehicleServer, public vhal_proto::Vehic
     ::grpc::Status StartPropertyValuesStream(
             ::grpc::ServerContext* context, const ::google::protobuf::Empty* request,
             ::grpc::ServerWriter<vhal_proto::WrappedVehiclePropValue>* stream) override;
-
-    ::grpc::Status GargeModeHeartbeat(::grpc::ServerContext* context,
-                                      const ::google::protobuf::Empty* emptyRequest,
-                                      ::google::protobuf::Empty* emptyReturn) override;
 
   private:
     // We keep long-lasting connection for streaming the prop values.
@@ -170,6 +169,14 @@ void GrpcVehicleServerImpl::onPropertyValueFromCar(const VehiclePropValue& value
     }
 }
 
+StatusCode GrpcVehicleServerImpl::onSetProperty(const VehiclePropValue& value, bool updateStatus) {
+    if (value.prop == AP_POWER_STATE_REPORT &&
+        value.value.int32Values[0] == toInt(VehicleApPowerStateReport::SHUTDOWN_POSTPONE)) {
+        mGarageModeHandler->HandleHeartbeat();
+    }
+    return GrpcVehicleServer::onSetProperty(value, updateStatus);
+}
+
 ::grpc::Status GrpcVehicleServerImpl::GetAllPropertyConfig(
         ::grpc::ServerContext* context, const ::google::protobuf::Empty* request,
         ::grpc::ServerWriter<vhal_proto::VehiclePropConfig>* stream) {
@@ -233,13 +240,6 @@ void GrpcVehicleServerImpl::onPropertyValueFromCar(const VehiclePropValue& value
     LOG(ERROR) << __func__ << ": Stream lost, ID : " << conn.mConnectionID;
 
     return ::grpc::Status(::grpc::StatusCode::ABORTED, "Connection lost.");
-}
-
-::grpc::Status GrpcVehicleServerImpl::GargeModeHeartbeat(
-        ::grpc::ServerContext* context, const ::google::protobuf::Empty* emptyRequest,
-        ::google::protobuf::Empty* emptyReturn) {
-    mGarageModeHandler->HandleHeartbeat();
-    return ::grpc::Status::OK;
 }
 
 }  // namespace impl
