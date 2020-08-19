@@ -17,6 +17,7 @@
 #pragma once
 
 #include "AudioControl.h"
+#include "BaseWatchdogClient.h"
 
 #include <aidl/android/automotive/watchdog/BnCarWatchdog.h>
 #include <aidl/android/automotive/watchdog/BnCarWatchdogClient.h>
@@ -25,39 +26,15 @@
 
 namespace android::hardware::automotive::audiocontrol::V2_0::implementation {
 
-class WatchdogClient : public aidl::android::automotive::watchdog::BnCarWatchdogClient {
+class WatchdogClient : public android::hardware::automotive::utils::BaseWatchdogClient {
   public:
-    explicit WatchdogClient(const ::android::sp<::android::Looper>& handlerLooper,
-                            AudioControl* audioCtrl);
+    WatchdogClient(const ::android::sp<::android::Looper>& handlerLooper, AudioControl* audioCtrl);
 
-    ndk::ScopedAStatus checkIfAlive(
-            int32_t sessionId, aidl::android::automotive::watchdog::TimeoutLength timeout) override;
-    ndk::ScopedAStatus prepareProcessTermination() override;
-
-    bool initialize();
+  protected:
+    bool isClientHealthy() const override;
 
   private:
-    class MessageHandlerImpl : public ::android::MessageHandler {
-      public:
-        explicit MessageHandlerImpl(WatchdogClient* client);
-        void handleMessage(const ::android::Message& message) override;
-
-      private:
-        WatchdogClient* mClient;
-    };
-
-  private:
-    void respondToWatchdog();
-    bool isClientHealthy() const;
-
-  private:
-    ::android::sp<::android::Looper> mHandlerLooper;
-    ::android::sp<MessageHandlerImpl> mMessageHandler;
-    std::shared_ptr<aidl::android::automotive::watchdog::ICarWatchdog> mWatchdogServer;
-    std::shared_ptr<aidl::android::automotive::watchdog::ICarWatchdogClient> mTestClient;
     AudioControl* mAudioControl;
-    ::android::Mutex mMutex;
-    int mCurrentSessionId GUARDED_BY(mMutex);
 };
 
 }  // namespace android::hardware::automotive::audiocontrol::V2_0::implementation
