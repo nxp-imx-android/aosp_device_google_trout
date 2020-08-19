@@ -146,6 +146,7 @@ void GrpcVehicleClientImpl::StartValuePollingThread() {
 
             auto value_stream =
                     mGrpcStub->StartPropertyValuesStream(&context, ::google::protobuf::Empty());
+            LOG(INFO) << __func__ << ": GRPC Value Streaming Started";
             vhal_proto::WrappedVehiclePropValue wrappedProtoValue;
             while (!mShuttingDownFlag.load() && value_stream->Read(&wrappedProtoValue)) {
                 VehiclePropValue value;
