@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+#define LOG_TAG "trout.audiocontrol@2.0"
+
 #include "AudioControl.h"
 
 #include <hidl/HidlTransportSupport.h>
@@ -43,6 +45,12 @@ Return<void> AudioControl::onAudioFocusChange(hidl_bitfield<AudioUsage>, int,
 
 Return<void> AudioControl::debug(const hidl_handle&, const hidl_vec<hidl_string>&) {
     return Void();
+}
+
+bool AudioControl::isHealthy() {
+    // TODO(egranata, chenhaosjtuacm): fill this in with a real check
+    // e.g. add a heartbeat message to remote side
+    return true;
 }
 
 }  // namespace android::hardware::automotive::audiocontrol::V2_0::implementation
