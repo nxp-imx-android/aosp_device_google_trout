@@ -15,8 +15,9 @@
   <manifest-server url="http://android-smartsync.corp.google.com/googleplex-android.googlesource.com/manifestserver" />
 
   <project path="device/google/trout" name="device/google/trout" groups="device,trout,gull" remote="goog-and-upload-partner" dest-branch="rvc-dev" revision="mirror-partner-rvc-dev">
-      <copyfile src="agl_services_build/build.sh" dest="build.sh" />
-      <copyfile src="agl_services_build/CMakeLists.txt" dest="CMakeLists.txt" />
+      <linkfile src="agl_services_build/build.sh" dest="build.sh" />
+      <linkfile src="agl_services_build/CMakeLists.txt" dest="CMakeLists.txt" />
+      <linkfile src="agl_services_build/cmake" dest="cmake" />
       <linkfile src="agl_services_build/toolchain" dest="toolchain" />
       <linkfile src="hal/dumpstate/1.1" dest="dumpstate_server" />
       <linkfile src="hal/vehicle/2.0" dest="vehicle_hal_server" />
