@@ -5,7 +5,7 @@ Wants=coqos-virtio-vsock.service
 After=coqos-virtio-vsock.service
 
 [Service]
-ExecStart=/bin/dumpstate_grpc_server -server_addr vsock:2:9211
+ExecStart=/bin/dumpstate_grpc_server -server_addr vsock:2:9310
 Restart=always
 
 [Install]
