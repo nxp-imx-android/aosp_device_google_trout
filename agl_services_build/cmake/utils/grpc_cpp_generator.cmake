@@ -1,7 +1,7 @@
 # ========== grpc proto prebuilts =================
 
 if (NOT trout_HOST_PROGRAM_PATH)
-  set(trout_HOST_PROGRAM_PATH ${trout_SRC_ROOT}/host_build/bin)
+  set(trout_HOST_PROGRAM_PATH ${trout_SRC_ROOT}/out/host_build/bin)
 endif()
 
 # find Android prebuilt programs first
