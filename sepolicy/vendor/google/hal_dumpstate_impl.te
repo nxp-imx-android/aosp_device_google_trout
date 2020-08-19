@@ -7,3 +7,7 @@ hal_server_domain(hal_dumpstate_impl, hal_dumpstate)
 init_daemon_domain(hal_dumpstate_impl)
 
 set_prop(hal_dumpstate_impl, hal_dumpstate_prop)
+
+allow system_server hal_dumpstate_server:process sigkill;
+carwatchdog_client_domain(hal_dumpstate_impl)
+binder_use(hal_dumpstate_impl)
