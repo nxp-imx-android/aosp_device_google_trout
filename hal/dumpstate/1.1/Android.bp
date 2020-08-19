@@ -60,6 +60,7 @@ cc_binary {
     ],
     static_libs: [
         "android.hardware.automotive@libc++fs",
+        "android.hardware.automotive.utils.vsockinfo",
     ],
     shared_libs: [
         "android.hardware.dumpstate@1.0",
