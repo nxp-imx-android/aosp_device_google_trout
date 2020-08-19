@@ -37,3 +37,5 @@ PRODUCT_PROPERTY_OVERRIDES += \
     ${LOCAL_DUMPSTATE_PROPERTIES}
 
 TARGET_BOARD_INFO_FILE ?= device/google/trout/board-info.txt
+
+include packages/services/Car/computepipe/products/computepipe.mk
