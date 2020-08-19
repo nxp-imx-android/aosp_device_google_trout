@@ -20,10 +20,11 @@
 #include <cutils/properties.h>
 #endif  // __ANDROID__
 
-#include <climits>
 #include <getopt.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <array>
+#include <climits>
 #include <sstream>
 
 namespace android {
@@ -126,12 +127,37 @@ static std::optional<unsigned> getNumberFromProperty(const char* key) {
     return static_cast<unsigned int>(value);
 }
 
-std::optional<VirtualizedVhalServerInfo> VirtualizedVhalServerInfo::fromRoPropertyStore() {
-    constexpr const char* VHAL_SERVER_CID_PROPERTY_KEY = "ro.vendor.vehiclehal.server.cid";
-    constexpr const char* VHAL_SERVER_PORT_PROPERTY_KEY = "ro.vendor.vehiclehal.server.port";
+template <std::size_t N>
+static std::optional<unsigned> getNumberFromProperties(const std::array<const char*, N>& arr) {
+    for (const auto& key : arr) {
+        auto val = getNumberFromProperty(key);
+        if (val) return val;
+    }
 
-    const auto cid = getNumberFromProperty(VHAL_SERVER_CID_PROPERTY_KEY);
-    const auto port = getNumberFromProperty(VHAL_SERVER_PORT_PROPERTY_KEY);
+    return std::nullopt;
+}
+
+static std::optional<unsigned> getCidFromPropertyStore() {
+    std::array<const char*, 2> properties = {
+            "ro.boot.vendor.vehiclehal.server.cid",
+            "ro.vendor.vehiclehal.server.cid",
+    };
+
+    return getNumberFromProperties(properties);
+}
+
+static std::optional<unsigned> getPortFromPropertyStore() {
+    std::array<const char*, 2> properties = {
+            "ro.boot.vendor.vehiclehal.server.port",
+            "ro.vendor.vehiclehal.server.port",
+    };
+
+    return getNumberFromProperties(properties);
+}
+
+std::optional<VirtualizedVhalServerInfo> VirtualizedVhalServerInfo::fromRoPropertyStore() {
+    const auto cid = getCidFromPropertyStore();
+    const auto port = getPortFromPropertyStore();
 
     if (cid && port) {
         return VirtualizedVhalServerInfo{*cid, *port, "", ""};
