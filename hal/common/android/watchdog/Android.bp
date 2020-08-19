@@ -14,20 +14,15 @@
  * limitations under the License.
  */
 
-cc_binary {
-    name: "android.hardware.audiocontrol@2.0-service.trout",
+cc_library {
+    name: "android.hardware.automotive.utils.watchdog",
     defaults: ["hidl_defaults"],
     vendor: true,
-    relative_install_path: "hw",
     srcs: [
-        "AudioControl.cpp",
-        "service.cpp",
-        "WatchdogClient.cpp"
+        "BaseWatchdogClient.cpp"
     ],
-    init_rc: ["android.hardware.audiocontrol@2.0-service.trout.rc"],
+    export_include_dirs: ["."],
     shared_libs: [
-        "android.hardware.automotive.audiocontrol@2.0",
-        "android.hardware.automotive.utils.watchdog",
         "carwatchdog_aidl_interface-ndk_platform",
         "libbase",
         "libbinder_ndk",
@@ -35,5 +30,4 @@ cc_binary {
         "liblog",
         "libutils",
     ],
-    vintf_fragments: ["manifest_android.hardware.audiocontrol@2.0-service.trout.xml"],
 }
