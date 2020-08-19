@@ -57,7 +57,7 @@ struct iio_device_data {
     float resolution;
     SensorType type;
     std::vector<iio_info_channel> channelInfo;
-    std::vector<float> sampling_freq_avl;
+    std::vector<double> sampling_freq_avl;
     uint8_t iio_dev_num;
     unsigned int power_microwatts;
 };
@@ -66,7 +66,7 @@ int load_iio_devices(std::vector<iio_device_data>* iio_data,
                      const std::vector<sensors_supported_hal>& supported_sensors);
 int scan_elements(const std::string& device_dir, struct iio_device_data* iio_data);
 int enable_sensor(const std::string& name, const bool flag);
-int set_sampling_frequency(const std::string& name, const unsigned int frequency);
+int set_sampling_frequency(const std::string& name, const double frequency);
 }  // namespace implementation
 }  // namespace subhal
 }  // namespace V2_0
