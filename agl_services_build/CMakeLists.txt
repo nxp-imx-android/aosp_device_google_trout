@@ -33,6 +33,7 @@ if (CMAKE_CROSSCOMPILING)
     add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/vehicle_hal_server/agl_build)
     add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/watchdog_test_server)
     add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/vehicle_hal_server/garage_mode_helper)
+    add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/audiocontrol/agl_build)
 
 else()
     # ========== grpc host tools ===================
