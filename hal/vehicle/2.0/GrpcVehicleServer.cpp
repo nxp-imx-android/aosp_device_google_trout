@@ -127,6 +127,9 @@ void GrpcVehicleServerImpl::Start() {
     builder.AddListeningPort(mServiceAddr, getServerCredentials());
     std::unique_ptr<::grpc::Server> server(builder.BuildAndStart());
 
+    CHECK(server) << __func__ << ": failed to create the GRPC server, "
+                  << "please make sure the configuration and permissions are correct";
+
     std::thread powerStateListenerThread([this]() { mPowerStateListener.Listen(); });
 
     server->Wait();
