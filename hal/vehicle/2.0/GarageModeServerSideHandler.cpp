@@ -114,12 +114,27 @@ void GarageModeServerSideHandlerImpl::HeartbeatTimeoutWatcher() {
 
 void GarageModeServerSideHandlerImpl::PowerStateWatcher() {
     constexpr auto kFileStatusCheckPeriod = 1s;
+
+    bool log_marker_file_not_exists_message_once = false;
+    bool log_marker_file_no_access_message_once = false;
+    auto call_once = [](bool* once_flag, auto&& func) {
+        if (!*once_flag) {
+            *once_flag = true;
+            func();
+        }
+    };
+
     while (access(mPowerStateMarkerPath.c_str(), F_OK | R_OK) < 0) {
         if (errno == ENOENT) {
-            LOG(ERROR) << __func__ << ": marker file " << mPowerStateMarkerPath
-                       << " has not been created yet.";
+            call_once(&log_marker_file_not_exists_message_once, [this]() {
+                LOG(ERROR) << __func__ << ": marker file " << mPowerStateMarkerPath
+                           << " has not been created yet.";
+            });
         } else {
-            LOG(ERROR) << __func__ << ": no read access to marker file " << mPowerStateMarkerPath;
+            call_once(&log_marker_file_no_access_message_once, [this]() {
+                LOG(ERROR) << __func__ << ": no read access to marker file "
+                           << mPowerStateMarkerPath;
+            });
         }
         std::this_thread::sleep_for(kFileStatusCheckPeriod);
     }
