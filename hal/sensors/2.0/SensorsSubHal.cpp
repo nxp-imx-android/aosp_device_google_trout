@@ -44,8 +44,8 @@ using ::android::hardware::sensors::V2_0::implementation::ScopedWakelock;
     { .name = SENSOR_NAME, .type = SENSOR_TYPE, }
 
 static const std::vector<sensors_supported_hal> sensors_supported = {
-        SENSOR_SUPPORTED("Acclerometer", SensorType::ACCELEROMETER),
-        SENSOR_SUPPORTED("Gyroscope", SensorType::GYROSCOPE),
+        SENSOR_SUPPORTED("scmi.iio.accel", SensorType::ACCELEROMETER),
+        SENSOR_SUPPORTED("scmi.iio.gyro", SensorType::GYROSCOPE),
 };
 
 SensorsSubHal::SensorsSubHal() : mCallback(nullptr), mNextHandle(1) {
