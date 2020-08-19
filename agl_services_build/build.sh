@@ -43,4 +43,4 @@ if [[ ! $(which aprotoc) && ! $(which protoc-gen-grpc-cpp-plugin) ]]; then
     build_host_tools protoc grpc_cpp_plugin
 fi
 
-build_agl_service vehicle_hal_grpc_server dumpstate_grpc_server
+build_agl_service vehicle_hal_grpc_server dumpstate_grpc_server watchdog_test_service
