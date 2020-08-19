@@ -14,27 +14,22 @@
  * limitations under the License.
  */
 
-syntax = "proto3";
+#include "CloseHandle.h"
 
-package audio_focus_control_proto;
+namespace android::hardware::automotive::audiocontrol::V2_0::implementation {
 
-import "google/protobuf/empty.proto";
+CloseHandle::CloseHandle(Callback callback) : mCallback(callback) {}
 
-message AudioFocusRequest {
-    uint64 session_id = 1;
-    int32 audio_usage = 2;
-    int32 zone_id = 3;
-    bool allow_duck = 4;
-    bool is_transient = 5;
-    bool is_exclusive = 6;
+CloseHandle::~CloseHandle() {
+    close();
 }
 
-message AudioFocusControlMessage {
-    repeated AudioFocusRequest acquire_requests = 1;
-    repeated uint64 release_requests = 2;
-    repeated uint64 active_sessions = 3;
+Return<void> CloseHandle::close() {
+    const auto wasClosed = mIsClosed.exchange(true);
+    if (wasClosed) return {};
+
+    if (mCallback) mCallback();
+    return {};
 }
 
-service AudioFocusControlServer {
-    rpc AudioRequests(AudioFocusControlMessage) returns (google.protobuf.Empty) {}
-}
+}  // namespace android::hardware::automotive::audiocontrol::V2_0::implementation
