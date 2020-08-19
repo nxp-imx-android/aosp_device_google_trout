@@ -16,16 +16,20 @@
 
 #include "Utils.h"
 
-#ifdef __ANDROID__
+#ifdef __BIONIC__
 #include <cutils/properties.h>
-#endif  // __ANDROID__
+#endif  // __BIONIC__
 
 #include <getopt.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <array>
 #include <climits>
+#include <iostream>
 #include <sstream>
+
+using std::cerr;
+using std::endl;
 
 namespace android {
 namespace hardware {
@@ -34,18 +38,27 @@ namespace vehicle {
 namespace V2_0 {
 namespace impl {
 
+#ifdef __BIONIC__
 std::string VirtualizedVhalServerInfo::getServerUri() const {
     return vsock.str();
 }
+#else
+std::string VirtualizedVhalServerInfo::getServerUri() const {
+    std::stringstream ss;
+
+    ss << "vsock:" << vsock.cid << ":" << vsock.port;
+    return ss.str();
+}
+#endif
 
 static std::optional<unsigned> parseUnsignedIntFromString(const char* optarg, const char* name) {
     auto v = strtoul(optarg, nullptr, 0);
     if (((v == ULONG_MAX) && (errno == ERANGE)) || (v > UINT_MAX)) {
-        LOG(WARNING) << name << " value is out of range: " << optarg;
+        cerr << name << " value is out of range: " << optarg << endl;
     } else if (v != 0) {
         return v;
     } else {
-        LOG(WARNING) << name << " value is invalid or missing: " << optarg;
+        cerr << name << " value is invalid or missing: " << optarg << endl;
     }
 
     return std::nullopt;
@@ -114,8 +127,7 @@ std::optional<VirtualizedVhalServerInfo> VirtualizedVhalServerInfo::fromCommandL
     return std::nullopt;
 }
 
-#ifdef __ANDROID__
-
+#ifdef __BIONIC__
 std::optional<VirtualizedVhalServerInfo> VirtualizedVhalServerInfo::fromRoPropertyStore() {
     auto vsock = android::hardware::automotive::utils::VsockConnectionInfo::fromRoPropertyStore(
             {
@@ -132,15 +144,7 @@ std::optional<VirtualizedVhalServerInfo> VirtualizedVhalServerInfo::fromRoProper
     }
     return std::nullopt;
 }
-
-#else  // __ANDROID__
-
-std::optional<VirtualizedVhalServerInfo> VirtualizedVhalServerInfo::fromRoPropertyStore() {
-    LOG(FATAL) << "Android-only method";
-    return std::nullopt;
-}
-
-#endif  // __ANDROID__
+#endif  // __BIONIC__
 
 }  // namespace impl
 }  // namespace V2_0
