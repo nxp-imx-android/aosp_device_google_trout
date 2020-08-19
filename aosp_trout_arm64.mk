@@ -14,32 +14,18 @@
 # limitations under the License.
 #
 
-# Vehicle HAL
-LOCAL_VHAL_PRODUCT_PACKAGE ?= android.hardware.automotive.vehicle@2.0-virtualization-service android.hardware.automotive.vehicle@2.0-virtualization-grpc-server
+$(call inherit-product, device/google/cuttlefish/vsoc_arm64/auto/aosp_cf.mk)
 
-# Dumpstate HAL
-LOCAL_DUMPSTATE_PRODUCT_PACKAGE ?= android.hardware.dumpstate@1.1-service.trout
+include device/google/trout/aosp_trout_common.mk
 
 DEVICE_MANIFEST_FILE += device/google/trout/manifest.xml
 
-PRODUCT_PROPERTY_OVERRIDES += \
-    ro.vendor.dumpstate.server.cid=2 \
-    ro.vendor.dumpstate.server.port=9211 \
-    ro.vendor.helpersystem.log_loc=/data/bugreport_test \
-
-# Disable Vulkan feature flag as it is not supported on trout
-TARGET_VULKAN_SUPPORT := false
-
 # Sensor HAL
+# The implementations use SCMI, which only works on arm architecture
 LOCAL_SENSOR_PRODUCT_PACKAGE ?= \
     android.hardware.sensors@2.0-service.multihal \
     android.hardware.sensors@2.0-service.multihal.rc \
     android.hardware.sensors@2.0-Google-IIO-Subhal \
-
-# Audio Control HAL
-LOCAL_AUDIOCONTROL_HAL_PRODUCT_PACKAGE ?= android.hardware.audiocontrol@2.0-service.trout
-
-$(call inherit-product, device/google/cuttlefish/vsoc_arm64/auto/aosp_cf.mk)
 
 PRODUCT_COPY_FILES += \
     device/google/trout/product_files/odm/ueventd.rc:$(TARGET_COPY_OUT_ODM)/ueventd.rc \
@@ -47,18 +33,11 @@ PRODUCT_COPY_FILES += \
 PRODUCT_COPY_FILES += \
     device/google/trout/product_files/vendor/etc/input-port-associations.xml:$(TARGET_COPY_OUT_VENDOR)/etc/input-port-associations.xml \
 
+PRODUCT_COPY_FILES += device/google/trout/product_files/vendor/etc/sensors/hals.conf:$(TARGET_COPY_OUT_VENDOR)/etc/sensors/hals.conf
+
 BOARD_VENDOR_KERNEL_MODULES += \
     $(wildcard device/google/trout-kernel/5.4-arm64/*.ko) \
-
-BOARD_SEPOLICY_DIRS += device/google/trout/sepolicy/vendor/google
-
-PRODUCT_PROPERTY_OVERRIDES += \
-    ro.hardware.type=automotive \
-
-PRODUCT_COPY_FILES += device/google/trout/product_files/vendor/etc/sensors/hals.conf:$(TARGET_COPY_OUT_VENDOR)/etc/sensors/hals.conf
 
 PRODUCT_NAME := aosp_trout_arm64
 PRODUCT_DEVICE := vsoc_arm64
 PRODUCT_MODEL := arm64 trout
-
-TARGET_BOARD_INFO_FILE ?= device/google/trout/board-info.txt
