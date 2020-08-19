@@ -50,7 +50,7 @@ class DumpstateDevice : public IDumpstateDevice {
     bool dumpRemoteLogs(::grpc::ClientReaderInterface<dumpstate_proto::DumpstateBuffer>* reader,
                         const fs::path& dumpPath);
 
-    void dumpHelperSystem(int textFd, int binFd);
+    bool dumpHelperSystem(int textFd, int binFd);
 
     void debugDumpServices(std::function<void(std::string)> f);
 
