@@ -20,9 +20,14 @@
 #include <android-base/file.h>
 #include <android-base/logging.h>
 #include <android-base/properties.h>
+#include <grpc++/grpc++.h>
 
 #include <automotive/filesystem>
+#include <fstream>
 #include <string>
+
+#include "DumpstateServer.grpc.pb.h"
+#include "DumpstateServer.pb.h"
 
 using android::os::dumpstate::CommandOptions;
 using android::os::dumpstate::DumpFileToFd;
@@ -39,6 +44,37 @@ static constexpr const char* VENDOR_HELPER_SYSTEM_LOG_LOC_PROPERTY =
         "ro.vendor.helpersystem.log_loc";
 
 namespace android::hardware::dumpstate::V1_1::implementation {
+
+class DumpstateDevice : public IDumpstateDevice {
+  public:
+    explicit DumpstateDevice(const std::string& addr);
+
+    // Methods from ::android::hardware::dumpstate::V1_0::IDumpstateDevice follow.
+    Return<void> dumpstateBoard(const hidl_handle& h) override;
+
+    // Methods from ::android::hardware::dumpstate::V1_1::IDumpstateDevice follow.
+    Return<DumpstateStatus> dumpstateBoard_1_1(const hidl_handle& h, const DumpstateMode mode,
+                                               const uint64_t timeoutMillis) override;
+    Return<void> setVerboseLoggingEnabled(const bool enable) override;
+    Return<bool> getVerboseLoggingEnabled() override;
+
+  private:
+    bool dumpRemoteLogs(::grpc::ClientReaderInterface<dumpstate_proto::DumpstateBuffer>* reader,
+                        const fs::path& dumpPath);
+
+    void dumpHelperSystem(int textFd, int binFd);
+
+    std::vector<std::string> getAvailableServices();
+
+    std::string mServiceAddr;
+    std::shared_ptr<::grpc::Channel> mGrpcChannel;
+    std::unique_ptr<dumpstate_proto::DumpstateServer::Stub> mGrpcStub;
+};
+
+static std::shared_ptr<::grpc::ChannelCredentials> getChannelCredentials() {
+    // TODO(chenhaosjtuacm): get secured credentials here
+    return ::grpc::InsecureChannelCredentials();
+}
 
 static void dumpDirAsText(int textFd, const fs::path& dirToDump) {
     for (const auto& fileEntry : fs::recursive_directory_iterator(dirToDump)) {
@@ -90,17 +126,105 @@ static void tryDumpDirAsTar(int textFd, int binFd, const fs::path& dirToDump) {
     }
 }
 
-static void dumpHelperSystem(int textFd, int binFd) {
+bool DumpstateDevice::dumpRemoteLogs(
+        ::grpc::ClientReaderInterface<dumpstate_proto::DumpstateBuffer>* grpcReader,
+        const fs::path& dumpPath) {
+    dumpstate_proto::DumpstateBuffer logStreamBuffer;
+    std::fstream logFile(dumpPath, std::fstream::out | std::fstream::binary);
+
+    if (!logFile.is_open()) {
+        LOG(ERROR) << "Failed to open file " << dumpPath;
+        return false;
+    }
+
+    while (grpcReader->Read(&logStreamBuffer)) {
+        const auto& writeBuffer = logStreamBuffer.buffer();
+        logFile.write(writeBuffer.c_str(), writeBuffer.size());
+    }
+    auto grpcStatus = grpcReader->Finish();
+    if (!grpcStatus.ok()) {
+        LOG(ERROR) << __func__ << ": GRPC GetCommandOutput Failed: " << grpcStatus.error_message();
+        return false;
+    }
+
+    return true;
+}
+
+void DumpstateDevice::dumpHelperSystem(int textFd, int binFd) {
     std::string helperSystemLogDir =
             android::base::GetProperty(VENDOR_HELPER_SYSTEM_LOG_LOC_PROPERTY, "");
+
     if (helperSystemLogDir.empty()) {
         LOG(ERROR) << "Helper system log location '" << VENDOR_HELPER_SYSTEM_LOG_LOC_PROPERTY
                    << "' not set";
         return;
     }
 
+    std::error_code error;
+
+    auto helperSysLogPath = fs::path(helperSystemLogDir);
+    if (!fs::create_directories(helperSysLogPath, error)) {
+        LOG(ERROR) << "Failed to create the dumping log directory " << helperSystemLogDir << ": "
+                   << error;
+        return;
+    }
+
+    if (!fs::is_directory(helperSysLogPath)) {
+        LOG(ERROR) << helperSystemLogDir << " is not a directory";
+        return;
+    }
+
+    {
+        // Dumping system logs
+        ::grpc::ClientContext context;
+        auto reader = mGrpcStub->GetSystemLogs(&context, ::google::protobuf::Empty());
+        dumpRemoteLogs(reader.get(), helperSysLogPath / "system_log");
+    }
+
+    // Request for service list every time to allow the service list to change on the server side.
+    // Also the getAvailableServices() may fail and return an empty list (e.g., failure on the
+    // server side), and it should not affect the future queries
+    const auto availableServices = getAvailableServices();
+
+    // Dumping service logs
+    for (const auto& service : availableServices) {
+        ::grpc::ClientContext context;
+        dumpstate_proto::ServiceLogRequest request;
+        request.set_service_name(service);
+        auto reader = mGrpcStub->GetServiceLogs(&context, request);
+        dumpRemoteLogs(reader.get(), helperSysLogPath / service);
+    }
+
     tryDumpDirAsTar(textFd, binFd, helperSystemLogDir);
+
+    if (fs::remove_all(helperSysLogPath, error) == static_cast<std::uintmax_t>(-1)) {
+        LOG(ERROR) << "Failed to clear the dumping log directory " << helperSystemLogDir << ": "
+                   << error;
+    }
 }
+
+std::vector<std::string> DumpstateDevice::getAvailableServices() {
+    ::grpc::ClientContext context;
+    dumpstate_proto::ServiceNameList servicesProto;
+    auto grpc_status =
+            mGrpcStub->GetAvailableServices(&context, ::google::protobuf::Empty(), &servicesProto);
+    if (!grpc_status.ok()) {
+        LOG(ERROR) << "Failed to get available services from the server: "
+                   << grpc_status.error_message();
+        return {};
+    }
+
+    std::vector<std::string> services;
+    for (auto& service : servicesProto.service_names()) {
+        services.emplace_back(service);
+    }
+    return services;
+}
+
+DumpstateDevice::DumpstateDevice(const std::string& addr)
+    : mServiceAddr(addr),
+      mGrpcChannel(::grpc::CreateChannel(mServiceAddr, getChannelCredentials())),
+      mGrpcStub(dumpstate_proto::DumpstateServer::NewStub(mGrpcChannel)) {}
 
 // Methods from ::android::hardware::dumpstate::V1_0::IDumpstateDevice follow.
 Return<void> DumpstateDevice::dumpstateBoard(const hidl_handle& handle) {
@@ -133,6 +257,10 @@ Return<void> DumpstateDevice::setVerboseLoggingEnabled(const bool enable) {
 
 Return<bool> DumpstateDevice::getVerboseLoggingEnabled() {
     return android::base::GetBoolProperty(VENDOR_VERBOSE_LOGGING_ENABLED_PROPERTY, false);
+}
+
+sp<IDumpstateDevice> makeVirtualizationDumpstateDevice(const std::string& addr) {
+    return new DumpstateDevice(addr);
 }
 
 }  // namespace android::hardware::dumpstate::V1_1::implementation
