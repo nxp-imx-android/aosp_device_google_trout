@@ -43,7 +43,7 @@ int main(int argc, char* argv[]) {
 
     auto serverInfo = vhal_impl::VirtualizedVhalServerInfo::fromRoPropertyStore();
     CHECK(serverInfo.has_value()) << "Invalid server CID/port combination";
-    LOG(INFO) << "VHAL will connect to " << serverInfo->serverCid << ":" << serverInfo->serverPort;
+    LOG(INFO) << "Connecting to vsock server at " << serverInfo->vsock.str();
 
     auto store = std::make_unique<VehiclePropertyStore>();
     auto connector = vhal_impl::makeGrpcVehicleClient(serverInfo->getServerUri());
