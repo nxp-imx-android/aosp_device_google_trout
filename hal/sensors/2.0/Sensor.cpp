@@ -228,6 +228,7 @@ HWSensorBase::HWSensorBase(int32_t sensorHandle, ISensorsEventCallback* callback
     mSensorInfo.flags |= SensorFlagBits::CONTINUOUS_MODE;
     mSensorInfo.name = data.name;
     mSensorInfo.resolution = data.resolution;
+    mSensorInfo.maxRange = data.max_range * data.resolution;
     mSensorInfo.power =
             (data.power_microwatts / 1000.f) / SENSOR_VOLTAGE_DEFAULT;  // converting uW to mA
     miio_data = data;
@@ -256,13 +257,11 @@ HWSensorBase::HWSensorBase(int32_t sensorHandle, ISensorsEventCallback* callback
 Accelerometer::Accelerometer(int32_t sensorHandle, ISensorsEventCallback* callback,
                              const struct iio_device_data& data)
     : HWSensorBase(sensorHandle, callback, SensorType::ACCELEROMETER, data) {
-    mSensorInfo.maxRange = 78.4f;  // +/- 8g
 }
 
 Gyroscope::Gyroscope(int32_t sensorHandle, ISensorsEventCallback* callback,
                      const struct iio_device_data& data)
     : HWSensorBase(sensorHandle, callback, SensorType::GYROSCOPE, data) {
-    mSensorInfo.maxRange = 1000.0f * M_PI / 180.0f;
 }
 
 }  // namespace implementation
