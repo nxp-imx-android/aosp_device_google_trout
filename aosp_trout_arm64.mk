@@ -23,8 +23,6 @@ LOCAL_DUMPSTATE_PRODUCT_PACKAGE := android.hardware.dumpstate@1.1-service.trout
 DEVICE_MANIFEST_FILE += device/google/trout/manifest.xml
 
 PRODUCT_PROPERTY_OVERRIDES += \
-    ro.vendor.vehiclehal.server.cid=2 \
-    ro.vendor.vehiclehal.server.port=9210 \
     ro.vendor.dumpstate.server.cid=2 \
     ro.vendor.dumpstate.server.port=9211 \
     ro.vendor.helpersystem.log_loc=/data/bugreport_test \
