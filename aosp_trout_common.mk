@@ -14,6 +14,16 @@
 # limitations under the License.
 #
 
+# Audio HAL
+LOCAL_AUDIO_PRODUCT_PACKAGE ?= \
+    audio.primary.trout \
+    audio.r_submix.default \
+    android.hardware.audio@6.0-impl:32 \
+    android.hardware.audio.effect@6.0-impl:32 \
+    android.hardware.audio.service \
+    android.hardware.soundtrigger@2.3-impl
+LOCAL_AUDIO_DEVICE_PACKAGE_OVERLAYS ?= device/google/trout/hal/audio/6.0/overlay
+
 # Audio Control HAL
 LOCAL_AUDIOCONTROL_HAL_PRODUCT_PACKAGE ?= android.hardware.audiocontrol@2.0-service.trout
 
@@ -34,8 +44,16 @@ TARGET_VULKAN_SUPPORT := false
 
 PRODUCT_PROPERTY_OVERRIDES += \
     ro.hardware.type=automotive \
+    ${LOCAL_AUDIOCONTROL_PROPERTIES} \
     ${LOCAL_DUMPSTATE_PROPERTIES}
 
 TARGET_BOARD_INFO_FILE ?= device/google/trout/board-info.txt
+
+LOCAL_AUDIO_PRODUCT_COPY_FILES ?= \
+    device/google/trout/hal/audio/6.0/audio_policy_configuration.xml:$(TARGET_COPY_OUT_VENDOR)/etc/audio_policy_configuration.xml \
+    device/google/trout/hal/audio/6.0/car_audio_configuration.xml:$(TARGET_COPY_OUT_VENDOR)/etc/car_audio_configuration.xml \
+    frameworks/native/data/etc/android.hardware.broadcastradio.xml:system/etc/permissions/android.hardware.broadcastradio.xml \
+    frameworks/av/services/audiopolicy/config/a2dp_audio_policy_configuration.xml:$(TARGET_COPY_OUT_VENDOR)/etc/a2dp_audio_policy_configuration.xml \
+    frameworks/av/services/audiopolicy/config/usb_audio_policy_configuration.xml:$(TARGET_COPY_OUT_VENDOR)/etc/usb_audio_policy_configuration.xml
 
 include packages/services/Car/computepipe/products/computepipe.mk
