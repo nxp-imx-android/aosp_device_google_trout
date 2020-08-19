@@ -17,8 +17,45 @@
 
 #include <android/hardware/dumpstate/1.1/IDumpstateDevice.h>
 
+#include <automotive/filesystem>
+
+#include <grpc++/grpc++.h>
+
+#include "DumpstateServer.grpc.pb.h"
+#include "DumpstateServer.pb.h"
+
 namespace android::hardware::dumpstate::V1_1::implementation {
 
-sp<IDumpstateDevice> makeVirtualizationDumpstateDevice(const std::string& addr);
+namespace fs = android::hardware::automotive::filesystem;
+
+class DumpstateDevice : public IDumpstateDevice {
+  public:
+    explicit DumpstateDevice(const std::string& addr);
+
+    // Methods from ::android::hardware::dumpstate::V1_0::IDumpstateDevice follow.
+    Return<void> dumpstateBoard(const hidl_handle& h) override;
+
+    // Methods from ::android::hardware::dumpstate::V1_1::IDumpstateDevice follow.
+    Return<DumpstateStatus> dumpstateBoard_1_1(const hidl_handle& h, const DumpstateMode mode,
+                                               const uint64_t timeoutMillis) override;
+    Return<void> setVerboseLoggingEnabled(const bool enable) override;
+    Return<bool> getVerboseLoggingEnabled() override;
+
+    bool isHealthy();
+
+  private:
+    bool dumpRemoteLogs(::grpc::ClientReaderInterface<dumpstate_proto::DumpstateBuffer>* reader,
+                        const fs::path& dumpPath);
+
+    void dumpHelperSystem(int textFd, int binFd);
+
+    std::vector<std::string> getAvailableServices();
+
+    std::string mServiceAddr;
+    std::shared_ptr<::grpc::Channel> mGrpcChannel;
+    std::unique_ptr<dumpstate_proto::DumpstateServer::Stub> mGrpcStub;
+};
+
+sp<DumpstateDevice> makeVirtualizationDumpstateDevice(const std::string& addr);
 
 }  // namespace android::hardware::dumpstate::V1_1::implementation
