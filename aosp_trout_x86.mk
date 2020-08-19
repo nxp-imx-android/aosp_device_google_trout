@@ -14,14 +14,9 @@
 # limitations under the License.
 #
 
-# Vehicle HAL
-LOCAL_VHAL_PRODUCT_PACKAGE := android.hardware.automotive.vehicle@2.0-virtualization-service
-BOARD_SEPOLICY_DIRS += device/google/trout/sepolicy/vendor/google
-
-# Disable Vulkan feature flag as it is not supported on trout
-TARGET_VULKAN_SUPPORT := false
-
 $(call inherit-product, device/google/cuttlefish/vsoc_x86/auto/device.mk)
+
+include device/google/trout/aosp_trout_common.mk
 
 include packages/services/Car/computepipe/products/computepipe.mk
 
@@ -31,16 +26,6 @@ DEVICE_FRAMEWORK_COMPATIBILITY_MATRIX_FILE := device/google/trout/framework_comp
 
 PRODUCT_COPY_FILES += \
     packages/services/Car/computepipe/products/init.computepipe.rc:$(TARGET_COPY_OUT_SYSTEM)/etc/init/computepipe.rc
-
-PRODUCT_COPY_FILES += \
-    device/google/trout/product_files/odm/ueventd.rc:$(TARGET_COPY_OUT_ODM)/ueventd.rc \
-
-# TODO(egranata): this should not be needed
-# PRODUCT_COPY_FILES += \
-#    device/google/trout/product_files/vendor/etc/input-port-associations.xml:$(TARGET_COPY_OUT_VENDOR)/etc/input-port-associations.xml \
-
-PRODUCT_PROPERTY_OVERRIDES += \
-	ro.hardware.type=automotive \
 
 PRODUCT_NAME := aosp_trout_x86
 PRODUCT_DEVICE := vsoc_x86
