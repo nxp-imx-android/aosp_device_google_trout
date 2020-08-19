@@ -22,6 +22,8 @@
 
 #include <android-base/logging.h>
 
+#include <vsockinfo.h>
+
 namespace android {
 namespace hardware {
 namespace automotive {
@@ -30,8 +32,7 @@ namespace V2_0 {
 namespace impl {
 
 struct VirtualizedVhalServerInfo {
-    unsigned int serverCid{0};
-    unsigned int serverPort{0};
+    android::hardware::automotive::utils::VsockConnectionInfo vsock;
 
     std::string powerStateMarkerFilePath;
     std::string powerStateSocket;

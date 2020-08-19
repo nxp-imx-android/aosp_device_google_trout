@@ -21,23 +21,35 @@
 
 #include "DumpstateDevice.h"
 
+#include <vsockinfo.h>
+
 using ::android::OK;
 using ::android::sp;
 using ::android::hardware::configureRpcThreadpool;
 using ::android::hardware::joinRpcThreadpool;
+using ::android::hardware::automotive::utils::VsockConnectionInfo;
 using ::android::hardware::dumpstate::V1_1::IDumpstateDevice;
 using ::android::hardware::dumpstate::V1_1::implementation::makeVirtualizationDumpstateDevice;
 
 int main() {
-    constexpr const char* DUMPSTATE_SERVER_CID_PROPERTY_KEY = "ro.vendor.dumpstate.server.cid";
-    constexpr const char* DUMPSTATE_SERVER_PORT_PROPERTY_KEY = "ro.vendor.dumpstate.server.port";
+    const auto si = VsockConnectionInfo::fromRoPropertyStore(
+            {
+                    "ro.boot.vendor.dumpstate.server.cid",
+                    "ro.vendor.dumpstate.server.cid",
+            },
+            {
+                    "ro.boot.vendor.dumpstate.server.port",
+                    "ro.vendor.dumpstate.server.port",
+            });
 
-    std::stringstream serverAddrStream;
+    if (!si) {
+        ALOGE("failed to get server connection cid/port; configure and try again.");
+        return 1;
+    } else {
+        ALOGI("Connecting to vsock server at %s", si->str().c_str());
+    }
 
-    serverAddrStream << "vsock:" << property_get_int64(DUMPSTATE_SERVER_CID_PROPERTY_KEY, -1) << ":"
-                     << property_get_int64(DUMPSTATE_SERVER_PORT_PROPERTY_KEY, -1);
-
-    sp<IDumpstateDevice> dumpstate = makeVirtualizationDumpstateDevice(serverAddrStream.str());
+    sp<IDumpstateDevice> dumpstate = makeVirtualizationDumpstateDevice(si->str());
     // This method MUST be called before interacting with any HIDL interfaces.
     configureRpcThreadpool(1, true);
     if (dumpstate->registerAsService() != OK) {
