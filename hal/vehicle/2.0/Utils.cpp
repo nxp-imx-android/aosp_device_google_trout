@@ -35,9 +35,7 @@ namespace V2_0 {
 namespace impl {
 
 std::string VirtualizedVhalServerInfo::getServerUri() const {
-    std::stringstream uri_stream;
-    uri_stream << "vsock:" << serverCid << ":" << serverPort;
-    return uri_stream.str();
+    return vsock.str();
 }
 
 static std::optional<unsigned> parseUnsignedIntFromString(const char* optarg, const char* name) {
@@ -55,6 +53,7 @@ static std::optional<unsigned> parseUnsignedIntFromString(const char* optarg, co
 
 std::optional<VirtualizedVhalServerInfo> VirtualizedVhalServerInfo::fromCommandLine(
         int argc, char* argv[], std::string* error) {
+    // TODO(egranata): move command-line parsing into vsockinfo
     std::optional<unsigned int> cid;
     std::optional<unsigned int> port;
     std::optional<std::string> powerStateMarkerFilePath;
@@ -109,58 +108,27 @@ std::optional<VirtualizedVhalServerInfo> VirtualizedVhalServerInfo::fromCommandL
     }
 
     if (cid && port && powerStateMarkerFilePath && powerStateSocketPath) {
-        return VirtualizedVhalServerInfo{*cid, *port, *powerStateMarkerFilePath,
-                                         *powerStateSocketPath};
+        return VirtualizedVhalServerInfo{
+                {*cid, *port}, *powerStateMarkerFilePath, *powerStateSocketPath};
     }
     return std::nullopt;
 }
 
 #ifdef __ANDROID__
 
-static std::optional<unsigned> getNumberFromProperty(const char* key) {
-    auto value = property_get_int64(key, -1);
-    if ((value <= 0) || (value > UINT_MAX)) {
-        LOG(WARNING) << key << " is missing or out of bounds";
-        return std::nullopt;
-    }
-
-    return static_cast<unsigned int>(value);
-}
-
-template <std::size_t N>
-static std::optional<unsigned> getNumberFromProperties(const std::array<const char*, N>& arr) {
-    for (const auto& key : arr) {
-        auto val = getNumberFromProperty(key);
-        if (val) return val;
-    }
-
-    return std::nullopt;
-}
-
-static std::optional<unsigned> getCidFromPropertyStore() {
-    std::array<const char*, 2> properties = {
-            "ro.boot.vendor.vehiclehal.server.cid",
-            "ro.vendor.vehiclehal.server.cid",
-    };
-
-    return getNumberFromProperties(properties);
-}
-
-static std::optional<unsigned> getPortFromPropertyStore() {
-    std::array<const char*, 2> properties = {
-            "ro.boot.vendor.vehiclehal.server.port",
-            "ro.vendor.vehiclehal.server.port",
-    };
-
-    return getNumberFromProperties(properties);
-}
-
 std::optional<VirtualizedVhalServerInfo> VirtualizedVhalServerInfo::fromRoPropertyStore() {
-    const auto cid = getCidFromPropertyStore();
-    const auto port = getPortFromPropertyStore();
+    auto vsock = android::hardware::automotive::utils::VsockConnectionInfo::fromRoPropertyStore(
+            {
+                    "ro.boot.vendor.vehiclehal.server.cid",
+                    "ro.vendor.vehiclehal.server.cid",
+            },
+            {
+                    "ro.boot.vendor.vehiclehal.server.port",
+                    "ro.vendor.vehiclehal.server.port",
+            });
 
-    if (cid && port) {
-        return VirtualizedVhalServerInfo{*cid, *port, "", ""};
+    if (vsock) {
+        return VirtualizedVhalServerInfo{*vsock, "", ""};
     }
     return std::nullopt;
 }
