@@ -35,6 +35,10 @@ LOCAL_SENSOR_PRODUCT_PACKAGE := android.hardware.sensors@2.0-service.multihal
 LOCAL_SENSOR_PRODUCT_PACKAGE += android.hardware.sensors@2.0-service.multihal.rc
 LOCAL_SENSOR_PRODUCT_PACKAGE += android.hardware.sensors@2.0-Google-IIO-Subhal
 
+# Audio Control HAL
+PRODUCT_PACKAGES += \
+	android.hardware.audiocontrol@2.0-service.trout
+
 $(call inherit-product, device/google/cuttlefish/vsoc_arm64/auto/aosp_cf.mk)
 
 PRODUCT_COPY_FILES += \

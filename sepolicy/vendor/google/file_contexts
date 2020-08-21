@@ -3,3 +3,6 @@
 
 # Virtualized Vehicle HAL
 /(vendor|system/vendor)/bin/hw/android\.hardware\.automotive\.vehicle@2\.0-virtualization-service  u:object_r:hal_vehicle_default_exec:s0
+
+# Audio Control HAL
+/vendor/bin/hw/android\.hardware\.audiocontrol@2\.0-service\.trout  u:object_r:hal_audiocontrol_impl_exec:s0
