@@ -70,7 +70,8 @@ static int sysfs_read_uint8(const std::string& file, uint8_t* val);
 static int sysfs_read_str(const std::string& file, std::string* str);
 static int sysfs_read_float(const std::string& file, float* val);
 static int get_scan_type(const std::string& device_dir, struct iio_info_channel* chanInfo);
-static int get_sampling_frequency_available(const std::string& device_dir, std::vector<float>* sfa);
+static int get_sampling_frequency_available(const std::string& device_dir,
+                                            std::vector<double>* sfa);
 static int get_scale(const std::string& device_dir, float* resolution);
 static int check_file(const std::string& filename);
 
@@ -103,6 +104,15 @@ int sysfs_write_uint(const std::string& file, const unsigned int val) {
     if (nullptr == fp) return -errno;
 
     fprintf(fp.get(), "%u", val);
+
+    return 0;
+}
+
+int sysfs_write_double(const std::string& file, const double val) {
+    FilePtr fp = {fopen(file.c_str(), "r+"), fclose};
+    if (nullptr == fp) return -errno;
+
+    fprintf(fp.get(), "%f", val);
 
     return 0;
 }
@@ -170,7 +180,7 @@ int enable_sensor(const std::string& device_dir, const bool enable) {
     return err;
 }
 
-int get_sampling_frequency_available(const std::string& device_dir, std::vector<float>* sfa) {
+int get_sampling_frequency_available(const std::string& device_dir, std::vector<double>* sfa) {
     int ret = 0;
     char* rest;
     std::string line;
@@ -198,7 +208,7 @@ int get_sensor_power(const std::string& device_dir, unsigned int* power) {
     return sysfs_read_uint(filename, power);
 }
 
-int set_sampling_frequency(const std::string& device_dir, const unsigned int frequency) {
+int set_sampling_frequency(const std::string& device_dir, const double frequency) {
     DirPtr dp(nullptr, closedir);
     const struct dirent* ent;
 
@@ -209,7 +219,7 @@ int set_sampling_frequency(const std::string& device_dir, const unsigned int fre
             std::string filename = device_dir;
             filename += "/";
             filename += ent->d_name;
-            ret = sysfs_write_uint(filename, frequency);
+            ret = sysfs_write_double(filename, frequency);
         }
     }
     return ret;
