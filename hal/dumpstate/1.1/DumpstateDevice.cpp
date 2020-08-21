@@ -21,7 +21,6 @@
 #include <android-base/logging.h>
 #include <android-base/properties.h>
 
-#include <filesystem>
 #include <string>
 
 using android::os::dumpstate::CommandOptions;
@@ -38,58 +37,7 @@ static constexpr const char* VENDOR_HELPER_SYSTEM_LOG_LOC_PROPERTY =
 
 namespace android::hardware::dumpstate::V1_1::implementation {
 
-static void dumpDirAsText(int textFd, const std::filesystem::path& dirToDump) {
-    for (const auto& fileEntry : std::filesystem::recursive_directory_iterator(dirToDump)) {
-        if (!fileEntry.is_regular_file()) {
-            continue;
-        }
-
-        DumpFileToFd(textFd, "Helper System Log", fileEntry.path());
-    }
-}
-
-static void tryDumpDirAsTar(int textFd, int binFd, const std::filesystem::path& dirToDump) {
-    if (!std::filesystem::is_directory(dirToDump)) {
-        LOG(ERROR) << "'" << dirToDump << "'"
-                   << " is not a valid directory to dump";
-        return;
-    }
-
-    if (binFd < 0) {
-        LOG(WARNING) << "No binary dumped file, fallback to text mode";
-        return dumpDirAsText(textFd, dirToDump);
-    }
-
-    TemporaryFile tempTarFile;
-    constexpr auto kTarTimeout = 20s;
-
-    RunCommandToFd(
-            textFd, "TAR LOG", {"/vendor/bin/tar", "cvf", tempTarFile.path, dirToDump.c_str()},
-            CommandOptions::WithTimeout(duration_cast<seconds>(kTarTimeout).count()).Build());
-
-    std::vector<uint8_t> buffer(65536);
-    while (true) {
-        ssize_t bytes_read = TEMP_FAILURE_RETRY(read(tempTarFile.fd, buffer.data(), buffer.size()));
-
-        if (bytes_read == 0) {
-            break;
-        } else if (bytes_read < 0) {
-            LOG(DEBUG) << "read temporary tar file(" << tempTarFile.path
-                       << "): " << strerror(errno);
-            break;
-        }
-
-        ssize_t result = TEMP_FAILURE_RETRY(write(binFd, buffer.data(), bytes_read));
-
-        if (result != bytes_read) {
-            LOG(DEBUG) << "Failed to write " << bytes_read
-                       << " bytes, actually written: " << result;
-            break;
-        }
-    }
-}
-
-static void dumpHelperSystem(int textFd, int binFd) {
+static void dumpHelperSystem(int /*textFd*/, int /*binFd*/) {
     std::string helperSystemLogDir =
             android::base::GetProperty(VENDOR_HELPER_SYSTEM_LOG_LOC_PROPERTY, "");
     if (helperSystemLogDir.empty()) {
@@ -98,7 +46,7 @@ static void dumpHelperSystem(int textFd, int binFd) {
         return;
     }
 
-    tryDumpDirAsTar(textFd, binFd, helperSystemLogDir);
+    LOG(ERROR) << "this build does not support actually getting any work done, sorry!";
 }
 
 // Methods from ::android::hardware::dumpstate::V1_0::IDumpstateDevice follow.
