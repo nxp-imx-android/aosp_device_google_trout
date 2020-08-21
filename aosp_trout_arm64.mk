@@ -31,3 +31,4 @@ PRODUCT_COPY_FILES += \
 PRODUCT_NAME := aosp_trout_arm64
 PRODUCT_DEVICE := vsoc_arm64
 PRODUCT_MODEL := arm64 trout
+BOARD_SEPOLICY_DIRS += device/google/trout/sepolicy/vendor/google
