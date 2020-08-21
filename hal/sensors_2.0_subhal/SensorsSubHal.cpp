@@ -53,7 +53,7 @@ SensorsSubHal::SensorsSubHal() : mCallback(nullptr), mNextHandle(1) {
     std::vector<iio_device_data> iio_devices;
     err = load_iio_devices(&iio_devices, sensors_supported);
     if (err == 0) {
-        for (int i = 0; i < iio_devices.size(); i++) {
+        for (auto i = 0u; i < iio_devices.size(); i++) {
             err = scan_elements(iio_devices[i].sysfspath, &iio_devices[i]);
             if (err == 0) {
                 err = enable_sensor(iio_devices[i].sysfspath, false);

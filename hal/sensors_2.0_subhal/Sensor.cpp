@@ -48,6 +48,9 @@ SensorBase::SensorBase(int32_t sensorHandle, ISensorsEventCallback* callback, Se
         case SensorType::GYROSCOPE:
             mSensorInfo.typeAsString = SENSOR_STRING_TYPE_GYROSCOPE;
             break;
+        default:
+            ALOGE("unsupported sensor type %d", type);
+            break;
     }
     // TODO(jbhayana) : Make the threading policy configurable
     mRunThread = std::thread(startThread, this);
@@ -123,10 +126,10 @@ void SensorBase::startThread(SensorBase* sensor) {
 void HWSensorBase::processScanData(uint8_t* data, Event* evt) {
     float channelData[NUM_OF_CHANNEL_SUPPORTED - 1];
     int64_t ts;
-    int chanIdx;
+    unsigned int chanIdx;
     evt->sensorHandle = mSensorInfo.sensorHandle;
     evt->sensorType = mSensorInfo.type;
-    for (int i = 0; i < miio_data.channelInfo.size(); i++) {
+    for (auto i = 0u; i < miio_data.channelInfo.size(); i++) {
         chanIdx = miio_data.channelInfo[i].index;
         if (miio_data.channelInfo[i].sign) {
             int64_t val = *reinterpret_cast<int64_t*>(
@@ -215,7 +218,7 @@ Result SensorBase::injectEvent(const Event& event) {
 
 ssize_t HWSensorBase::calculateScanSize() {
     ssize_t numBytes = 0;
-    for (int i = 0; i < miio_data.channelInfo.size(); i++) {
+    for (auto i = 0u; i < miio_data.channelInfo.size(); i++) {
         numBytes += miio_data.channelInfo[i].storage_bytes;
     }
     return numBytes;
@@ -231,7 +234,7 @@ HWSensorBase::HWSensorBase(int32_t sensorHandle, ISensorsEventCallback* callback
     miio_data = data;
     unsigned int max_sampling_frequency = 0;
     unsigned int min_sampling_frequency = UINT_MAX;
-    for (int i = 0; i < data.sampling_freq_avl.size(); i++) {
+    for (auto i = 0u; i < data.sampling_freq_avl.size(); i++) {
         if (max_sampling_frequency < data.sampling_freq_avl[i])
             max_sampling_frequency = data.sampling_freq_avl[i];
         if (min_sampling_frequency > data.sampling_freq_avl[i])
