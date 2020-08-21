@@ -24,20 +24,23 @@
 #include "Utils.h"
 #include "GrpcVehicleClient.h"
 
-using namespace android;
-using namespace android::hardware;
-using namespace android::hardware::automotive::vehicle::V2_0;
+using android::OK;
+using android::status_t;
+using android::hardware::configureRpcThreadpool;
+using android::hardware::joinRpcThreadpool;
+using android::hardware::automotive::vehicle::V2_0::VehicleHalManager;
+using android::hardware::automotive::vehicle::V2_0::VehiclePropertyStore;
 
 int main(int argc, char* argv[]) {
     namespace vhal_impl = android::hardware::automotive::vehicle::V2_0::impl;
 
-    auto serverInfo = vhal_impl::VsockServerInfo::fromRoPropertyStore();
+    auto serverInfo = vhal_impl::VirtualizedVhalServerInfo::fromRoPropertyStore();
     CHECK(serverInfo.has_value()) << "Invalid server CID/port combination";
 
     auto store = std::make_unique<VehiclePropertyStore>();
-    auto connector = impl::makeGrpcVehicleClient(serverInfo->toUri());
-    auto hal = std::make_unique<impl::EmulatedVehicleHal>(store.get(), connector.get());
-    auto emulator = std::make_unique<impl::VehicleEmulator>(hal.get());
+    auto connector = vhal_impl::makeGrpcVehicleClient(serverInfo->getServerUri());
+    auto hal = std::make_unique<vhal_impl::EmulatedVehicleHal>(store.get(), connector.get());
+    auto emulator = std::make_unique<vhal_impl::VehicleEmulator>(hal.get());
     auto service = std::make_unique<VehicleHalManager>(hal.get());
 
     configureRpcThreadpool(4, true /* callerWillJoin */);

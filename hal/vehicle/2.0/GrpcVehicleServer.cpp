@@ -22,6 +22,7 @@
 #include <android-base/logging.h>
 #include <grpc++/grpc++.h>
 
+#include "GarageModeServerSideHandler.h"
 #include "VehicleServer.grpc.pb.h"
 #include "VehicleServer.pb.h"
 #include "vhal_v2_0/ProtoMessageConverter.h"
@@ -36,7 +37,10 @@ namespace impl {
 
 class GrpcVehicleServerImpl : public GrpcVehicleServer, public vhal_proto::VehicleServer::Service {
   public:
-    GrpcVehicleServerImpl(const std::string& addr) : mServiceAddr(addr) {
+    explicit GrpcVehicleServerImpl(const VirtualizedVhalServerInfo& serverInfo)
+        : mServiceAddr(serverInfo.getServerUri()),
+          mGarageModeHandler(makeGarageModeServerSideHandler(this, &mValueObjectPool,
+                                                             serverInfo.powerStateMarkerFilePath)) {
         setValuePool(&mValueObjectPool);
     }
 
@@ -67,7 +71,7 @@ class GrpcVehicleServerImpl : public GrpcVehicleServer, public vhal_proto::Vehic
     struct ConnectionDescriptor {
         using ValueWriterType = std::function<bool(const vhal_proto::WrappedVehiclePropValue&)>;
 
-        ConnectionDescriptor(ValueWriterType&& value_writer)
+        explicit ConnectionDescriptor(ValueWriterType&& value_writer)
             : mValueWriter(std::move(value_writer)),
               mConnectionID(CONNECTION_ID_COUNTER.fetch_add(1)) {}
 
@@ -94,6 +98,7 @@ class GrpcVehicleServerImpl : public GrpcVehicleServer, public vhal_proto::Vehic
 
     std::string mServiceAddr;
     VehiclePropValuePool mValueObjectPool;
+    std::unique_ptr<GarageModeServerSideHandler> mGarageModeHandler;
     mutable std::shared_mutex mConnectionMutex;
     mutable std::shared_mutex mWriterMutex;
     std::list<ConnectionDescriptor> mValueStreamingConnections;
@@ -106,8 +111,8 @@ static std::shared_ptr<::grpc::ServerCredentials> getServerCredentials() {
     return ::grpc::InsecureServerCredentials();
 }
 
-GrpcVehicleServerPtr makeGrpcVehicleServer(const std::string& addr) {
-    return std::make_unique<GrpcVehicleServerImpl>(addr);
+GrpcVehicleServerPtr makeGrpcVehicleServer(const VirtualizedVhalServerInfo& serverInfo) {
+    return std::make_unique<GrpcVehicleServerImpl>(serverInfo);
 }
 
 void GrpcVehicleServerImpl::Start() {
