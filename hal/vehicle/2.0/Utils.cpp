@@ -16,8 +16,11 @@
 
 #include "Utils.h"
 
+#ifdef __ANDROID__
 #include <cutils/properties.h>
+#endif  // __ANDROID__
 
+#include <climits>
 #include <getopt.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -48,16 +51,6 @@ static std::optional<unsigned> parseUnsignedIntFromString(const char* optarg, co
 
     return std::nullopt;
 }
-
-static std::optional<unsigned> getNumberFromProperty(const char* key) {
-    auto value = property_get_int64(key, -1);
-    if ((value <= 0) || (value > UINT_MAX)) {
-        LOG(WARNING) << key << " is missing or out of bounds";
-        return std::nullopt;
-    }
-
-    return static_cast<unsigned int>(value);
-};
 
 std::optional<VsockServerInfo> VsockServerInfo::fromCommandLine(int argc, char* argv[]) {
     std::optional<unsigned int> cid;
@@ -94,6 +87,18 @@ std::optional<VsockServerInfo> VsockServerInfo::fromCommandLine(int argc, char* 
     return std::nullopt;
 }
 
+#ifdef __ANDROID__
+
+static std::optional<unsigned> getNumberFromProperty(const char* key) {
+    auto value = property_get_int64(key, -1);
+    if ((value <= 0) || (value > UINT_MAX)) {
+        LOG(WARNING) << key << " is missing or out of bounds";
+        return std::nullopt;
+    }
+
+    return static_cast<unsigned int>(value);
+};
+
 std::optional<VsockServerInfo> VsockServerInfo::fromRoPropertyStore() {
     constexpr const char* VHAL_SERVER_CID_PROPERTY_KEY = "ro.vendor.vehiclehal.server.cid";
     constexpr const char* VHAL_SERVER_PORT_PROPERTY_KEY = "ro.vendor.vehiclehal.server.port";
@@ -106,6 +111,15 @@ std::optional<VsockServerInfo> VsockServerInfo::fromRoPropertyStore() {
     }
     return std::nullopt;
 }
+
+#else  // __ANDROID__
+
+std::optional<VsockServerInfo> VsockServerInfo::fromRoPropertyStore() {
+    LOG(FATAL) << "Android-only method";
+    return std::nullopt;
+}
+
+#endif  // __ANDROID__
 
 }  // namespace impl
 }  // namespace V2_0

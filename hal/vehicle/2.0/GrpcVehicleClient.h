@@ -17,7 +17,7 @@
 #ifndef android_hardware_automotive_vehicle_V2_0_impl_virtialization_GrpcVehicleClient_H_
 #define android_hardware_automotive_vehicle_V2_0_impl_virtialization_GrpcVehicleClient_H_
 
-#include "vhal_v2_0/EmulatedVehicleConnector.h"
+#include "vhal_v2_0/VehicleHalClient.h"
 
 namespace android {
 namespace hardware {
@@ -27,7 +27,7 @@ namespace V2_0 {
 
 namespace impl {
 
-std::unique_ptr<EmulatedVehicleClient> makeGrpcVehicleClient(const std::string& addr);
+std::unique_ptr<VehicleHalClient> makeGrpcVehicleClient(const std::string& addr);
 
 }  // namespace impl
 
