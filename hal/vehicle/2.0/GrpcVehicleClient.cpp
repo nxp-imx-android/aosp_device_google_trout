@@ -167,9 +167,18 @@ void GrpcVehicleClientImpl::StartValuePollingThread() {
     });
 }
 
-// TODO(chenhaosjtuacm): Send heatbeat to VHAL server instead of logging)
 bool GrpcVehicleClientImpl::SendGarageModeHeartbeat() {
-    LOG(WARNING) << __func__ << ": hb";
+    ::grpc::ClientContext context;
+    ::google::protobuf::Empty emptyReturn;
+
+    LOG(DEBUG) << __func__ << ": sending heartbeat";
+    auto grpc_status =
+            mGrpcStub->GargeModeHeartbeat(&context, ::google::protobuf::Empty(), &emptyReturn);
+    if (!grpc_status.ok()) {
+        LOG(ERROR) << __func__
+                   << ": GRPC SendGarageModeHeartbeat Failed: " << grpc_status.error_message();
+        return false;
+    }
     return true;
 }
 
