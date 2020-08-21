@@ -96,6 +96,7 @@ add_executable(vehicle_hal_grpc_server
     ${trout_VHAL_SRC_ROOT}/VirtualizationGrpcServer.cpp
     ${trout_VHAL_SRC_ROOT}/GarageModeServerSideHandler.cpp
     ${trout_VHAL_SRC_ROOT}/GrpcVehicleServer.cpp
+    ${trout_VHAL_SRC_ROOT}/PowerStateListener.cpp
     ${trout_VHAL_SRC_ROOT}/Utils.cpp
 
     ${trout_NATIVE_VHAL_ROOT_DIR}/common/src/Obd2SensorStore.cpp

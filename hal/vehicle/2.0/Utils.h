@@ -34,6 +34,7 @@ struct VirtualizedVhalServerInfo {
     unsigned int serverPort{0};
 
     std::string powerStateMarkerFilePath;
+    std::string powerStateSocket;
 
     static std::optional<VirtualizedVhalServerInfo> fromCommandLine(int argc, char* argv[],
                                                                     std::string* error);
