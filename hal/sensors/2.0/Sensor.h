@@ -69,7 +69,6 @@ class SensorBase {
 
   protected:
     virtual void run() = 0;
-    static void startThread(SensorBase* sensor);
     bool isWakeUpSensor();
 
     bool mIsEnabled;
