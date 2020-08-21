@@ -49,6 +49,12 @@ PRODUCT_PROPERTY_OVERRIDES += \
 
 TARGET_BOARD_INFO_FILE ?= device/google/trout/board-info.txt
 
+# Keymaster HAL
+LOCAL_KEYMASTER_PRODUCT_PACKAGE ?= android.hardware.keymaster@4.1-service
+
+# Gatekeeper HAL
+LOCAL_GATEKEEPER_PRODUCT_PACKAGE ?= android.hardware.gatekeeper@1.0-service.software
+
 LOCAL_AUDIO_PRODUCT_COPY_FILES ?= \
     device/google/trout/hal/audio/6.0/audio_policy_configuration.xml:$(TARGET_COPY_OUT_VENDOR)/etc/audio_policy_configuration.xml \
     device/google/trout/hal/audio/6.0/car_audio_configuration.xml:$(TARGET_COPY_OUT_VENDOR)/etc/car_audio_configuration.xml \
