@@ -15,7 +15,7 @@
 #
 
 PRODUCT_MAKEFILES := \
-	aosp_trout_arm64:$(LOCAL_DIR)/aosp_trout_arm64.mk
+	aosp_trout_arm64:$(LOCAL_DIR)/aosp_trout_arm64.mk \
 
 COMMON_LUNCH_CHOICES := \
 	aosp_trout_arm64-userdebug \
