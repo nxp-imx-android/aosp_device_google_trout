@@ -20,14 +20,9 @@
 #include <android-base/file.h>
 #include <android-base/logging.h>
 #include <android-base/properties.h>
-#include <grpc++/grpc++.h>
 
-#include <automotive/filesystem>
 #include <fstream>
 #include <string>
-
-#include "DumpstateServer.grpc.pb.h"
-#include "DumpstateServer.pb.h"
 
 using android::os::dumpstate::CommandOptions;
 using android::os::dumpstate::DumpFileToFd;
@@ -44,32 +39,6 @@ static constexpr const char* VENDOR_HELPER_SYSTEM_LOG_LOC_PROPERTY =
         "ro.vendor.helpersystem.log_loc";
 
 namespace android::hardware::dumpstate::V1_1::implementation {
-
-class DumpstateDevice : public IDumpstateDevice {
-  public:
-    explicit DumpstateDevice(const std::string& addr);
-
-    // Methods from ::android::hardware::dumpstate::V1_0::IDumpstateDevice follow.
-    Return<void> dumpstateBoard(const hidl_handle& h) override;
-
-    // Methods from ::android::hardware::dumpstate::V1_1::IDumpstateDevice follow.
-    Return<DumpstateStatus> dumpstateBoard_1_1(const hidl_handle& h, const DumpstateMode mode,
-                                               const uint64_t timeoutMillis) override;
-    Return<void> setVerboseLoggingEnabled(const bool enable) override;
-    Return<bool> getVerboseLoggingEnabled() override;
-
-  private:
-    bool dumpRemoteLogs(::grpc::ClientReaderInterface<dumpstate_proto::DumpstateBuffer>* reader,
-                        const fs::path& dumpPath);
-
-    void dumpHelperSystem(int textFd, int binFd);
-
-    std::vector<std::string> getAvailableServices();
-
-    std::string mServiceAddr;
-    std::shared_ptr<::grpc::Channel> mGrpcChannel;
-    std::unique_ptr<dumpstate_proto::DumpstateServer::Stub> mGrpcStub;
-};
 
 static std::shared_ptr<::grpc::ChannelCredentials> getChannelCredentials() {
     // TODO(chenhaosjtuacm): get secured credentials here
@@ -203,6 +172,14 @@ void DumpstateDevice::dumpHelperSystem(int textFd, int binFd) {
     }
 }
 
+bool DumpstateDevice::isHealthy() {
+    // Check that we can get services back from the remote end
+    // This check will not work if the server actually works but is
+    // not exporting any services. This seems like a corner case
+    // but it's worth pointing out.
+    return (getAvailableServices().size() > 0);
+}
+
 std::vector<std::string> DumpstateDevice::getAvailableServices() {
     ::grpc::ClientContext context;
     dumpstate_proto::ServiceNameList servicesProto;
@@ -259,7 +236,7 @@ Return<bool> DumpstateDevice::getVerboseLoggingEnabled() {
     return android::base::GetBoolProperty(VENDOR_VERBOSE_LOGGING_ENABLED_PROPERTY, false);
 }
 
-sp<IDumpstateDevice> makeVirtualizationDumpstateDevice(const std::string& addr) {
+sp<DumpstateDevice> makeVirtualizationDumpstateDevice(const std::string& addr) {
     return new DumpstateDevice(addr);
 }
 
