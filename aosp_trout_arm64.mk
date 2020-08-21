@@ -33,11 +33,14 @@ LOCAL_SENSOR_PRODUCT_PACKAGE ?= \
     android.hardware.sensors@2.0-service.multihal.rc \
     android.hardware.sensors@2.0-Google-IIO-Subhal \
 
+LOCAL_SENSOR_FILE_OVERRIDES := true
+
 PRODUCT_COPY_FILES += \
     device/google/trout/product_files/odm/ueventd.rc:$(TARGET_COPY_OUT_ODM)/ueventd.rc \
     device/google/trout/product_files/odm/usr/idc/Vendor_0fff_Product_0fff.idc:$(TARGET_COPY_OUT_ODM)/usr/idc/Vendor_0fff_Product_0fff.idc \
-
-PRODUCT_COPY_FILES += device/google/trout/product_files/vendor/etc/sensors/hals.conf:$(TARGET_COPY_OUT_VENDOR)/etc/sensors/hals.conf
+    device/google/trout/product_files/vendor/etc/sensors/hals.conf:$(TARGET_COPY_OUT_VENDOR)/etc/sensors/hals.conf \
+    frameworks/native/data/etc/android.hardware.sensor.gyroscope.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.sensor.gyroscope.xml \
+    frameworks/native/data/etc/android.hardware.sensor.accelerometer.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.sensor.accelerometer.xml \
 
 PRODUCT_NAME := aosp_trout_arm64
 PRODUCT_DEVICE := vsoc_arm64
