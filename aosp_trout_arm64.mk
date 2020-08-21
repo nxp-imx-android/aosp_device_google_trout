@@ -23,12 +23,13 @@ PRODUCT_PROPERTY_OVERRIDES += \
 $(call inherit-product, device/google/cuttlefish/vsoc_arm64/auto/aosp_cf.mk)
 
 PRODUCT_COPY_FILES += \
-    device/google/trout/rootdir/etc/ueventd.rc:$(TARGET_COPY_OUT_ODM)/ueventd.rc \
+    device/google/trout/product_files/odm/ueventd.rc:$(TARGET_COPY_OUT_ODM)/ueventd.rc \
 
 PRODUCT_COPY_FILES += \
-    device/google/trout/config/input-port-associations.xml:$(TARGET_COPY_OUT_VENDOR)/etc/input-port-associations.xml \
+    device/google/trout/product_files/vendor/etc/input-port-associations.xml:$(TARGET_COPY_OUT_VENDOR)/etc/input-port-associations.xml \
+
+BOARD_SEPOLICY_DIRS += device/google/trout/sepolicy/vendor/google
 
 PRODUCT_NAME := aosp_trout_arm64
 PRODUCT_DEVICE := vsoc_arm64
 PRODUCT_MODEL := arm64 trout
-BOARD_SEPOLICY_DIRS += device/google/trout/sepolicy/vendor/google
