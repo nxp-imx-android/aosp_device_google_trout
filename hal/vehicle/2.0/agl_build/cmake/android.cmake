@@ -28,10 +28,12 @@ add_library(${trout_ANDROID_LIBBASE_LIBRARY}
 
 target_include_directories(${trout_ANDROID_LIBBASE_LIBRARY}
     PUBLIC ${trout_ANDROID_LIBBASE_INCLUDE_DIR}
+    PRIVATE ${trout_FMTLIB_INCLUDE_DIRS}
 )
 
 target_link_libraries(${trout_ANDROID_LIBBASE_LIBRARY}
     ${trout_ANDROID_LIBLOG_LIBRARY}
+    ${trout_FMTLIB_LIBRARIES}
 )
 
 target_compile_options(${trout_ANDROID_LIBBASE_LIBRARY} PRIVATE ${_trout_ANDROID_CXX_FLAGS})

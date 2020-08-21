@@ -15,6 +15,7 @@ set(_trout_CXX_FLAGS -Wall -Werror -std=c++17)
 
 set(_trout_GRPCXX_LIBRARY_NAME "grpc++")
 
+include(cmake/fmtlib.cmake)
 include(cmake/android.cmake)
 include(cmake/default_native_vhal.cmake)
 include(cmake/grpc.cmake)
@@ -103,6 +104,7 @@ add_executable(vehicle_hal_grpc_server
     ${trout_NATIVE_VHAL_ROOT_DIR}/common/src/VehicleObjectPool.cpp
     ${trout_NATIVE_VHAL_ROOT_DIR}/common/src/VehicleUtils.cpp
     ${trout_NATIVE_VHAL_ROOT_DIR}/impl/vhal_v2_0/VehicleHalServer.cpp
+    ${trout_NATIVE_VHAL_ROOT_DIR}/impl/vhal_v2_0/EmulatedUserHal.cpp
     ${trout_NATIVE_VHAL_ROOT_DIR}/impl/vhal_v2_0/GeneratorHub.cpp
     ${trout_NATIVE_VHAL_ROOT_DIR}/impl/vhal_v2_0/JsonFakeValueGenerator.cpp
     ${trout_NATIVE_VHAL_ROOT_DIR}/impl/vhal_v2_0/LinearFakeValueGenerator.cpp
