@@ -23,9 +23,11 @@ LOCAL_DUMPSTATE_PRODUCT_PACKAGE := android.hardware.dumpstate@1.1-service.trout
 DEVICE_MANIFEST_FILE += device/google/trout/manifest.xml
 
 PRODUCT_PROPERTY_OVERRIDES += \
-	ro.vendor.vehiclehal.server.cid=2 \
-	ro.vendor.vehiclehal.server.port=9210 \
-	ro.vendor.helpersystem.log_loc=/data/bugreport_test \
+    ro.vendor.vehiclehal.server.cid=2 \
+    ro.vendor.vehiclehal.server.port=9210 \
+    ro.vendor.dumpstate.server.cid=2 \
+    ro.vendor.dumpstate.server.port=9211 \
+    ro.vendor.helpersystem.log_loc=/data/bugreport_test \
 
 # Disable Vulkan feature flag as it is not supported on trout
 TARGET_VULKAN_SUPPORT := false
@@ -52,7 +54,7 @@ BOARD_VENDOR_KERNEL_MODULES += \
 BOARD_SEPOLICY_DIRS += device/google/trout/sepolicy/vendor/google
 
 PRODUCT_PROPERTY_OVERRIDES += \
-	ro.hardware.type=automotive \
+    ro.hardware.type=automotive \
 
 PRODUCT_COPY_FILES += device/google/trout/product_files/vendor/etc/sensors/hals.conf:$(TARGET_COPY_OUT_VENDOR)/etc/sensors/hals.conf
 
