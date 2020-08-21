@@ -21,6 +21,7 @@
       <linkfile src="agl_services_build/toolchain" dest="toolchain" />
       <linkfile src="hal/dumpstate/1.1" dest="dumpstate_server" />
       <linkfile src="hal/vehicle/2.0" dest="vehicle_hal_server" />
+      <linkfile src="hal/common/agl/watchdog" dest="watchdog_test_server" />
   </project>
   <project path="third_party/fmtlib" name="platform/external/fmtlib" groups="pdk" />
   <project path="third_party/grpc-grpc" name="platform/external/grpc-grpc" groups="pdk,tradefed" />
