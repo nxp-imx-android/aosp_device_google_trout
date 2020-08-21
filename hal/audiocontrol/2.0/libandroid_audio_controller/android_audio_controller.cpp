@@ -16,7 +16,9 @@
 
 #include "android_audio_controller.h"
 
-#include <cutils/threads.h>
+#include <sys/syscall.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 #include <chrono>
 #include <condition_variable>
@@ -33,6 +35,16 @@
 namespace android::hardware::automotive::audiocontrol::V2_0::implementation {
 
 using std::literals::chrono_literals::operator""s;
+
+static pid_t getCurrentThreadID() {
+#ifdef gettid
+    return gettid();
+#elif defined(SYS_gettid)
+    return syscall(SYS_gettid);
+#else
+    return getpid();
+#endif
+}
 
 class AudioFocusControllerImpl {
   public:
@@ -86,6 +98,23 @@ static std::shared_ptr<::grpc::ChannelCredentials> getChannelCredentials() {
     return ::grpc::InsecureChannelCredentials();
 }
 
+static void validateRequest(aafc_audio_focus_request_t* request) {
+    if (!request) {
+        std::cerr << "Validate null request is a no-op";
+        return;
+    }
+    if (!request->is_transient && (request->allow_duck || request->is_exclusive)) {
+        std::cerr << "If request is not transient, allow_duck and "
+                     "exclusive options will be ignored."
+                  << std::endl;
+    } else if (request->allow_duck && request->is_exclusive) {
+        std::cerr << "allow_duck and is_exclusive cannot be set together, "
+                     "disabled ducking."
+                  << std::endl;
+        request->allow_duck = false;
+    }
+}
+
 AudioFocusControllerImpl::AudioFocusControllerImpl()
     : mRequestWorkerThread(std::bind(&AudioFocusControllerImpl::RequestWorker, this)) {}
 
@@ -120,7 +149,7 @@ AudioFocusControllerImpl* AudioFocusControllerImpl::GetInstance() {
 }
 
 aafc_session_id_t AudioFocusControllerImpl::GetNewUniqueSessionID() {
-    static const auto tid = static_cast<uint64_t>(gettid());
+    static const auto tid = static_cast<uint64_t>(getCurrentThreadID());
 
     // 48 bits for timestamp (in nanoseconds), so a session ID
     // within a thread is guaranteed not to reappear in about 3 days,
@@ -139,6 +168,8 @@ aafc_session_id_t AudioFocusControllerImpl::GetNewUniqueSessionID() {
 }
 
 aafc_session_id_t AudioFocusControllerImpl::AcquireFocus(aafc_audio_focus_request_t&& request) {
+    validateRequest(&request);
+
     auto session_id = AAFC_SESSION_ID_INVALID;
 
     {
@@ -226,6 +257,7 @@ void AudioFocusControllerImpl::RequestWorker() {
                 acquire_request.set_zone_id(request.request.zone_id);
                 acquire_request.set_allow_duck(request.request.allow_duck);
                 acquire_request.set_is_transient(request.request.is_transient);
+                acquire_request.set_is_exclusive(request.request.is_exclusive);
             }
             for (auto session_id : mSessionsReleaseRequests) {
                 audio_requests.add_release_requests(session_id);
