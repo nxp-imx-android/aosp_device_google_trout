@@ -38,6 +38,9 @@ PRODUCT_COPY_FILES += \
 PRODUCT_COPY_FILES += \
     device/google/trout/product_files/vendor/etc/input-port-associations.xml:$(TARGET_COPY_OUT_VENDOR)/etc/input-port-associations.xml \
 
+BOARD_VENDOR_KERNEL_MODULES += \
+    $(wildcard device/google/trout-kernel/5.4-arm64/*.ko) \
+
 BOARD_SEPOLICY_DIRS += device/google/trout/sepolicy/vendor/google
 
 PRODUCT_PROPERTY_OVERRIDES += \
