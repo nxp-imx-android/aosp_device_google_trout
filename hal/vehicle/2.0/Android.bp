@@ -24,6 +24,18 @@ cc_library_static {
     ],
 }
 
+cc_library_static {
+    name: "android.hardware.automotive.vehicle@2.0-virtualization-garage-mode",
+    vendor: true,
+    defaults: ["vhal_v2_0_defaults"],
+    srcs: [
+        "GarageModeHandler.cpp",
+    ],
+    static_libs: [
+        "android.hardware.automotive.vehicle@2.0-default-impl-lib",
+    ],
+}
+
 cc_binary {
     name: "android.hardware.automotive.vehicle@2.0-virtualization-service",
     defaults: ["vhal_v2_0_defaults"],
