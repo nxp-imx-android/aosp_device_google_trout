@@ -25,6 +25,7 @@
 #include <algorithm>
 #include <fstream>
 #include <iostream>
+#include <memory>
 
 static const char* IIO_DEVICE_BASE = "iio:device";
 static const char* DEVICE_IIO_DIR = "/sys/bus/iio/devices/";
@@ -40,6 +41,9 @@ namespace sensors {
 namespace V2_0 {
 namespace subhal {
 namespace implementation {
+
+using DirPtr = std::unique_ptr<DIR, decltype(&closedir)>;
+using FilePtr = std::unique_ptr<FILE, decltype(&fclose)>;
 
 static bool str_has_prefix(const char* s, const char* prefix) {
     if (!s || !prefix) return false;
@@ -59,7 +63,7 @@ static bool str_has_suffix(const char* s, const char* suffix) {
     return std::equal(s + len_s - len_suffix, s + len_s, suffix);
 }
 
-static int sysfs_opendir(const std::string& name, DIR** dp);
+static int sysfs_opendir(const std::string& name, DirPtr* dp);
 static int sysfs_write_uint(const std::string& file, const unsigned int val);
 static int sysfs_read_uint8(const std::string& file, uint8_t* val);
 static int sysfs_read_str(const std::string& file, std::string* str);
@@ -69,10 +73,7 @@ static int get_sampling_frequency_available(const std::string& device_dir, std::
 static int get_scale(const std::string& device_dir, float* resolution);
 static int check_file(const std::string& filename);
 
-int sysfs_opendir(const std::string& name, DIR** dp) {
-    struct stat sb;
-    DIR* tmp;
-
+int sysfs_opendir(const std::string& name, DirPtr* dp) {
     if (dp == nullptr) {
         return -EINVAL;
     }
@@ -82,72 +83,59 @@ int sysfs_opendir(const std::string& name, DIR** dp) {
      * or path is an empty string return ENOENT
      * If path is not accessible return EACCES
      */
+    struct stat sb;
     if (stat(name.c_str(), &sb) == -1) {
         return -errno;
     }
 
     /* Open sysfs directory */
-    tmp = opendir(name.c_str());
+    DIR* tmp = opendir(name.c_str());
     if (tmp == nullptr) return -errno;
 
-    *dp = tmp;
+    dp->reset(tmp);
 
     return 0;
 }
 
 int sysfs_write_uint(const std::string& file, const unsigned int val) {
-    FILE* fp = fopen(file.c_str(), "r+");
+    FilePtr fp = {fopen(file.c_str(), "r+"), fclose};
     if (nullptr == fp) return -errno;
 
-    fprintf(fp, "%u", val);
-    fclose(fp);
+    fprintf(fp.get(), "%u", val);
 
     return 0;
 }
 
 int sysfs_read_uint8(const std::string& file, uint8_t* val) {
-    int ret;
     if (val == nullptr) {
         return -EINVAL;
     }
 
-    FILE* fp = fopen(file.c_str(), "r");
+    FilePtr fp = {fopen(file.c_str(), "r"), fclose};
     if (nullptr == fp) return -errno;
 
-    ret = fscanf(fp, "%hhu\n", val);
-    fclose(fp);
-
-    return ret;
+    return fscanf(fp.get(), "%hhu\n", val);
 }
 
 int sysfs_read_str(const std::string& file, std::string* str) {
-    int err = 0;
-
     std::ifstream infile(file);
     if (!infile.is_open()) return -EINVAL;
 
-    if (!std::getline(infile, *str)) {
-        err = -EINVAL;
-    }
-
-    infile.close();
-
-    return err;
+    if (!std::getline(infile, *str))
+        return -EINVAL;
+    else
+        return 0;
 }
 int sysfs_read_float(const std::string& file, float* val) {
-    int ret;
     if (val == nullptr) {
         return -EINVAL;
     }
 
-    FILE* fp = fopen(file.c_str(), "r");
+    FilePtr fp = {fopen(file.c_str(), "r"), fclose};
     if (nullptr == fp) return -errno;
 
-    ret = fscanf(fp, "%f", val);
-    ret = (ret == 1) ? 0 : -EINVAL;
-    fclose(fp);
-
-    return ret;
+    const int ret = fscanf(fp.get(), "%f", val);
+    return (ret == 1) ? 0 : -EINVAL;
 }
 
 int check_file(const std::string& filename) {
@@ -188,12 +176,12 @@ int get_sampling_frequency_available(const std::string& device_dir, std::vector<
 }
 
 int set_sampling_frequency(const std::string& device_dir, const unsigned int frequency) {
-    DIR* dp;
+    DirPtr dp(nullptr, closedir);
     const struct dirent* ent;
 
     int ret = sysfs_opendir(device_dir, &dp);
     if (ret) return ret;
-    while (ent = readdir(dp), ent != nullptr) {
+    while (ent = readdir(dp.get()), ent != nullptr) {
         if (str_has_suffix(ent->d_name, IIO_SAMPLING_FREQUENCY)) {
             std::string filename = device_dir;
             filename += "/";
@@ -201,12 +189,11 @@ int set_sampling_frequency(const std::string& device_dir, const unsigned int fre
             ret = sysfs_write_uint(filename, frequency);
         }
     }
-    closedir(dp);
     return ret;
 }
 
 int get_scale(const std::string& device_dir, float* resolution) {
-    DIR* dp;
+    DirPtr dp(nullptr, closedir);
     const struct dirent* ent;
     int err;
     std::string filename;
@@ -215,7 +202,7 @@ int get_scale(const std::string& device_dir, float* resolution) {
     }
     err = sysfs_opendir(device_dir, &dp);
     if (err) return err;
-    while (ent = readdir(dp), ent != nullptr) {
+    while (ent = readdir(dp.get()), ent != nullptr) {
         if (str_has_suffix(ent->d_name, IIO_SCALE_FILENAME)) {
             filename = device_dir;
             filename += "/";
@@ -223,7 +210,6 @@ int get_scale(const std::string& device_dir, float* resolution) {
             err = sysfs_read_float(filename, resolution);
         }
     }
-    closedir(dp);
     return err;
 }
 
@@ -246,7 +232,7 @@ static bool is_supported_sensor(const std::string& path,
 
 int load_iio_devices(std::vector<iio_device_data>* iio_data,
                      const std::vector<sensors_supported_hal>& supported_sensors) {
-    DIR* dp;
+    DirPtr dp(nullptr, closedir);
     const struct dirent* ent;
     int err;
 
@@ -254,7 +240,7 @@ int load_iio_devices(std::vector<iio_device_data>* iio_data,
     const auto iio_base_len = strlen(IIO_DEVICE_BASE);
     err = sysfs_opendir(DEVICE_IIO_DIR, &dp);
     if (err) return err;
-    while (ent = readdir(dp), ent != nullptr) {
+    while (ent = readdir(dp.get()), ent != nullptr) {
         if (!str_has_prefix(ent->d_name, IIO_DEVICE_BASE)) continue;
 
         std::string path_device = DEVICE_IIO_DIR;
@@ -287,15 +273,12 @@ int load_iio_devices(std::vector<iio_device_data>* iio_data,
 
         iio_data->push_back(iio_dev_data);
     }
-    closedir(dp);
     return err;
 }
 
 int get_scan_type(const std::string& device_dir, struct iio_info_channel* chanInfo) {
-    DIR* dp;
+    DirPtr dp(nullptr, closedir);
     const struct dirent* ent;
-    FILE* fp;
-    int ret;
     std::string scan_dir;
     std::string filename;
     std::string type_name;
@@ -307,35 +290,30 @@ int get_scan_type(const std::string& device_dir, struct iio_info_channel* chanIn
     }
     scan_dir = device_dir;
     scan_dir += "/scan_elements";
-    ret = sysfs_opendir(scan_dir, &dp);
-    if (ret) return ret;
+    const int err = sysfs_opendir(scan_dir, &dp);
+    if (err) return err;
     type_name = chanInfo->name;
     type_name += "_type";
-    while (ent = readdir(dp), ent != nullptr) {
+    while (ent = readdir(dp.get()), ent != nullptr) {
         if (strcmp(ent->d_name, type_name.c_str()) == 0) {
             filename = scan_dir;
             filename += "/";
             filename += ent->d_name;
-            fp = fopen(filename.c_str(), "r");
+            FilePtr fp = {fopen(filename.c_str(), "r"), fclose};
             if (fp == nullptr) continue;
-            ret = fscanf(fp, "%ce:%c%hhu/%u>>%hhu", &endianchar, &signchar, &chanInfo->bits_used,
-                         &storage_bits, &chanInfo->shift);
-            if (ret < 0) {
-                fclose(fp);
-                continue;
-            }
+            const int ret = fscanf(fp.get(), "%ce:%c%hhu/%u>>%hhu", &endianchar, &signchar,
+                                   &chanInfo->bits_used, &storage_bits, &chanInfo->shift);
+            if (ret < 0) continue;
             chanInfo->big_endian = (endianchar == 'b');
             chanInfo->sign = (signchar == 's');
             chanInfo->storage_bytes = (storage_bits >> 3);
-            fclose(fp);
         }
     }
-    closedir(dp);
     return 0;
 }
 
 int scan_elements(const std::string& device_dir, struct iio_device_data* iio_data) {
-    DIR* dp;
+    DirPtr dp(nullptr, closedir);
     const struct dirent* ent;
     std::string scan_dir;
     std::string filename;
@@ -349,7 +327,7 @@ int scan_elements(const std::string& device_dir, struct iio_device_data* iio_dat
     scan_dir += "/scan_elements";
     ret = sysfs_opendir(scan_dir, &dp);
     if (ret) return ret;
-    while (ent = readdir(dp), ent != nullptr) {
+    while (ent = readdir(dp.get()), ent != nullptr) {
         if (str_has_suffix(ent->d_name, IIO_SCAN_ELEMENTS_EN)) {
             filename = scan_dir;
             filename += "/";
@@ -372,7 +350,6 @@ int scan_elements(const std::string& device_dir, struct iio_device_data* iio_dat
             }
         }
     }
-    closedir(dp);
     return ret;
 }
 }  // namespace implementation
