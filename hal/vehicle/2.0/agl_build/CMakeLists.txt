@@ -26,6 +26,10 @@ get_filename_component(trout_VHAL_SRC_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/.. ABSOLU
 set(trout_PREBUILT_DIR ${trout_VHAL_SRC_ROOT}/agl_build/prebuilt)
 set(trout_GENS_DIR ${trout_VHAL_SRC_ROOT}/agl_build/build/gens)
 
+if (NOT trout_NATIVE_VHAL_ROOT_DIR)
+    set(trout_NATIVE_VHAL_ROOT_DIR ${trout_VHAL_SRC_ROOT}/agl_build/third_party/default_native_vhal)
+endif()
+
 # ========== grpc proto prebuilts =================
 
 find_program(trout_PROTOC aprotoc REQUIRED)
@@ -43,7 +47,7 @@ function(trout_generate_grpc_cpp_from_proto)
   endif()
 
   set(_protobuf_include_path -I . -I ${_trout_PROTOBUF_WELLKNOWN_INCLUDE_DIR}
-      -I ${trout_VHAL_SRC_ROOT}/agl_build/third_party/default_native_vhal/impl/vhal_v2_0/proto)
+      -I ${trout_NATIVE_VHAL_ROOT_DIR}/impl/vhal_v2_0/proto)
 
   foreach(FIL ${ARGN})
     get_filename_component(ABS_FIL ${FIL} ABSOLUTE)
@@ -73,7 +77,7 @@ endfunction()
 
 
 trout_generate_grpc_cpp_from_proto(
-    ${trout_VHAL_SRC_ROOT}/agl_build/third_party/default_native_vhal/impl/vhal_v2_0/proto/VehicleHalProto.proto
+    ${trout_NATIVE_VHAL_ROOT_DIR}/impl/vhal_v2_0/proto/VehicleHalProto.proto
     ${trout_VHAL_SRC_ROOT}/proto/VehicleServer.proto)
 
 # ========== Protobuf generated code ==================
