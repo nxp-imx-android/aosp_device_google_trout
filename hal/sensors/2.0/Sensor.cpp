@@ -122,30 +122,25 @@ Result SensorBase::flush() {
 
 void HWSensorBase::processScanData(uint8_t* data, Event* evt) {
     float channelData[NUM_OF_CHANNEL_SUPPORTED - 1];
-    int64_t ts;
     unsigned int chanIdx;
     evt->sensorHandle = mSensorInfo.sensorHandle;
     evt->sensorType = mSensorInfo.type;
     for (auto i = 0u; i < miio_data.channelInfo.size(); i++) {
         chanIdx = miio_data.channelInfo[i].index;
-        if (miio_data.channelInfo[i].sign) {
-            int64_t val = *reinterpret_cast<int64_t*>(
-                    data + chanIdx * miio_data.channelInfo[i].storage_bytes);
-            if (chanIdx == (miio_data.channelInfo.size() - 1)) {
-                ts = val;
-            } else {
-                channelData[chanIdx] = (static_cast<float>(val) * miio_data.resolution);
-            }
+        const int64_t val = *reinterpret_cast<int64_t*>(
+                data + chanIdx * miio_data.channelInfo[i].storage_bytes);
+
+        // If the channel index is the last, it is timestamp
+        // else it is sensor data
+        if (chanIdx == miio_data.channelInfo.size() - 1) {
+            evt->timestamp = val;
         } else {
-            uint64_t val = *reinterpret_cast<uint64_t*>(
-                    data + chanIdx * miio_data.channelInfo[i].storage_bytes);
             channelData[chanIdx] = (static_cast<float>(val) * miio_data.resolution);
         }
     }
     evt->u.vec3.x = channelData[0];
     evt->u.vec3.y = channelData[1];
     evt->u.vec3.z = channelData[2];
-    evt->timestamp = ts;
     evt->u.vec3.status = SensorStatus::ACCURACY_HIGH;
 }
 
