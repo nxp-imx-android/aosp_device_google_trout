@@ -23,6 +23,8 @@ LOCAL_AUDIO_PRODUCT_PACKAGE ?= \
     android.hardware.audio.service \
     android.hardware.soundtrigger@2.3-impl
 LOCAL_AUDIO_DEVICE_PACKAGE_OVERLAYS ?= device/google/trout/hal/audio/6.0/overlay
+LOCAL_AUDIO_PROPERTIES ?= \
+    ro.hardware.audio.primary=trout \
 
 # Audio Control HAL
 LOCAL_AUDIOCONTROL_HAL_PRODUCT_PACKAGE ?= android.hardware.audiocontrol@2.0-service.trout
@@ -44,6 +46,7 @@ TARGET_VULKAN_SUPPORT := false
 
 PRODUCT_PROPERTY_OVERRIDES += \
     ro.hardware.type=automotive \
+    ${LOCAL_AUDIO_PROPERTIES} \
     ${LOCAL_AUDIOCONTROL_PROPERTIES} \
     ${LOCAL_DUMPSTATE_PROPERTIES}
 
@@ -61,6 +64,8 @@ LOCAL_AUDIO_PRODUCT_COPY_FILES ?= \
     frameworks/native/data/etc/android.hardware.broadcastradio.xml:system/etc/permissions/android.hardware.broadcastradio.xml \
     frameworks/av/services/audiopolicy/config/a2dp_audio_policy_configuration.xml:$(TARGET_COPY_OUT_VENDOR)/etc/a2dp_audio_policy_configuration.xml \
     frameworks/av/services/audiopolicy/config/usb_audio_policy_configuration.xml:$(TARGET_COPY_OUT_VENDOR)/etc/usb_audio_policy_configuration.xml
+
+PRODUCT_PACKAGES += tinyplay
 
 # TODO(b/162901005): Include computepipe once this project points to main.
 # include packages/services/Car/cpp/computepipe/products/computepipe.mk
