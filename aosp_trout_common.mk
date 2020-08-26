@@ -14,7 +14,16 @@
 # limitations under the License.
 #
 
-# Audio HAL
+ifeq ($(TARGET_USES_CUTTLEFISH_AUDIO),true)
+# Cuttlefish Audio HAL with custom configuration
+LOCAL_AUDIO_PRODUCT_COPY_FILES ?= \
+    device/google/cuttlefish/shared/config/audio_policy.conf:$(TARGET_COPY_OUT_VENDOR)/etc/audio_policy.conf \
+    frameworks/av/services/audiopolicy/config/audio_policy_configuration_generic.xml:$(TARGET_COPY_OUT_VENDOR)/etc/audio_policy_configuration.xml \
+    device/google/trout/product_files/vendor/etc/primary_audio_policy_configuration.cf.xml:$(TARGET_COPY_OUT_VENDOR)/etc/primary_audio_policy_configuration.xml
+
+LOCAL_AUDIO_PROPERTIES ?=
+else
+# Trout Audio HAL
 LOCAL_AUDIO_PRODUCT_PACKAGE ?= \
     audio.primary.trout \
     audio.r_submix.default \
@@ -22,9 +31,19 @@ LOCAL_AUDIO_PRODUCT_PACKAGE ?= \
     android.hardware.audio.effect@6.0-impl:32 \
     android.hardware.audio.service \
     android.hardware.soundtrigger@2.3-impl
+
 LOCAL_AUDIO_DEVICE_PACKAGE_OVERLAYS ?= device/google/trout/hal/audio/6.0/overlay
+
 LOCAL_AUDIO_PROPERTIES ?= \
     ro.hardware.audio.primary=trout \
+
+LOCAL_AUDIO_PRODUCT_COPY_FILES ?= \
+    device/google/trout/hal/audio/6.0/audio_policy_configuration.xml:$(TARGET_COPY_OUT_VENDOR)/etc/audio_policy_configuration.xml \
+    device/google/trout/hal/audio/6.0/car_audio_configuration.xml:$(TARGET_COPY_OUT_VENDOR)/etc/car_audio_configuration.xml \
+    frameworks/native/data/etc/android.hardware.broadcastradio.xml:system/etc/permissions/android.hardware.broadcastradio.xml \
+    frameworks/av/services/audiopolicy/config/a2dp_audio_policy_configuration.xml:$(TARGET_COPY_OUT_VENDOR)/etc/a2dp_audio_policy_configuration.xml \
+    frameworks/av/services/audiopolicy/config/usb_audio_policy_configuration.xml:$(TARGET_COPY_OUT_VENDOR)/etc/usb_audio_policy_configuration.xml
+endif
 
 # Audio Control HAL
 LOCAL_AUDIOCONTROL_HAL_PRODUCT_PACKAGE ?= android.hardware.audiocontrol@2.0-service.trout
@@ -57,13 +76,6 @@ LOCAL_KEYMASTER_PRODUCT_PACKAGE ?= android.hardware.keymaster@4.1-service
 
 # Gatekeeper HAL
 LOCAL_GATEKEEPER_PRODUCT_PACKAGE ?= android.hardware.gatekeeper@1.0-service.software
-
-LOCAL_AUDIO_PRODUCT_COPY_FILES ?= \
-    device/google/trout/hal/audio/6.0/audio_policy_configuration.xml:$(TARGET_COPY_OUT_VENDOR)/etc/audio_policy_configuration.xml \
-    device/google/trout/hal/audio/6.0/car_audio_configuration.xml:$(TARGET_COPY_OUT_VENDOR)/etc/car_audio_configuration.xml \
-    frameworks/native/data/etc/android.hardware.broadcastradio.xml:system/etc/permissions/android.hardware.broadcastradio.xml \
-    frameworks/av/services/audiopolicy/config/a2dp_audio_policy_configuration.xml:$(TARGET_COPY_OUT_VENDOR)/etc/a2dp_audio_policy_configuration.xml \
-    frameworks/av/services/audiopolicy/config/usb_audio_policy_configuration.xml:$(TARGET_COPY_OUT_VENDOR)/etc/usb_audio_policy_configuration.xml
 
 PRODUCT_PACKAGES += tinyplay
 
