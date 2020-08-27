@@ -79,5 +79,4 @@ LOCAL_GATEKEEPER_PRODUCT_PACKAGE ?= android.hardware.gatekeeper@1.0-service.soft
 
 PRODUCT_PACKAGES += tinyplay
 
-# TODO(b/162901005): Include computepipe once this project points to main.
-# include packages/services/Car/cpp/computepipe/products/computepipe.mk
+include packages/services/Car/cpp/computepipe/products/computepipe.mk
