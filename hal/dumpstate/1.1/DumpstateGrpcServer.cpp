@@ -16,6 +16,7 @@
 
 #include "DumpstateGrpcServer.h"
 
+#include <array>
 #include <iostream>
 #include <unordered_set>
 
