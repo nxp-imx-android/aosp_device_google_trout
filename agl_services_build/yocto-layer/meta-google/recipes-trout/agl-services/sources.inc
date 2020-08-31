@@ -11,6 +11,8 @@ GITHUB_REMOTE = "git://github.com"
 
 FETCH_CODE_PREFIX = "src"
 
+S = "${WORKDIR}/${FETCH_CODE_PREFIX}"
+
 # Pull the source from git server remote/name to path
 def trout_git_uri(d, remote, name, path, revision):
     return '{}/{};protocol=https;nobranch=1;' \
@@ -47,3 +49,16 @@ SRC_SYMLINKS = "\
    device/google/trout/hal/common/agl/watchdog:watchdog_test_server \
    hardware/interfaces/automotive/vehicle/2.0/default:third_party/default_native_vehicle_hal \
 "
+
+def force_create_symlink(src, dst):
+    src = os.path.relpath(src, os.path.dirname(dst))
+    tmplink = '{}.templink'.format(dst)
+    os.symlink(src, tmplink)
+    os.rename(tmplink, dst)
+
+python do_unpack_append() {
+    os.chdir(d.getVar('S'))
+    linkfile_rules = d.getVar('SRC_SYMLINKS').split()
+    for src, dst in map(lambda x: x.split(':'), linkfile_rules):
+        force_create_symlink(src, dst)
+}

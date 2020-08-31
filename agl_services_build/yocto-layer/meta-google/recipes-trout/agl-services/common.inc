@@ -1,12 +1,16 @@
 require sources.inc
 
-S = "${WORKDIR}/${FETCH_CODE_PREFIX}"
+do_fetch() {
+	:
+}
+do_fetch[noexec] = "1"
+deltask do_unpack
+deltask do_patch
 
-def force_create_symlink(src, dst):
-    src = os.path.relpath(src, os.path.dirname(dst))
-    tmplink = '{}.templink'.format(dst)
-    os.symlink(src, tmplink)
-    os.rename(tmplink, dst)
+S = "${TMPDIR}/work-shared/google-trout-agl-services-source/${PV}-${PR}/${FETCH_CODE_PREFIX}"
+
+do_configure[depends] += "google-trout-agl-services-source:do_patch"
+do_populate_lic[depends] += "google-trout-agl-services-source:do_unpack"
 
 def trout_compile_targets(d):
     install_entries = d.getVar('TROUT_target_install').split()
@@ -29,13 +33,6 @@ def trout_do_install(d):
 OECMAKE_TARGET_COMPILE = "${@trout_compile_targets(d)}"
 
 inherit pkgconfig cmake
-
-python do_unpack_append() {
-    os.chdir(d.getVar('S'))
-    linkfile_rules = d.getVar('SRC_SYMLINKS').split()
-    for src, dst in map(lambda x: x.split(':'), linkfile_rules):
-        force_create_symlink(src, dst)
-}
 
 python do_install() {
     trout_do_install(d)
