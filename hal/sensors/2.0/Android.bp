@@ -39,11 +39,13 @@ cc_library {
     ],
     static_libs: [
         "android.hardware.sensors@2.X-multihal",
+        "libxml2",
     ],
     cflags: [
-        "-DLOG_TAG=\"GoogleIIOSensorSubHal\"",
         "-Wall",
         "-Wextra",
         "-Werror",
     ],
+    generated_sources: ["sensor_hal_configuration_V1_0"],
+    generated_headers: ["sensor_hal_configuration_V1_0"],
 }
