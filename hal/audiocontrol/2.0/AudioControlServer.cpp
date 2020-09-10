@@ -148,8 +148,11 @@ void AudioControlServerImpl::Start() {
 
     mGrpcServer = builder.BuildAndStart();
 
-    CHECK(mGrpcServer) << __func__ << ": failed to create the GRPC server, "
-                       << "please make sure the configuration and permissions are correct.";
+    if (!mGrpcServer) {
+        LOG(ERROR) << __func__ << ": failed to create the GRPC server, "
+                   << "please make sure the configuration and permissions are correct.";
+        return;
+    }
 
     mRequestWorker = std::thread(std::bind(&AudioControlServerImpl::RequestWorker, this));
 }
