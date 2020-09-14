@@ -45,10 +45,10 @@
 #define PCM_CARD 0
 #define PCM_DEVICE 0
 
-#define OUT_PERIOD_MS 15
+#define OUT_PERIOD_MS 40
 #define OUT_PERIOD_COUNT 4
 
-#define IN_PERIOD_MS 15
+#define IN_PERIOD_MS 40
 #define IN_PERIOD_COUNT 4
 
 #define PI 3.14159265
@@ -1079,8 +1079,17 @@ static int adev_open_output_stream(struct audio_hw_device *dev,
     out->frames_written = 0;
     out->frames_rendered = 0;
 
+    /* Init a buffer, twice the size of the period count.
+     * It is not enough to make the buffer of the exactly size, as the
+     * processes of writing to and reading from the buffer are not synchronized.
+     * Hence, it is possible that the reader hasn't read all the frames from
+     * the buffer by the moment, the writer put a new chunk of frames there.
+     * Taking into account, that this code does not handle the situation of
+     * generic frames overflows (as it is handled in another place), doubling
+     * the size of the buffer solves this problem.
+     */
     ret = audio_vbuffer_init(&out->buffer,
-            out->pcm_config.period_size*out->pcm_config.period_count,
+            out->pcm_config.period_size*out->pcm_config.period_count*2,
             out->pcm_config.channels *
             pcm_format_to_bits(out->pcm_config.format) >> 3);
     if (ret == 0) {
