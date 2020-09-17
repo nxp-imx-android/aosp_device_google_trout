@@ -52,14 +52,13 @@ int main() {
             });
 
     if (!si) {
-        LOG(ERROR) << "failed to get server connection cid/port; configure and try again.";
-        return 1;
+        LOG(ERROR) << "failed to get server connection cid/port; audio control server disabled.";
     } else {
         LOG(INFO) << "Creating audio control server at " << si->str();
     }
 
     // Create an instance of our service class
-    android::sp<AudioControl> service = new AudioControl(si->str());
+    android::sp<AudioControl> service = new AudioControl(si ? si->str() : "");
     configureRpcThreadpool(4, false /*callerWillJoin*/);
 
     if (service->registerAsService() != OK) {
