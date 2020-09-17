@@ -42,3 +42,16 @@ target_link_libraries(android_audio_controller
 )
 
 target_compile_options(android_audio_controller PRIVATE ${_trout_AUDIOFOCUS_CXX_FLAGS})
+
+# ========== libandroid_audio_controller_test ==============
+
+add_executable(android_audio_controller_test ${trout_AUDIOFOCUS_SRC_ROOT}/libandroid_audio_controller_test/main.cpp)
+
+target_compile_options(android_audio_controller_test PRIVATE ${_trout_AUDIOFOCUS_CXX_FLAGS})
+
+target_include_directories(android_audio_controller_test
+    PRIVATE ${trout_GENS_DIR}
+    PRIVATE ${trout_AUDIOFOCUS_SRC_ROOT}/libandroid_audio_controller
+)
+
+target_link_libraries(android_audio_controller_test android_audio_controller)
