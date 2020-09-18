@@ -45,10 +45,10 @@
 #define PCM_CARD 0
 #define PCM_DEVICE 0
 
-#define OUT_PERIOD_MS 15
+#define OUT_PERIOD_MS 40
 #define OUT_PERIOD_COUNT 4
 
-#define IN_PERIOD_MS 15
+#define IN_PERIOD_MS 40
 #define IN_PERIOD_COUNT 4
 
 #define PI 3.14159265
@@ -60,6 +60,11 @@
 #define TONE_FREQUENCY_INCREASE 20
 // Max tone frequency to auto assign, don't want to generate too high of a pitch
 #define MAX_TONE_FREQUENCY 500
+
+// The average interval with which notifications come from the device (1 ms or 1000 us)
+#define NOTIFICATION_AVR_INTERVAL_US 1000
+// The amount of times we try to read a notification from the device
+#define MAX_READ_ATTEMPTS 100
 
 #define _bool_str(x) ((x)?"true":"false")
 
@@ -899,6 +904,25 @@ static bool is_tone_generator_device(struct generic_stream_in *in) {
         address_has_tone_keyword(in->bus_address));
 }
 
+static size_t read_frames_from_stream(void* dst, struct generic_stream_in* in, size_t frames_cnt) {
+    size_t frames_read = 0;
+    void *cur_dst = NULL;
+    audio_vbuffer_t *src = &in->buffer;
+    size_t frame_size = in->buffer.frame_size;
+    for (int attempt = 0; attempt < MAX_READ_ATTEMPTS; attempt++) {
+        cur_dst = &((uint8_t *)dst)[frames_read * frame_size];
+        frames_read += audio_vbuffer_read(src, cur_dst, frames_cnt - frames_read);
+        if (frames_read == frames_cnt)
+            break;
+        // The next notification from the device informs about new available frames.
+        // Wait for a time of the order of one notification interval.
+        pthread_mutex_unlock(&in->lock);
+        usleep(NOTIFICATION_AVR_INTERVAL_US / 2);
+        pthread_mutex_lock(&in->lock);
+    }
+    return frames_read;
+}
+
 static ssize_t in_read(struct audio_stream_in *stream, void *buffer, size_t bytes) {
     struct generic_stream_in *in = (struct generic_stream_in *)stream;
     struct generic_audio_device *adev = in->dev;
@@ -945,7 +969,7 @@ static ssize_t in_read(struct audio_stream_in *stream, void *buffer, size_t byte
     }
 
     pthread_mutex_lock(&in->lock);
-    int read_frames = 0;
+    size_t read_frames = 0;
     if (in->standby) {
         ALOGW("Input put to sleep while read in progress");
         goto exit;
@@ -966,7 +990,12 @@ static ssize_t in_read(struct audio_stream_in *stream, void *buffer, size_t byte
             }
         }
 
-        read_frames = audio_vbuffer_read(&in->buffer, in->stereo_to_mono_buf, frames);
+        read_frames = read_frames_from_stream(in->stereo_to_mono_buf, in, frames);
+        if (read_frames != frames) {
+            ALOGE("Failed to read all the frames! Is the device dead?");
+            goto exit;
+        }
+
 
         // Currently only pcm 16 is supported.
         uint16_t *src = (uint16_t *)in->stereo_to_mono_buf;
@@ -980,7 +1009,11 @@ static ssize_t in_read(struct audio_stream_in *stream, void *buffer, size_t byte
             dst += 1;
         }
     } else {
-        read_frames = audio_vbuffer_read(&in->buffer, buffer, frames);
+        read_frames = read_frames_from_stream(buffer, in, frames);
+        if (read_frames != frames) {
+            ALOGE("Failed to read all the frames! Is the device dead?");
+            goto exit;
+        }
     }
 
 exit:
@@ -1079,8 +1112,17 @@ static int adev_open_output_stream(struct audio_hw_device *dev,
     out->frames_written = 0;
     out->frames_rendered = 0;
 
+    /* Init a buffer, twice the size of the period count.
+     * It is not enough to make the buffer of the exactly size, as the
+     * processes of writing to and reading from the buffer are not synchronized.
+     * Hence, it is possible that the reader hasn't read all the frames from
+     * the buffer by the moment, the writer put a new chunk of frames there.
+     * Taking into account, that this code does not handle the situation of
+     * generic frames overflows (as it is handled in another place), doubling
+     * the size of the buffer solves this problem.
+     */
     ret = audio_vbuffer_init(&out->buffer,
-            out->pcm_config.period_size*out->pcm_config.period_count,
+            out->pcm_config.period_size*out->pcm_config.period_count*2,
             out->pcm_config.channels *
             pcm_format_to_bits(out->pcm_config.format) >> 3);
     if (ret == 0) {
