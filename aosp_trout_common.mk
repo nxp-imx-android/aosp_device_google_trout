@@ -53,7 +53,7 @@ LOCAL_DUMPSTATE_PRODUCT_PACKAGE ?= android.hardware.dumpstate@1.1-service.trout
 LOCAL_DUMPSTATE_PROPERTIES ?= \
     ro.vendor.dumpstate.server.cid=2 \
     ro.vendor.dumpstate.server.port=9310 \
-    ro.vendor.helpersystem.log_loc=/data/bugreport_test \
+    ro.vendor.helpersystem.log_loc=/data/host_logs \
 
 # Vehicle HAL
 LOCAL_VHAL_PRODUCT_PACKAGE ?= android.hardware.automotive.vehicle@2.0-virtualization-service
