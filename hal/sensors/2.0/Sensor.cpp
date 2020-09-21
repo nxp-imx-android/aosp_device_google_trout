@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#define LOG_TAG "GoogleIIOSensorSubHal"
 
 #include "Sensor.h"
 #include <hardware/sensors.h>
@@ -30,6 +31,7 @@ namespace implementation {
 using ::android::hardware::sensors::V1_0::MetaDataEventType;
 using ::android::hardware::sensors::V1_0::SensorFlagBits;
 using ::android::hardware::sensors::V1_0::SensorStatus;
+using ::sensor::hal::configuration::V1_0::Orientation;
 
 SensorBase::SensorBase(int32_t sensorHandle, ISensorsEventCallback* callback, SensorType type)
     : mIsEnabled(false), mSamplingPeriodNs(0), mCallback(callback), mMode(OperationMode::NORMAL) {
@@ -69,7 +71,7 @@ SensorBase::~SensorBase() {
 }
 
 HWSensorBase::~HWSensorBase() {
-    close(mpollfd_iio.fd);
+    close(mPollFdIio.fd);
 }
 
 const SensorInfo& SensorBase::getSensorInfo() const {
@@ -84,10 +86,10 @@ void HWSensorBase::batch(int32_t samplingPeriodNs) {
         int i = 0;
         mSamplingPeriodNs = samplingPeriodNs;
         std::vector<double>::iterator low =
-                std::lower_bound(miio_data.sampling_freq_avl.begin(),
-                                 miio_data.sampling_freq_avl.end(), sampling_frequency);
-        i = low - miio_data.sampling_freq_avl.begin();
-        set_sampling_frequency(miio_data.sysfspath, miio_data.sampling_freq_avl[i]);
+                std::lower_bound(mIioData.sampling_freq_avl.begin(),
+                                 mIioData.sampling_freq_avl.end(), sampling_frequency);
+        i = low - mIioData.sampling_freq_avl.begin();
+        set_sampling_frequency(mIioData.sysfspath, mIioData.sampling_freq_avl[i]);
         // Wake up the 'run' thread to check if a new event should be generated now
         mWaitCV.notify_all();
     }
@@ -97,7 +99,7 @@ void HWSensorBase::activate(bool enable) {
     std::unique_lock<std::mutex> lock(mRunMutex);
     if (mIsEnabled != enable) {
         mIsEnabled = enable;
-        enable_sensor(miio_data.sysfspath, enable);
+        enable_sensor(mIioData.sysfspath, enable);
         mWaitCV.notify_all();
     }
 }
@@ -120,27 +122,33 @@ Result SensorBase::flush() {
     return Result::OK;
 }
 
+template <size_t N>
+float getChannelData(const std::array<float, N>& channelData, int64_t map, bool negate) {
+    return negate ? -channelData[map] : channelData[map];
+}
+
 void HWSensorBase::processScanData(uint8_t* data, Event* evt) {
-    float channelData[NUM_OF_CHANNEL_SUPPORTED - 1];
+    std::array<float, NUM_OF_DATA_CHANNELS> channelData;
     unsigned int chanIdx;
     evt->sensorHandle = mSensorInfo.sensorHandle;
     evt->sensorType = mSensorInfo.type;
-    for (auto i = 0u; i < miio_data.channelInfo.size(); i++) {
-        chanIdx = miio_data.channelInfo[i].index;
-        const int64_t val = *reinterpret_cast<int64_t*>(
-                data + chanIdx * miio_data.channelInfo[i].storage_bytes);
+    for (auto i = 0u; i < mIioData.channelInfo.size(); i++) {
+        chanIdx = mIioData.channelInfo[i].index;
 
+        const int64_t val =
+                *reinterpret_cast<int64_t*>(data + chanIdx * mIioData.channelInfo[i].storage_bytes);
         // If the channel index is the last, it is timestamp
         // else it is sensor data
-        if (chanIdx == miio_data.channelInfo.size() - 1) {
+        if (chanIdx == mIioData.channelInfo.size() - 1) {
             evt->timestamp = val;
         } else {
-            channelData[chanIdx] = (static_cast<float>(val) * miio_data.resolution);
+            channelData[chanIdx] = static_cast<float>(val) * mIioData.resolution;
         }
     }
-    evt->u.vec3.x = channelData[0];
-    evt->u.vec3.y = channelData[1];
-    evt->u.vec3.z = channelData[2];
+
+    evt->u.vec3.x = getChannelData(channelData, mXMap, mXNegate);
+    evt->u.vec3.y = getChannelData(channelData, mYMap, mYNegate);
+    evt->u.vec3.z = getChannelData(channelData, mZMap, mZNegate);
     evt->u.vec3.status = SensorStatus::ACCURACY_HIGH;
 }
 
@@ -157,19 +165,19 @@ void HWSensorBase::run() {
                 return ((mIsEnabled && mMode == OperationMode::NORMAL) || mStopThread);
             });
         } else {
-            err = poll(&mpollfd_iio, 1, mSamplingPeriodNs * 1000);
+            err = poll(&mPollFdIio, 1, mSamplingPeriodNs * 1000);
             if (err <= 0) {
-                ALOGE("Sensor %s poll returned %d", miio_data.name.c_str(), err);
+                ALOGE("Sensor %s poll returned %d", mIioData.name.c_str(), err);
                 continue;
             }
-            if (mpollfd_iio.revents & POLLIN) {
-                read_size = read(mpollfd_iio.fd, &msensor_raw_data[0], mscan_size);
+            if (mPollFdIio.revents & POLLIN) {
+                read_size = read(mPollFdIio.fd, &mSensorRawData[0], mScanSize);
                 if (read_size <= 0) {
-                    ALOGE("%s: Failed to read data from iio char device.", miio_data.name.c_str());
+                    ALOGE("%s: Failed to read data from iio char device.", mIioData.name.c_str());
                     continue;
                 }
                 events.clear();
-                processScanData(&msensor_raw_data[0], &event);
+                processScanData(&mSensorRawData[0], &event);
                 events.push_back(event);
                 mCallback->postEvents(events, isWakeUpSensor());
             }
@@ -210,15 +218,103 @@ Result SensorBase::injectEvent(const Event& event) {
 
 ssize_t HWSensorBase::calculateScanSize() {
     ssize_t numBytes = 0;
-    for (auto i = 0u; i < miio_data.channelInfo.size(); i++) {
-        numBytes += miio_data.channelInfo[i].storage_bytes;
+    for (auto i = 0u; i < mIioData.channelInfo.size(); i++) {
+        numBytes += mIioData.channelInfo[i].storage_bytes;
     }
     return numBytes;
 }
 
-HWSensorBase::HWSensorBase(int32_t sensorHandle, ISensorsEventCallback* callback, SensorType type,
-                           const struct iio_device_data& data)
-    : SensorBase(sensorHandle, callback, type) {
+status_t checkAxis(int64_t map) {
+    if (map < 0 || map >= NUM_OF_DATA_CHANNELS)
+        return BAD_VALUE;
+    else
+        return OK;
+}
+
+std::optional<std::vector<Orientation>> getOrientation(
+        std::optional<std::vector<Configuration>> config) {
+    if (!config) return std::nullopt;
+    if (config->empty()) return std::nullopt;
+    Configuration& sensorCfg = (*config)[0];
+    return sensorCfg.getOrientation();
+}
+
+status_t checkOrientation(std::optional<std::vector<Configuration>> config) {
+    status_t ret = OK;
+    std::optional<std::vector<Orientation>> sensorOrientationList = getOrientation(config);
+    if (!sensorOrientationList) return OK;
+    if (sensorOrientationList->empty()) return OK;
+    Orientation& sensorOrientation = (*sensorOrientationList)[0];
+    if (!sensorOrientation.getFirstX() || !sensorOrientation.getFirstY() ||
+        !sensorOrientation.getFirstZ())
+        return BAD_VALUE;
+
+    int64_t xMap = sensorOrientation.getFirstX()->getMap();
+    ret = checkAxis(xMap);
+    if (ret != OK) return ret;
+    int64_t yMap = sensorOrientation.getFirstY()->getMap();
+    ret = checkAxis(yMap);
+    if (ret != OK) return ret;
+    int64_t zMap = sensorOrientation.getFirstZ()->getMap();
+    ret = checkAxis(zMap);
+    if (ret != OK) return ret;
+    if (xMap == yMap || yMap == zMap || zMap == xMap) return BAD_VALUE;
+    return ret;
+}
+
+void HWSensorBase::setAxisDefaultValues() {
+    mXMap = 0;
+    mYMap = 1;
+    mZMap = 2;
+    mXNegate = mYNegate = mZNegate = false;
+}
+void HWSensorBase::setOrientation(std::optional<std::vector<Configuration>> config) {
+    std::optional<std::vector<Orientation>> sensorOrientationList = getOrientation(config);
+
+    if (sensorOrientationList && !sensorOrientationList->empty()) {
+        Orientation& sensorOrientation = (*sensorOrientationList)[0];
+
+        if (sensorOrientation.getRotate()) {
+            mXMap = sensorOrientation.getFirstX()->getMap();
+            mXNegate = sensorOrientation.getFirstX()->getNegate();
+            mYMap = sensorOrientation.getFirstY()->getMap();
+            mYNegate = sensorOrientation.getFirstY()->getNegate();
+            mZMap = sensorOrientation.getFirstZ()->getMap();
+            mZNegate = sensorOrientation.getFirstZ()->getNegate();
+        } else {
+            setAxisDefaultValues();
+        }
+    } else {
+        setAxisDefaultValues();
+    }
+}
+
+status_t checkIIOData(const struct iio_device_data& iio_data) {
+    status_t ret = OK;
+    for (auto i = 0u; i < iio_data.channelInfo.size(); i++) {
+        if (iio_data.channelInfo[i].index > NUM_OF_DATA_CHANNELS) return BAD_VALUE;
+    }
+    return ret;
+}
+HWSensorBase* HWSensorBase::buildSensor(int32_t sensorHandle, ISensorsEventCallback* callback,
+                                        const struct iio_device_data& iio_data,
+                                        const std::optional<std::vector<Configuration>>& config) {
+    if (checkOrientation(config) != OK) {
+        ALOGE("Orientation of the sensor %s in the configuration file is invalid",
+              iio_data.name.c_str());
+        return nullptr;
+    }
+    if (checkIIOData(iio_data) != OK) {
+        ALOGE("IIO channel index of the sensor %s  is invalid", iio_data.name.c_str());
+        return nullptr;
+    }
+    return new HWSensorBase(sensorHandle, callback, iio_data, config);
+}
+
+HWSensorBase::HWSensorBase(int32_t sensorHandle, ISensorsEventCallback* callback,
+                           const struct iio_device_data& data,
+                           const std::optional<std::vector<Configuration>>& config)
+    : SensorBase(sensorHandle, callback, data.type) {
     std::string buffer_path;
     mSensorInfo.flags |= SensorFlagBits::CONTINUOUS_MODE;
     mSensorInfo.name = data.name;
@@ -226,7 +322,8 @@ HWSensorBase::HWSensorBase(int32_t sensorHandle, ISensorsEventCallback* callback
     mSensorInfo.maxRange = data.max_range * data.resolution;
     mSensorInfo.power =
             (data.power_microwatts / 1000.f) / SENSOR_VOLTAGE_DEFAULT;  // converting uW to mA
-    miio_data = data;
+    mIioData = data;
+    setOrientation(config);
     unsigned int max_sampling_frequency = 0;
     unsigned int min_sampling_frequency = UINT_MAX;
     for (auto i = 0u; i < data.sampling_freq_avl.size(); i++) {
@@ -237,26 +334,16 @@ HWSensorBase::HWSensorBase(int32_t sensorHandle, ISensorsEventCallback* callback
     }
     mSensorInfo.minDelay = frequency_to_us(max_sampling_frequency);
     mSensorInfo.maxDelay = frequency_to_us(min_sampling_frequency);
-    mscan_size = calculateScanSize();
+    mScanSize = calculateScanSize();
     buffer_path = "/dev/iio:device";
-    buffer_path.append(std::to_string(miio_data.iio_dev_num));
-    mpollfd_iio.fd = open(buffer_path.c_str(), O_RDONLY | O_NONBLOCK);
-    if (mpollfd_iio.fd < 0) {
+    buffer_path.append(std::to_string(mIioData.iio_dev_num));
+    mPollFdIio.fd = open(buffer_path.c_str(), O_RDONLY | O_NONBLOCK);
+    if (mPollFdIio.fd < 0) {
         ALOGE("%s: Failed to open iio char device (%s).", data.name.c_str(), buffer_path.c_str());
         return;
     }
-    mpollfd_iio.events = POLLIN;
-    msensor_raw_data.resize(mscan_size);
-}
-
-Accelerometer::Accelerometer(int32_t sensorHandle, ISensorsEventCallback* callback,
-                             const struct iio_device_data& data)
-    : HWSensorBase(sensorHandle, callback, SensorType::ACCELEROMETER, data) {
-}
-
-Gyroscope::Gyroscope(int32_t sensorHandle, ISensorsEventCallback* callback,
-                     const struct iio_device_data& data)
-    : HWSensorBase(sensorHandle, callback, SensorType::GYROSCOPE, data) {
+    mPollFdIio.events = POLLIN;
+    mSensorRawData.resize(mScanSize);
 }
 
 }  // namespace implementation
