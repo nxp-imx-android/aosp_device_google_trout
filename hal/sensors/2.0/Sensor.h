@@ -24,14 +24,19 @@
 #include <thread>
 #include <vector>
 #include "iio_utils.h"
+#include "sensor_hal_configuration_V1_0.h"
 
 #define NUM_OF_CHANNEL_SUPPORTED 4
+// Subtract the timestamp channel to get the number of data channels
+#define NUM_OF_DATA_CHANNELS NUM_OF_CHANNEL_SUPPORTED - 1
 
 using ::android::hardware::sensors::V1_0::Event;
 using ::android::hardware::sensors::V1_0::OperationMode;
 using ::android::hardware::sensors::V1_0::Result;
 using ::android::hardware::sensors::V1_0::SensorInfo;
 using ::android::hardware::sensors::V1_0::SensorType;
+using ::sensor::hal::configuration::V1_0::AxisType;
+using ::sensor::hal::configuration::V1_0::Configuration;
 
 namespace android {
 namespace hardware {
@@ -90,36 +95,31 @@ class SensorBase {
 // HWSensorBase represents the actual physical sensor provided as the IIO device
 class HWSensorBase : public SensorBase {
   public:
-    HWSensorBase(int32_t sensorHandle, ISensorsEventCallback* callback, SensorType type,
-                 const struct iio_device_data& iio_data);
-    virtual ~HWSensorBase() = 0;
+    static HWSensorBase* buildSensor(int32_t sensorHandle, ISensorsEventCallback* callback,
+                                     const struct iio_device_data& iio_data,
+                                     const std::optional<std::vector<Configuration>>& config);
+    ~HWSensorBase();
     void batch(int32_t samplingPeriodNs);
     void activate(bool enable);
-
-    struct iio_device_data miio_data;
+    struct iio_device_data mIioData;
 
   private:
-    ssize_t mscan_size;
-    struct pollfd mpollfd_iio;
-    std::vector<uint8_t> msensor_raw_data;
+    ssize_t mScanSize;
+    struct pollfd mPollFdIio;
+    std::vector<uint8_t> mSensorRawData;
+    int64_t mXMap, mYMap, mZMap;
+    bool mXNegate, mYNegate, mZNegate;
+
+    HWSensorBase(int32_t sensorHandle, ISensorsEventCallback* callback,
+                 const struct iio_device_data& iio_data,
+                 const std::optional<std::vector<Configuration>>& config);
 
     ssize_t calculateScanSize();
     void run();
+    void setOrientation(std::optional<std::vector<Configuration>> config);
     void processScanData(uint8_t* data, Event* evt);
+    void setAxisDefaultValues();
 };
-
-class Accelerometer : public HWSensorBase {
-  public:
-    Accelerometer(int32_t sensorHandle, ISensorsEventCallback* callback,
-                  const struct iio_device_data& iio_data);
-};
-
-class Gyroscope : public HWSensorBase {
-  public:
-    Gyroscope(int32_t sensorHandle, ISensorsEventCallback* callback,
-              const struct iio_device_data& iio_data);
-};
-
 }  // namespace implementation
 }  // namespace subhal
 }  // namespace V2_0
