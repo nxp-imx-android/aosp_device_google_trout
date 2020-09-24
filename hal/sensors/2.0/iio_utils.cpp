@@ -37,6 +37,7 @@ static const char* IIO_SAMPLING_FREQUENCY = "_sampling_frequency";
 static const char* IIO_BUFFER_ENABLE = "buffer/enable";
 static const char* IIO_POWER_FILENAME = "sensor_power";
 static const char* IIO_MAX_RANGE_FILENAME = "sensor_max_range";
+static const char* IIO_RESOLUTION_FILENAME = "sensor_resolution";
 
 namespace android {
 namespace hardware {
@@ -170,9 +171,7 @@ static int get_sampling_frequency_available(const std::string& device_dir,
     char* rest;
     std::string line;
 
-    std::string filename = device_dir;
-    filename += "/";
-    filename += IIO_SFA_FILENAME;
+    const std::string filename = device_dir + "/" + IIO_SFA_FILENAME;
 
     ret = sysfs_read_str(filename, &line);
     if (ret < 0) return ret;
@@ -186,17 +185,13 @@ static int get_sampling_frequency_available(const std::string& device_dir,
 }
 
 static int get_sensor_power(const std::string& device_dir, unsigned int* power) {
-    std::string filename = device_dir;
-    filename += "/";
-    filename += IIO_POWER_FILENAME;
+    const std::string filename = device_dir + "/" + IIO_POWER_FILENAME;
 
     return sysfs_read_uint(filename, power);
 }
 
 static int get_sensor_max_range(const std::string& device_dir, int64_t* max_range) {
-    std::string filename = device_dir;
-    filename += "/";
-    filename += IIO_MAX_RANGE_FILENAME;
+    const std::string filename = device_dir + "/" + IIO_MAX_RANGE_FILENAME;
 
     return sysfs_read_int64(filename, max_range);
 }
@@ -218,12 +213,12 @@ int set_sampling_frequency(const std::string& device_dir, const double frequency
     return ret;
 }
 
-static int get_scale(const std::string& device_dir, float* resolution) {
+static int get_sensor_scale(const std::string& device_dir, float* scale) {
     DirPtr dp(nullptr, closedir);
     const struct dirent* ent;
     int err;
     std::string filename;
-    if (resolution == nullptr) {
+    if (scale == nullptr) {
         return -EINVAL;
     }
     err = sysfs_opendir(device_dir, &dp);
@@ -233,10 +228,16 @@ static int get_scale(const std::string& device_dir, float* resolution) {
             filename = device_dir;
             filename += "/";
             filename += ent->d_name;
-            err = sysfs_read_float(filename, resolution);
+            err = sysfs_read_float(filename, scale);
         }
     }
     return err;
+}
+
+static int get_sensor_resolution(const std::string& device_dir, float* resolution) {
+    const std::string filename = device_dir + "/" + IIO_RESOLUTION_FILENAME;
+
+    return sysfs_read_float(filename, resolution);
 }
 
 static bool is_supported_sensor(const std::string& path,
@@ -290,9 +291,9 @@ int load_iio_devices(std::vector<iio_device_data>* iio_data,
         }
 
         std::sort(iio_dev_data.sampling_freq_avl.begin(), iio_dev_data.sampling_freq_avl.end());
-        err = get_scale(iio_dev_data.sysfspath, &iio_dev_data.resolution);
+        err = get_sensor_scale(iio_dev_data.sysfspath, &iio_dev_data.scale);
         if (err) {
-            ALOGE("get_scale for %s returned error %d", path_device.c_str(), err);
+            ALOGE("get_sensor_scale for %s returned error %d", path_device.c_str(), err);
             continue;
         }
         err = get_sensor_power(iio_dev_data.sysfspath, &iio_dev_data.power_microwatts);
@@ -305,6 +306,12 @@ int load_iio_devices(std::vector<iio_device_data>* iio_data,
             ALOGE("get_sensor_max_range for %s returned error %d", path_device.c_str(), err);
             continue;
         }
+        err = get_sensor_resolution(iio_dev_data.sysfspath, &iio_dev_data.resolution);
+        if (err) {
+            ALOGE("get_sensor_resolution for %s returned error %d", path_device.c_str(), err);
+            continue;
+        }
+
         sscanf(ent->d_name + iio_base_len, "%hhu", &iio_dev_data.iio_dev_num);
 
         iio_data->push_back(iio_dev_data);

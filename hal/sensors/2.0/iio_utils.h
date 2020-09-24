@@ -55,6 +55,7 @@ struct iio_device_data {
     std::string name;
     std::string sysfspath;
     float resolution;
+    float scale;
     SensorType type;
     std::vector<iio_info_channel> channelInfo;
     std::vector<double> sampling_freq_avl;
