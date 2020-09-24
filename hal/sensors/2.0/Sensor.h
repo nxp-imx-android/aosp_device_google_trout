@@ -30,12 +30,12 @@
 // Subtract the timestamp channel to get the number of data channels
 #define NUM_OF_DATA_CHANNELS NUM_OF_CHANNEL_SUPPORTED - 1
 
+using ::android::hardware::sensors::V1_0::AdditionalInfo;
 using ::android::hardware::sensors::V1_0::Event;
 using ::android::hardware::sensors::V1_0::OperationMode;
 using ::android::hardware::sensors::V1_0::Result;
 using ::android::hardware::sensors::V1_0::SensorInfo;
 using ::android::hardware::sensors::V1_0::SensorType;
-using ::sensor::hal::configuration::V1_0::AxisType;
 using ::sensor::hal::configuration::V1_0::Configuration;
 
 namespace android {
@@ -72,7 +72,7 @@ class SensorBase {
     const SensorInfo& getSensorInfo() const;
     virtual void batch(int32_t samplingPeriodNs) = 0;
     virtual void activate(bool enable) = 0;
-    Result flush();
+    virtual Result flush();
     void setOperationMode(OperationMode mode);
     bool supportsDataInjection() const;
     Result injectEvent(const Event& event);
@@ -101,14 +101,23 @@ class HWSensorBase : public SensorBase {
     ~HWSensorBase();
     void batch(int32_t samplingPeriodNs);
     void activate(bool enable);
+    Result flush();
     struct iio_device_data mIioData;
 
   private:
+    static constexpr uint8_t LOCATION_X_IDX = 3;
+    static constexpr uint8_t LOCATION_Y_IDX = 7;
+    static constexpr uint8_t LOCATION_Z_IDX = 11;
+    static constexpr uint8_t ROTATION_X_IDX = 0;
+    static constexpr uint8_t ROTATION_Y_IDX = 1;
+    static constexpr uint8_t ROTATION_Z_IDX = 2;
+
     ssize_t mScanSize;
     struct pollfd mPollFdIio;
     std::vector<uint8_t> mSensorRawData;
     int64_t mXMap, mYMap, mZMap;
     bool mXNegate, mYNegate, mZNegate;
+    std::vector<AdditionalInfo> mAdditionalInfoFrames;
 
     HWSensorBase(int32_t sensorHandle, ISensorsEventCallback* callback,
                  const struct iio_device_data& iio_data,
@@ -119,6 +128,10 @@ class HWSensorBase : public SensorBase {
     void setOrientation(std::optional<std::vector<Configuration>> config);
     void processScanData(uint8_t* data, Event* evt);
     void setAxisDefaultValues();
+    status_t setAdditionalInfoFrames(const std::optional<std::vector<Configuration>>& config);
+    void sendAdditionalInfoReport();
+    status_t getSensorPlacement(AdditionalInfo* sensorPlacement,
+                                const std::optional<std::vector<Configuration>>& config);
 };
 }  // namespace implementation
 }  // namespace subhal
