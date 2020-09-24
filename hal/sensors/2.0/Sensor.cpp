@@ -166,7 +166,7 @@ void HWSensorBase::processScanData(uint8_t* data, Event* evt) {
         if (chanIdx == mIioData.channelInfo.size() - 1) {
             evt->timestamp = val;
         } else {
-            channelData[chanIdx] = static_cast<float>(val) * mIioData.resolution;
+            channelData[chanIdx] = static_cast<float>(val) * mIioData.scale;
         }
     }
 
@@ -451,7 +451,7 @@ HWSensorBase::HWSensorBase(int32_t sensorHandle, ISensorsEventCallback* callback
     mSensorInfo.flags |= SensorFlagBits::CONTINUOUS_MODE;
     mSensorInfo.name = data.name;
     mSensorInfo.resolution = data.resolution;
-    mSensorInfo.maxRange = data.max_range * data.resolution;
+    mSensorInfo.maxRange = data.max_range * data.scale;
     mSensorInfo.power =
             (data.power_microwatts / 1000.f) / SENSOR_VOLTAGE_DEFAULT;  // converting uW to mA
     mIioData = data;
