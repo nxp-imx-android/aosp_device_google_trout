@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+#pragma once
+
 #include "DumpstateServer.grpc.pb.h"
 #include "DumpstateServer.pb.h"
 

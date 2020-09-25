@@ -15,6 +15,7 @@
  */
 
 #include "DumpstateGrpcServer.h"
+#include "ServiceDescriptor.h"
 
 #include <array>
 #include <iostream>
@@ -22,59 +23,18 @@
 
 #include <grpc++/grpc++.h>
 
-struct ServiceDescriptor {
-  public:
-    ServiceDescriptor(std::string name, std::string cmd) : mName(name), mCommandLine(cmd) {}
+struct GrpcServiceOutputConsumer : public ServiceDescriptor::OutputConsumer {
+    using Dest = ::grpc::ServerWriter<dumpstate_proto::DumpstateBuffer>*;
 
-    const char* name() const { return mName.c_str(); }
-    const char* command() const { return mCommandLine.c_str(); }
+    explicit GrpcServiceOutputConsumer(Dest s) : stream(s) {}
 
-    bool IsAvailable() const {
-        // TODO(egranata): how to validate this?
-        return true;
+    void Write(char* ptr, size_t len) override {
+        dumpstate_proto::DumpstateBuffer dumpstateBuffer;
+        dumpstateBuffer.set_buffer(ptr, len);
+        stream->Write(dumpstateBuffer);
     }
 
-    grpc::Status GetOutput(::grpc::ServerWriter<dumpstate_proto::DumpstateBuffer>* stream) const {
-        const auto cmd = command();
-
-        int commandExitStatus = 0;
-        auto pipeStreamDeleter = [&commandExitStatus](std::FILE* fp) {
-            commandExitStatus = pclose(fp);
-        };
-        std::unique_ptr<std::FILE, decltype(pipeStreamDeleter)> pipeStream(popen(cmd, "r"),
-                                                                           pipeStreamDeleter);
-
-        if (!pipeStream) {
-            return ::grpc::Status(::grpc::StatusCode::INTERNAL,
-                                  std::string("Failed to execute ") + cmd + ", " + strerror(errno));
-        }
-
-        std::array<char, 65536> buffer;
-        while (!std::feof(pipeStream.get())) {
-            auto readLen = fread(buffer.data(), 1, buffer.size(), pipeStream.get());
-            dumpstate_proto::DumpstateBuffer dumpstateBuffer;
-            dumpstateBuffer.set_buffer(buffer.data(), readLen);
-            stream->Write(dumpstateBuffer);
-        }
-
-        pipeStream.reset();
-
-        if (commandExitStatus == 0) {
-            return ::grpc::Status::OK;
-        } else if (commandExitStatus < 0) {
-            return ::grpc::Status(
-                    ::grpc::StatusCode::INTERNAL,
-                    std::string("Failed when pclose ") + cmd + ", " + strerror(errno));
-        } else {
-            return ::grpc::Status(::grpc::StatusCode::INTERNAL,
-                                  std::string("Error when executing ") + cmd +
-                                          ", exit code: " + std::to_string(commandExitStatus));
-        }
-    }
-
-  private:
-    std::string mName;
-    std::string mCommandLine;
+    Dest stream;
 };
 
 static ServiceDescriptor kDmesgService("dmesg", "/bin/dmesg -kuPT");
@@ -109,7 +69,13 @@ static std::shared_ptr<::grpc::ServerCredentials> getServerCredentials() {
 grpc::Status DumpstateGrpcServer::GetSystemLogs(
         ::grpc::ServerContext*, const ::google::protobuf::Empty*,
         ::grpc::ServerWriter<dumpstate_proto::DumpstateBuffer>* stream) {
-    return kDmesgService.GetOutput(stream);
+    GrpcServiceOutputConsumer consumer(stream);
+
+    const auto ok = kDmesgService.GetOutput(&consumer);
+    if (ok == std::nullopt)
+        return ::grpc::Status::OK;
+    else
+        return ::grpc::Status(::grpc::StatusCode::INTERNAL, *ok);
 }
 
 grpc::Status DumpstateGrpcServer::GetAvailableServices(
@@ -139,7 +105,12 @@ grpc::Status DumpstateGrpcServer::GetServiceLogs(
         return ::grpc::Status(::grpc::StatusCode::INVALID_ARGUMENT,
                               std::string("Bad service name: ") + serviceName);
     }
-    return iter->second.GetOutput(stream);
+    GrpcServiceOutputConsumer consumer(stream);
+    const auto ok = iter->second.GetOutput(&consumer);
+    if (ok == std::nullopt)
+        return ::grpc::Status::OK;
+    else
+        return ::grpc::Status(::grpc::StatusCode::INTERNAL, *ok);
 }
 
 void DumpstateGrpcServer::Start() {
