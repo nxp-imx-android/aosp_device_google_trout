@@ -18,10 +18,14 @@
 
 #include "DumpstateServer.grpc.pb.h"
 #include "DumpstateServer.pb.h"
+#include "ServiceDescriptor.h"
+#include "ServiceSupplier.h"
+
+#include <optional>
 
 class DumpstateGrpcServer : public dumpstate_proto::DumpstateServer::Service {
   public:
-    explicit DumpstateGrpcServer(const std::string& addr) : mServiceAddr(addr) {}
+    DumpstateGrpcServer(const std::string& addr, const ServiceSupplier& services);
 
     grpc::Status GetSystemLogs(
             ::grpc::ServerContext* context, const ::google::protobuf::Empty* request,
@@ -39,4 +43,7 @@ class DumpstateGrpcServer : public dumpstate_proto::DumpstateServer::Service {
 
   private:
     std::string mServiceAddr;
+
+    std::optional<ServiceDescriptor> mSystemLogsService;
+    std::unordered_map<std::string, ServiceDescriptor> mServices;
 };
