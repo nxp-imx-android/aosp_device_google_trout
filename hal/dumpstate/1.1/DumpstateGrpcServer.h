@@ -36,8 +36,5 @@ class DumpstateGrpcServer : public dumpstate_proto::DumpstateServer::Service {
     void Start();
 
   private:
-    grpc::Status GetCommandOutput(const std::string& command,
-                                  ::grpc::ServerWriter<dumpstate_proto::DumpstateBuffer>* stream);
-
     std::string mServiceAddr;
 };

@@ -22,21 +22,82 @@
 
 #include <grpc++/grpc++.h>
 
+struct ServiceDescriptor {
+  public:
+    ServiceDescriptor(std::string name, std::string cmd) : mName(name), mCommandLine(cmd) {}
+
+    const char* name() const { return mName.c_str(); }
+    const char* command() const { return mCommandLine.c_str(); }
+
+    bool IsAvailable() const {
+        // TODO(egranata): how to validate this?
+        return true;
+    }
+
+    grpc::Status GetOutput(::grpc::ServerWriter<dumpstate_proto::DumpstateBuffer>* stream) const {
+        const auto cmd = command();
+
+        int commandExitStatus = 0;
+        auto pipeStreamDeleter = [&commandExitStatus](std::FILE* fp) {
+            commandExitStatus = pclose(fp);
+        };
+        std::unique_ptr<std::FILE, decltype(pipeStreamDeleter)> pipeStream(popen(cmd, "r"),
+                                                                           pipeStreamDeleter);
+
+        if (!pipeStream) {
+            return ::grpc::Status(::grpc::StatusCode::INTERNAL,
+                                  std::string("Failed to execute ") + cmd + ", " + strerror(errno));
+        }
+
+        std::array<char, 65536> buffer;
+        while (!std::feof(pipeStream.get())) {
+            auto readLen = fread(buffer.data(), 1, buffer.size(), pipeStream.get());
+            dumpstate_proto::DumpstateBuffer dumpstateBuffer;
+            dumpstateBuffer.set_buffer(buffer.data(), readLen);
+            stream->Write(dumpstateBuffer);
+        }
+
+        pipeStream.reset();
+
+        if (commandExitStatus == 0) {
+            return ::grpc::Status::OK;
+        } else if (commandExitStatus < 0) {
+            return ::grpc::Status(
+                    ::grpc::StatusCode::INTERNAL,
+                    std::string("Failed when pclose ") + cmd + ", " + strerror(errno));
+        } else {
+            return ::grpc::Status(::grpc::StatusCode::INTERNAL,
+                                  std::string("Error when executing ") + cmd +
+                                          ", exit code: " + std::to_string(commandExitStatus));
+        }
+    }
+
+  private:
+    std::string mName;
+    std::string mCommandLine;
+};
+
+static ServiceDescriptor kDmesgService("dmesg", "/bin/dmesg -kuPT");
+
+static std::pair<std::string, ServiceDescriptor> SystemdService(const std::string& name) {
+    return {name, ServiceDescriptor{name, std::string("/bin/journalctl --no-pager -t ") + name}};
+}
+
 // clang-format off
-static const std::unordered_set<std::string> kAvailableServices{
-        "coqos-virtio-blk",
-        "coqos-virtio-net",
-        "coqos-virtio-video",
-        "coqos-virtio-console",
-        "coqos-virtio-rng",
-        "coqos-virtio-vsock",
-        "coqos-virtio-gpu-virgl",
-        "coqos-virtio-scmi",
-        "coqos-virtio-input",
-        "coqos-virtio-snd",
-        "dumpstate_grpc_server",
-        "systemd",
-        "vehicle_hal_grpc_server",
+static const std::unordered_map<std::string, ServiceDescriptor> kAvailableServices{
+        SystemdService("coqos-virtio-blk"),
+        SystemdService("coqos-virtio-net"),
+        SystemdService("coqos-virtio-video"),
+        SystemdService("coqos-virtio-console"),
+        SystemdService("coqos-virtio-rng"),
+        SystemdService("coqos-virtio-vsock"),
+        SystemdService("coqos-virtio-gpu-virgl"),
+        SystemdService("coqos-virtio-scmi"),
+        SystemdService("coqos-virtio-input"),
+        SystemdService("coqos-virtio-snd"),
+        SystemdService("dumpstate_grpc_server"),
+        SystemdService("systemd"),
+        SystemdService("vehicle_hal_grpc_server"),
 };
 // clang-format on
 
@@ -48,7 +109,7 @@ static std::shared_ptr<::grpc::ServerCredentials> getServerCredentials() {
 grpc::Status DumpstateGrpcServer::GetSystemLogs(
         ::grpc::ServerContext*, const ::google::protobuf::Empty*,
         ::grpc::ServerWriter<dumpstate_proto::DumpstateBuffer>* stream) {
-    return GetCommandOutput("/bin/dmesg -kuPT", stream);
+    return kDmesgService.GetOutput(stream);
 }
 
 grpc::Status DumpstateGrpcServer::GetAvailableServices(
@@ -56,8 +117,8 @@ grpc::Status DumpstateGrpcServer::GetAvailableServices(
         dumpstate_proto::ServiceNameList* serviceList) {
     static const dumpstate_proto::ServiceNameList kProtoAvailableServices = []() {
         dumpstate_proto::ServiceNameList serviceNameList;
-        for (auto& serviceName : kAvailableServices) {
-            serviceNameList.add_service_names(serviceName);
+        for (auto& svc : kAvailableServices) {
+            if (svc.second.IsAvailable()) serviceNameList.add_service_names(svc.first);
         }
         return serviceNameList;
     }();
@@ -73,49 +134,12 @@ grpc::Status DumpstateGrpcServer::GetServiceLogs(
     if (serviceName.empty()) {
         return ::grpc::Status::OK;
     }
-    if (kAvailableServices.find(serviceName) == kAvailableServices.end()) {
+    auto iter = kAvailableServices.find(serviceName);
+    if (iter == kAvailableServices.end()) {
         return ::grpc::Status(::grpc::StatusCode::INVALID_ARGUMENT,
                               std::string("Bad service name: ") + serviceName);
     }
-    return GetCommandOutput(std::string("/bin/journalctl --no-pager -t ") + serviceName, stream);
-}
-
-grpc::Status DumpstateGrpcServer::GetCommandOutput(
-        const std::string& command,
-        ::grpc::ServerWriter<dumpstate_proto::DumpstateBuffer>* stream) {
-    int commandExitStatus = 0;
-    auto pipeStreamDeleter = [&commandExitStatus](std::FILE* fp) {
-        commandExitStatus = pclose(fp);
-    };
-    std::unique_ptr<std::FILE, decltype(pipeStreamDeleter)> pipeStream(popen(command.c_str(), "r"),
-                                                                       pipeStreamDeleter);
-
-    if (!pipeStream) {
-        return ::grpc::Status(::grpc::StatusCode::INTERNAL,
-                              std::string("Failed to execute ") + command + ", " + strerror(errno));
-    }
-
-    std::array<char, 65536> buffer;
-    while (!std::feof(pipeStream.get())) {
-        auto readLen = fread(buffer.data(), 1, buffer.size(), pipeStream.get());
-        dumpstate_proto::DumpstateBuffer dumpstateBuffer;
-        dumpstateBuffer.set_buffer(buffer.data(), readLen);
-        stream->Write(dumpstateBuffer);
-    }
-
-    pipeStream.reset();
-
-    if (commandExitStatus == 0) {
-        return ::grpc::Status::OK;
-    } else if (commandExitStatus < 0) {
-        return ::grpc::Status(
-                ::grpc::StatusCode::INTERNAL,
-                std::string("Failed when pclose ") + command + ", " + strerror(errno));
-    } else {
-        return ::grpc::Status(::grpc::StatusCode::INTERNAL,
-                              std::string("Error when executing ") + command +
-                                      ", exit code: " + std::to_string(commandExitStatus));
-    }
+    return iter->second.GetOutput(stream);
 }
 
 void DumpstateGrpcServer::Start() {
