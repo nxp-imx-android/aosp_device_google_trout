@@ -17,13 +17,11 @@
 #pragma once
 
 #include "DumpstateServer.grpc.pb.h"
+#include "DumpstateServer.h"
 #include "DumpstateServer.pb.h"
-#include "ServiceDescriptor.h"
-#include "ServiceSupplier.h"
 
-#include <optional>
-
-class DumpstateGrpcServer : public dumpstate_proto::DumpstateServer::Service {
+class DumpstateGrpcServer : public dumpstate_proto::DumpstateServer::Service,
+                            private DumpstateServer {
   public:
     DumpstateGrpcServer(const std::string& addr, const ServiceSupplier& services);
 
@@ -43,7 +41,4 @@ class DumpstateGrpcServer : public dumpstate_proto::DumpstateServer::Service {
 
   private:
     std::string mServiceAddr;
-
-    std::optional<ServiceDescriptor> mSystemLogsService;
-    std::unordered_map<std::string, ServiceDescriptor> mServices;
 };

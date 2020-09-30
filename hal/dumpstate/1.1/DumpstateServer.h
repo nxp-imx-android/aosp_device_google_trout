@@ -16,30 +16,24 @@
 
 #pragma once
 
+#include "ServiceDescriptor.h"
+#include "ServiceSupplier.h"
+
 #include <optional>
-#include <string>
+#include <unordered_map>
 
-class ServiceDescriptor {
+class DumpstateServer {
   public:
-    ServiceDescriptor(std::string name, std::string cmd);
+    explicit DumpstateServer(const ServiceSupplier& services);
 
-    const char* name() const { return mName.c_str(); }
-    const char* command() const { return mCommandLine.c_str(); }
+    ServiceDescriptor::Error GetSystemLogs(ServiceDescriptor::OutputConsumer* out);
 
-    bool IsAvailable() const {
-        // TODO(egranata): how to validate this?
-        return true;
-    }
+    std::vector<std::string> GetAvailableServices();
 
-    struct OutputConsumer {
-        virtual void Write(char* ptr, size_t len) = 0;
-    };
-
-    using Error = std::optional<std::string>;
-    // std::nullopt for success; an error descriptor otherwise
-    Error GetOutput(OutputConsumer* consumer) const;
+    ServiceDescriptor::Error GetServiceLogs(const std::string& svc,
+                                            ServiceDescriptor::OutputConsumer* out);
 
   private:
-    std::string mName;
-    std::string mCommandLine;
+    std::optional<ServiceDescriptor> mSystemLogsService;
+    std::unordered_map<std::string, ServiceDescriptor> mServices;
 };

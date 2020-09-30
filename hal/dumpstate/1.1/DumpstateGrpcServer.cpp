@@ -37,47 +37,37 @@ struct GrpcServiceOutputConsumer : public ServiceDescriptor::OutputConsumer {
     Dest stream;
 };
 
-DumpstateGrpcServer::DumpstateGrpcServer(const std::string& addr, const ServiceSupplier& services)
-    : mServiceAddr(addr) {
-    mSystemLogsService = services.GetSystemLogsService();
-    for (auto svc : services.GetServices()) {
-        mServices.emplace(svc.name(), svc);
-    }
-}
-
 static std::shared_ptr<::grpc::ServerCredentials> getServerCredentials() {
     // TODO(chenhaosjtuacm): get secured credentials here
     return ::grpc::InsecureServerCredentials();
 }
+
+static ::grpc::Status toGRpcStatus(const ServiceDescriptor::Error& err) {
+    if (err == std::nullopt)
+        return ::grpc::Status::OK;
+    else
+        return ::grpc::Status(::grpc::StatusCode::INTERNAL, *err);
+}
+
+DumpstateGrpcServer::DumpstateGrpcServer(const std::string& addr, const ServiceSupplier& services)
+    : DumpstateServer(services), mServiceAddr(addr) {}
 
 grpc::Status DumpstateGrpcServer::GetSystemLogs(
         ::grpc::ServerContext*, const ::google::protobuf::Empty*,
         ::grpc::ServerWriter<dumpstate_proto::DumpstateBuffer>* stream) {
     GrpcServiceOutputConsumer consumer(stream);
 
-    if (mSystemLogsService) {
-        const auto ok = mSystemLogsService->GetOutput(&consumer);
-        if (ok == std::nullopt)
-            return ::grpc::Status::OK;
-        else
-            return ::grpc::Status(::grpc::StatusCode::INTERNAL, *ok);
-    } else {
-        return ::grpc::Status(::grpc::StatusCode::INTERNAL, "system logs missing");
-    }
+    const auto ok = this->DumpstateServer::GetSystemLogs(&consumer);
+    return toGRpcStatus(ok);
 }
 
 grpc::Status DumpstateGrpcServer::GetAvailableServices(
         ::grpc::ServerContext*, const ::google::protobuf::Empty*,
         dumpstate_proto::ServiceNameList* serviceList) {
-    const dumpstate_proto::ServiceNameList kProtoAvailableServices = [this]() {
-        dumpstate_proto::ServiceNameList serviceNameList;
-        for (auto& svc : mServices) {
-            if (svc.second.IsAvailable()) serviceNameList.add_service_names(svc.first);
-        }
-        return serviceNameList;
-    }();
+    const auto services = this->DumpstateServer::GetAvailableServices();
 
-    *serviceList = kProtoAvailableServices;
+    for (const auto& svc : services) serviceList->add_service_names(svc);
+
     return ::grpc::Status::OK;
 }
 
@@ -88,17 +78,10 @@ grpc::Status DumpstateGrpcServer::GetServiceLogs(
     if (serviceName.empty()) {
         return ::grpc::Status::OK;
     }
-    auto iter = mServices.find(serviceName);
-    if (iter == mServices.end()) {
-        return ::grpc::Status(::grpc::StatusCode::INVALID_ARGUMENT,
-                              std::string("Bad service name: ") + serviceName);
-    }
+
     GrpcServiceOutputConsumer consumer(stream);
-    const auto ok = iter->second.GetOutput(&consumer);
-    if (ok == std::nullopt)
-        return ::grpc::Status::OK;
-    else
-        return ::grpc::Status(::grpc::StatusCode::INTERNAL, *ok);
+    const auto ok = this->DumpstateServer::GetServiceLogs(serviceName, &consumer);
+    return toGRpcStatus(ok);
 }
 
 void DumpstateGrpcServer::Start() {
