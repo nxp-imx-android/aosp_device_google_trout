@@ -24,6 +24,7 @@ if (CMAKE_CROSSCOMPILING)
     # ========== vehicle hal server build settings ===================
     set(trout_ANDROID_SYSCORE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/third_party/android/system_core)
     set(trout_FMTLIB_ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/third_party/fmtlib)
+    set(trout_GOOGLETEST_ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/third_party/googletest)
     set(trout_GRPC_ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/third_party/grpc-grpc)
     set(trout_JSONCPP_ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/third_party/jsoncpp)
     set(trout_NATIVE_VHAL_ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/third_party/default_native_vehicle_hal)

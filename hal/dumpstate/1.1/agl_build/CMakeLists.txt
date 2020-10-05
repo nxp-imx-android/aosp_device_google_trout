@@ -1,5 +1,6 @@
 set(_dumpstate_CXX_FLAGS -Wall -Werror -std=c++17)
 
+include(${trout_SRC_ROOT}/cmake/googletest.cmake)
 include(${trout_SRC_ROOT}/cmake/grpc.cmake)
 include(${trout_SRC_ROOT}/cmake/protobuf.cmake)
 include(${trout_SRC_ROOT}/cmake/utils/grpc_cpp_generator.cmake)
@@ -29,12 +30,16 @@ target_compile_options(dumpstate_protobuf_gen PRIVATE ${_dumpstate_CXX_FLAGS} -W
 
 # ========== dumpstate_grpc_server ==============
 
-add_executable(dumpstate_grpc_server
+set(_dumpstate_sources
     ${dumpstate_SRC_ROOT}/DumpstateServer.cpp
     ${dumpstate_SRC_ROOT}/DumpstateGrpcServer.cpp
-    ${dumpstate_SRC_ROOT}/server_main.cpp
     ${dumpstate_SRC_ROOT}/ServiceDescriptor.cpp
     ${dumpstate_SRC_ROOT}/ServiceSupplier.cpp
+)
+
+add_executable(dumpstate_grpc_server
+    ${_dumpstate_sources}
+    ${dumpstate_SRC_ROOT}/server_main.cpp
 )
 
 target_include_directories(dumpstate_grpc_server
@@ -46,3 +51,21 @@ target_link_libraries(dumpstate_grpc_server
 )
 
 target_compile_options(dumpstate_grpc_server PRIVATE ${_dumpstate_CXX_FLAGS})
+
+add_executable(dumpstate_tests
+    ${_dumpstate_sources}
+    ${dumpstate_SRC_ROOT}/tests/test_main.cpp
+    ${dumpstate_SRC_ROOT}/tests/tests.cpp
+)
+
+target_include_directories(dumpstate_tests
+    PRIVATE ${trout_GENS_DIR}
+    ${dumpstate_SRC_ROOT}
+)
+
+target_link_libraries(dumpstate_tests
+    dumpstate_protobuf_gen
+    ${trout_GOOGLETEST_LIBRARIES}
+)
+
+target_compile_options(dumpstate_tests PRIVATE ${_dumpstate_CXX_FLAGS})
