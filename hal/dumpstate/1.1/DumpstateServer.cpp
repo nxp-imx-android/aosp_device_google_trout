@@ -16,11 +16,15 @@
 
 #include "DumpstateServer.h"
 
+#include <iostream>
+
 DumpstateServer::DumpstateServer(const ServiceSupplier& services) {
     mSystemLogsService = services.GetSystemLogsService();
     for (auto svc : services.GetServices()) {
         mServices.emplace(svc.name(), svc);
     }
+
+    services.dump(std::cerr);
 }
 
 ServiceDescriptor::Error DumpstateServer::GetSystemLogs(ServiceDescriptor::OutputConsumer* out) {

@@ -19,9 +19,14 @@
 #include "ServiceDescriptor.h"
 
 #include <optional>
+#include <ostream>
 #include <vector>
 
 struct ServiceSupplier {
     virtual std::optional<ServiceDescriptor> GetSystemLogsService() const;
     virtual std::vector<ServiceDescriptor> GetServices() const;
+
+    void dump(std::ostream& os) const;
+
+    virtual ~ServiceSupplier() = default;
 };

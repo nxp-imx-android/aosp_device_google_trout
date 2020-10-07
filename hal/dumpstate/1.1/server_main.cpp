@@ -16,6 +16,7 @@
 
 #include "DumpstateGrpcServer.h"
 #include "ServiceSupplier.h"
+#include "config/XmlServiceSupplier.h"
 
 #include <getopt.h>
 
@@ -46,22 +47,15 @@ static const std::vector<ServiceDescriptor> kAvailableServices {
 };
 // clang-format on
 
+// TODO(egranata): this is a default configuration that we can remove once we land the proper BSP
 class CoqosLvSystemdServices : public ServiceSupplier {
   public:
     std::optional<ServiceDescriptor> GetSystemLogsService() const override { return kDmesgService; }
 
     std::vector<ServiceDescriptor> GetServices() const override { return kAvailableServices; }
-
-    void dump(std::ostream& os) {
-        if (auto dmesg = GetSystemLogsService()) {
-            os << "system logs service: [name=" << dmesg->name() << ", command=" << dmesg->command()
-               << "]" << std::endl;
-        }
-        for (auto svc : GetServices()) {
-            os << "service " << svc.name() << " runs command " << svc.command() << std::endl;
-        }
-    }
 };
+
+static constexpr auto SERVER_CONFIG_FILE = "/etc/aaos.dumpstate.xml";
 
 int main(int argc, char** argv) {
     std::string serverAddr;
@@ -93,10 +87,15 @@ int main(int argc, char** argv) {
         std::cerr << "Dumpstate server addreess: " << serverAddr << std::endl;
     }
 
-    CoqosLvSystemdServices servicesSupplier;
-    servicesSupplier.dump(std::cerr);
+    std::unique_ptr<DumpstateGrpcServer> server;
+    if (auto xmlServices = XmlServiceSupplier::fromFile(SERVER_CONFIG_FILE)) {
+        server.reset(new DumpstateGrpcServer{serverAddr, *xmlServices});
+    } else {
+        server.reset(new DumpstateGrpcServer{serverAddr, CoqosLvSystemdServices()});
+        std::cerr << "Server configuration not found; defaulting to built-in configuration which"
+                  << " may not work for all environments" << std::endl;
+    }
+    server->Start();
 
-    DumpstateGrpcServer server(serverAddr, servicesSupplier);
-    server.Start();
     return 0;
 }

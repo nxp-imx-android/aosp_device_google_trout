@@ -23,3 +23,16 @@ std::optional<ServiceDescriptor> ServiceSupplier::GetSystemLogsService() const {
 std::vector<ServiceDescriptor> ServiceSupplier::GetServices() const {
     return {};
 }
+
+void ServiceSupplier::dump(std::ostream& os) const {
+    os << "ServiceSupplier dump[system logs=" << (GetSystemLogsService().has_value() ? "y" : "n")
+       << "], services count = " << GetServices().size() << std::endl;
+
+    if (auto dmesg = GetSystemLogsService()) {
+        os << "system logs service: [name=" << dmesg->name() << ", command=" << dmesg->command()
+           << "]" << std::endl;
+    }
+    for (auto svc : GetServices()) {
+        os << "service " << svc.name() << " runs command " << svc.command() << std::endl;
+    }
+}

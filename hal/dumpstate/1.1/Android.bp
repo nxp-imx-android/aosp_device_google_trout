@@ -54,14 +54,17 @@ cc_binary {
         "WatchdogClient.cpp",
     ],
     generated_headers: [
+        "dumpstate_hal_configuration_V1_0",
         "DumpstateServerProtoStub_h",
     ],
     generated_sources: [
+        "dumpstate_hal_configuration_V1_0",
         "DumpstateServerProtoStub_cc",
     ],
     static_libs: [
         "android.hardware.automotive@libc++fs",
         "android.hardware.automotive.utils.vsockinfo",
+        "libxml2",
     ],
     shared_libs: [
         "android.hardware.automotive.utils.watchdog",
