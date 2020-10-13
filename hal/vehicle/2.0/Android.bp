@@ -96,10 +96,8 @@ cc_binary {
     srcs: [
         "GrpcVehicleClient.cpp",
         "VirtualizedVehicleService.cpp",
-        "WatchdogClient.cpp",
     ],
     shared_libs: [
-        "android.hardware.automotive.utils.watchdog",
         "libbase",
         "libcutils",
         "libjsoncpp",
