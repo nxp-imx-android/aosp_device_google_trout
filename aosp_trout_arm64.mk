@@ -16,6 +16,12 @@
 
 $(call inherit-product, device/google/cuttlefish/vsoc_arm64/auto/aosp_cf.mk)
 
+# Audio Control HAL
+# TODO (chenhaosjtuacm, egranata): move them to kernel command line
+LOCAL_AUDIOCONTROL_PROPERTIES ?= \
+    ro.vendor.audiocontrol.server.cid=1000 \
+    ro.vendor.audiocontrol.server.port=9410 \
+
 include device/google/trout/aosp_trout_common.mk
 
 DEVICE_MANIFEST_FILE += device/google/trout/manifest.xml
@@ -29,14 +35,9 @@ LOCAL_SENSOR_PRODUCT_PACKAGE ?= \
 
 PRODUCT_COPY_FILES += \
     device/google/trout/product_files/odm/ueventd.rc:$(TARGET_COPY_OUT_ODM)/ueventd.rc \
-
-PRODUCT_COPY_FILES += \
-    device/google/trout/product_files/vendor/etc/input-port-associations.xml:$(TARGET_COPY_OUT_VENDOR)/etc/input-port-associations.xml \
+    device/google/trout/product_files/odm/usr/idc/Vendor_0fff_Product_0fff.idc:$(TARGET_COPY_OUT_ODM)/usr/idc/Vendor_0fff_Product_0fff.idc \
 
 PRODUCT_COPY_FILES += device/google/trout/product_files/vendor/etc/sensors/hals.conf:$(TARGET_COPY_OUT_VENDOR)/etc/sensors/hals.conf
-
-BOARD_VENDOR_KERNEL_MODULES += \
-    $(wildcard device/google/trout-kernel/5.4-arm64/*.ko) \
 
 PRODUCT_NAME := aosp_trout_arm64
 PRODUCT_DEVICE := vsoc_arm64
