@@ -26,6 +26,7 @@ cd "${dest_dir}/manifest"
 git init > /dev/null
 git add default.xml
 git commit -am "Manifest" > /dev/null
+git_branch_name=$(git branch --show-current)
 cd "../repo"
-yes | repo init -u ../manifest -q
+yes | repo init -u ../manifest -b ${git_branch_name} -q
 repo sync -c -q -j2
