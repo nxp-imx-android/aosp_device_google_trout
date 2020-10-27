@@ -49,3 +49,23 @@ cc_library {
     generated_sources: ["sensor_hal_configuration_V1_0"],
     generated_headers: ["sensor_hal_configuration_V1_0"],
 }
+
+cc_test_host {
+    name: "android.hardware.sensors@2.0-Google-IIO-Subhal_test",
+    srcs: [
+        "iio_utils.cpp",
+        "tests/IioUtilsTest.cpp",
+    ],
+    static_libs: [
+        "libgtest",
+        "android.hardware.sensors@1.0",
+        "android.hardware.sensors@2.0",
+    ],
+    include_dirs: [
+        "system/libbase/include",
+    ],
+    shared_libs: [
+        "libbase",
+        "liblog",
+    ],
+}
