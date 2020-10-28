@@ -69,6 +69,8 @@ PRODUCT_PROPERTY_OVERRIDES += \
     ${LOCAL_AUDIOCONTROL_PROPERTIES} \
     ${LOCAL_DUMPSTATE_PROPERTIES}
 
+PRODUCT_CHARACTERISTICS := nosdcard,automotive
+
 TARGET_BOARD_INFO_FILE ?= device/google/trout/board-info.txt
 
 # Keymaster HAL
