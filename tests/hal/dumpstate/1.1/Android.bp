@@ -18,7 +18,7 @@ android_test {
     sdk_version: "current",
     static_libs: [
         "android.hardware.dumpstate-V1.1-java",
-        "android-support-test",
+        "androidx.test.rules",
         "apache-commons-compress",
         "hwbinder",
     ],
