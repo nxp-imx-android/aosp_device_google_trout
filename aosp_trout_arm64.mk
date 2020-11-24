@@ -16,6 +16,9 @@
 
 $(call inherit-product, device/google/cuttlefish/vsoc_arm64/auto/aosp_cf.mk)
 
+# Audio HAL
+TARGET_USES_CUTTLEFISH_AUDIO := false
+
 # Audio Control HAL
 # TODO (chenhaosjtuacm, egranata): move them to kernel command line
 LOCAL_AUDIOCONTROL_PROPERTIES ?= \
@@ -33,11 +36,19 @@ LOCAL_SENSOR_PRODUCT_PACKAGE ?= \
     android.hardware.sensors@2.0-service.multihal.rc \
     android.hardware.sensors@2.0-Google-IIO-Subhal \
 
+LOCAL_SENSOR_FILE_OVERRIDES := true
+
+SENSOR_HAL_CONFIG_COPY_FILE ?= \
+    device/google/trout/hal/sensors/2.0/config/sensor_hal_configuration.xml:$(TARGET_COPY_OUT_VENDOR)/etc/sensors/sensor_hal_configuration.xml  \
+
 PRODUCT_COPY_FILES += \
     device/google/trout/product_files/odm/ueventd.rc:$(TARGET_COPY_OUT_ODM)/ueventd.rc \
     device/google/trout/product_files/odm/usr/idc/Vendor_0fff_Product_0fff.idc:$(TARGET_COPY_OUT_ODM)/usr/idc/Vendor_0fff_Product_0fff.idc \
+    device/google/trout/product_files/vendor/etc/sensors/hals.conf:$(TARGET_COPY_OUT_VENDOR)/etc/sensors/hals.conf \
+    frameworks/native/data/etc/android.hardware.sensor.gyroscope.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.sensor.gyroscope.xml \
+    frameworks/native/data/etc/android.hardware.sensor.accelerometer.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.sensor.accelerometer.xml \
 
-PRODUCT_COPY_FILES += device/google/trout/product_files/vendor/etc/sensors/hals.conf:$(TARGET_COPY_OUT_VENDOR)/etc/sensors/hals.conf
+PRODUCT_COPY_FILES += $(SENSOR_HAL_CONFIG_COPY_FILE)
 
 PRODUCT_NAME := aosp_trout_arm64
 PRODUCT_DEVICE := vsoc_arm64
