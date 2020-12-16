@@ -32,5 +32,5 @@ PRODUCT_COPY_FILES += \
     packages/services/Car/cpp/computepipe/products/init.computepipe.rc:$(TARGET_COPY_OUT_SYSTEM)/etc/init/computepipe.rc
 
 PRODUCT_NAME := aosp_trout_x86
-PRODUCT_DEVICE := vsoc_x86
+PRODUCT_DEVICE := trout_x86
 PRODUCT_MODEL := x86 trout
