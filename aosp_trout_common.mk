@@ -46,7 +46,7 @@ LOCAL_AUDIO_PRODUCT_COPY_FILES ?= \
 endif
 
 # Audio Control HAL
-LOCAL_AUDIOCONTROL_HAL_PRODUCT_PACKAGE ?= android.hardware.audiocontrol@2.0-service.trout
+LOCAL_AUDIOCONTROL_HAL_PRODUCT_PACKAGE ?= android.hardware.automotive.audiocontrol-service.trout
 
 # Dumpstate HAL
 LOCAL_DUMPSTATE_PRODUCT_PACKAGE ?= android.hardware.dumpstate@1.1-service.trout
