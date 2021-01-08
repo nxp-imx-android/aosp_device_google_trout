@@ -12,10 +12,56 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+cc_defaults {
+    name: "audiocontrol_hal_default_trout",
+    defaults: [
+        "hidl_defaults",
+    ],
+    shared_libs: [
+        "android.hardware.automotive.audiocontrol@2.0",
+        "libbase",
+        "libhidlbase",
+        "liblog",
+        "libutils",
+    ],
+}
+
+genrule {
+    name: "AudioFocusControlProtoStub_h",
+    tools: [
+        "aprotoc",
+        "protoc-gen-grpc-cpp-plugin",
+    ],
+    cmd: "$(location aprotoc) -I$$(dirname $(in)) -Iexternal/protobuf/src --plugin=protoc-gen-grpc=$(location protoc-gen-grpc-cpp-plugin) $(in) --grpc_out=$(genDir) --cpp_out=$(genDir)",
+    srcs: [
+        "proto/AudioFocusControl.proto",
+    ],
+    out: [
+        "AudioFocusControl.pb.h",
+        "AudioFocusControl.grpc.pb.h",
+    ],
+}
+
+genrule {
+    name: "AudioFocusControlProtoStub_cc",
+    tools: [
+        "aprotoc",
+        "protoc-gen-grpc-cpp-plugin",
+    ],
+    cmd: "$(location aprotoc) -I$$(dirname $(in)) -Iexternal/protobuf/src --plugin=protoc-gen-grpc=$(location protoc-gen-grpc-cpp-plugin) $(in) --grpc_out=$(genDir) --cpp_out=$(genDir)",
+    srcs: [
+        "proto/AudioFocusControl.proto",
+    ],
+    out: [
+        "AudioFocusControl.pb.cc",
+        "AudioFocusControl.grpc.pb.cc",
+    ],
+}
+
 cc_library {
     name: "android.hardware.automotive.audiocontrol-server.trout",
     vendor: true,
-    defaults: ["audio_control_hal_v2_0_default_trout"],
+    defaults: ["audiocontrol_hal_default_trout"],
     srcs: [
         "AudioControlServer.cpp",
     ],

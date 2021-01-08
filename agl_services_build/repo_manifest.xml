@@ -19,7 +19,7 @@
       <linkfile src="agl_services_build/CMakeLists.txt" dest="CMakeLists.txt" />
       <linkfile src="agl_services_build/cmake" dest="cmake" />
       <linkfile src="agl_services_build/toolchain" dest="toolchain" />
-      <linkfile src="hal/audiocontrol/2.0" dest="audiocontrol" />
+      <linkfile src="hal/audiocontrol/aidl/1.0" dest="audiocontrol" />
       <linkfile src="hal/dumpstate/1.1" dest="dumpstate_server" />
       <linkfile src="hal/vehicle/2.0" dest="vehicle_hal_server" />
       <linkfile src="hal/common/agl/watchdog" dest="watchdog_test_server" />
