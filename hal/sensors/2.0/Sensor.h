@@ -23,6 +23,8 @@
 #include <mutex>
 #include <thread>
 #include <vector>
+
+#include "SensorThread.h"
 #include "iio_utils.h"
 #include "sensor_hal_configuration_V1_0.h"
 
@@ -77,20 +79,24 @@ class SensorBase {
     bool supportsDataInjection() const;
     Result injectEvent(const Event& event);
 
+    bool isEnabled() const;
+    OperationMode getOperationMode() const;
+
   protected:
-    virtual void run() = 0;
+    friend class SensorThread;
+
+    virtual void pollSensor() = 0;
     bool isWakeUpSensor();
 
     bool mIsEnabled;
     int64_t mSamplingPeriodNs;
     SensorInfo mSensorInfo;
-    std::atomic_bool mStopThread;
-    std::condition_variable mWaitCV;
-    std::mutex mRunMutex;
-    std::thread mRunThread;
     ISensorsEventCallback* mCallback;
     OperationMode mMode;
+    SensorThread mSensorThread;
 };
+
+class SensorThread;
 
 // HWSensorBase represents the actual physical sensor provided as the IIO device
 class HWSensorBase : public SensorBase {
@@ -104,7 +110,13 @@ class HWSensorBase : public SensorBase {
     Result flush();
     struct iio_device_data mIioData;
 
+  protected:
+    void pollSensor() override;
+
   private:
+    void idleLoop();
+    void pollForEvents();
+
     static constexpr uint8_t LOCATION_X_IDX = 3;
     static constexpr uint8_t LOCATION_Y_IDX = 7;
     static constexpr uint8_t LOCATION_Z_IDX = 11;
