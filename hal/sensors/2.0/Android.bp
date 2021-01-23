@@ -18,6 +18,7 @@ cc_library {
     vendor: true,
     srcs: [
         "iio_utils.cpp",
+        "MultiPoll.cpp",
         "Sensor.cpp",
         "SensorsSubHal.cpp",
         "SensorThread.cpp",
@@ -64,6 +65,23 @@ cc_test_host {
     ],
     include_dirs: [
         "system/libbase/include",
+    ],
+    shared_libs: [
+        "libbase",
+        "liblog",
+    ],
+}
+
+cc_test_host {
+    name: "android.hardware.sensors@2.0-Google-IIO-Subhal_test-MultiPoll",
+    srcs: [
+        "MultiPoll.cpp",
+        "tests/MultiPoll.cpp"
+    ],
+    static_libs: [
+        "libgtest",
+        "android.hardware.sensors@1.0",
+        "android.hardware.sensors@2.0",
     ],
     shared_libs: [
         "libbase",
