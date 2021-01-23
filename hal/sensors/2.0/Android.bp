@@ -20,6 +20,7 @@ cc_library {
         "iio_utils.cpp",
         "Sensor.cpp",
         "SensorsSubHal.cpp",
+        "SensorThread.cpp",
     ],
     header_libs: [
         "android.hardware.sensors@2.0-multihal.header",
