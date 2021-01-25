@@ -63,6 +63,8 @@ BOARD_SEPOLICY_DIRS += device/google/trout/sepolicy/vendor/google
 # Disable Vulkan feature flag as it is not supported on trout
 TARGET_VULKAN_SUPPORT := false
 
+ENABLE_EVS_SAMPLE := true
+
 PRODUCT_PROPERTY_OVERRIDES += \
     ro.hardware.type=automotive \
     ${LOCAL_AUDIO_PROPERTIES} \
