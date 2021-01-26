@@ -23,7 +23,7 @@ cc_library {
     ],
     export_include_dirs: ["."],
     shared_libs: [
-        "carwatchdog_aidl_interface-ndk_platform",
+        "carwatchdog_aidl_interface-V2-ndk_platform",
         "libbase",
         "libbinder_ndk",
         "libhidlbase",
