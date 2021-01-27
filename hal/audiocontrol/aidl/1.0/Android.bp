@@ -103,7 +103,7 @@ cc_binary {
         "android.hardware.automotive.audiocontrol-server.trout",
         "android.hardware.automotive.audiocontrol-ndk_platform",
         "android.hardware.automotive.utils.watchdog",
-        "android.automotive.watchdog-ndk_platform",
+        "android.automotive.watchdog-V2-ndk_platform",
         "libbase",
         "libbinder_ndk",
         "libutils",
