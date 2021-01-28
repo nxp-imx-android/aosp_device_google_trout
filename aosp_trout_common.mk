@@ -65,6 +65,10 @@ LOCAL_EVS_PRODUCT_PACKAGE ?= \
     android.hardware.automotive.evs@1.1-sample \
     evs_app \
 
+LOCAL_EVS_PRODUCT_COPY_FILES ?= \
+    device/google/trout/product_files/etc/automotive/evs/config_override.json:${TARGET_COPY_OUT_SYSTEM}/etc/automotive/evs/config_override.json \
+    device/google/trout/product_files/vendor/etc/automotive/evs/evs_configuration_override.xml:$(TARGET_COPY_OUT_VENDOR)/etc/automotive/evs/evs_configuration_override.xml \
+
 BOARD_SEPOLICY_DIRS += device/google/trout/sepolicy/vendor/google
 
 # Disable Vulkan feature flag as it is not supported on trout
@@ -87,6 +91,9 @@ LOCAL_GATEKEEPER_PRODUCT_PACKAGE ?= android.hardware.gatekeeper@1.0-service.soft
 PRODUCT_PACKAGES += \
     tinyplay \
     ${LOCAL_EVS_PRODUCT_PACKAGE} \
+
+PRODUCT_COPY_FILES += \
+    ${LOCAL_EVS_PRODUCT_COPY_FILES} \
 
 # TODO(b/162901005): Include computepipe once this project points to main.
 # include packages/services/Car/cpp/computepipe/products/computepipe.mk
