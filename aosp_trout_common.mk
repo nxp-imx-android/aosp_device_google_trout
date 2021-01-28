@@ -58,12 +58,17 @@ LOCAL_DUMPSTATE_PROPERTIES ?= \
 # Vehicle HAL
 LOCAL_VHAL_PRODUCT_PACKAGE ?= android.hardware.automotive.vehicle@2.0-virtualization-service
 
+# EVS HAL
+LOCAL_EVS_PRODUCT_COPY_FILES ?= \
+    device/google/trout/product_files/etc/automotive/evs/config_override.json:${TARGET_COPY_OUT_SYSTEM}/etc/automotive/evs/config_override.json \
+    device/google/trout/product_files/vendor/etc/automotive/evs/evs_configuration_override.xml:$(TARGET_COPY_OUT_VENDOR)/etc/automotive/evs/evs_configuration_override.xml \
+
+ENABLE_EVS_SAMPLE := true
+
 BOARD_SEPOLICY_DIRS += device/google/trout/sepolicy/vendor/google
 
 # Disable Vulkan feature flag as it is not supported on trout
 TARGET_VULKAN_SUPPORT := false
-
-ENABLE_EVS_SAMPLE := true
 
 PRODUCT_PROPERTY_OVERRIDES += \
     ro.hardware.type=automotive \
@@ -82,5 +87,8 @@ LOCAL_KEYMASTER_PRODUCT_PACKAGE ?= android.hardware.keymaster@4.1-service
 LOCAL_GATEKEEPER_PRODUCT_PACKAGE ?= android.hardware.gatekeeper@1.0-service.software
 
 PRODUCT_PACKAGES += tinyplay
+
+PRODUCT_COPY_FILES += \
+    ${LOCAL_EVS_PRODUCT_COPY_FILES} \
 
 include packages/services/Car/cpp/computepipe/products/computepipe.mk
