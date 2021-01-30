@@ -91,4 +91,7 @@ PRODUCT_PACKAGES += tinyplay
 PRODUCT_COPY_FILES += \
     ${LOCAL_EVS_PRODUCT_COPY_FILES} \
 
+PRODUCT_COPY_FILES += \
+    ${LOCAL_EVS_PRODUCT_COPY_FILES} \
+
 include packages/services/Car/cpp/computepipe/products/computepipe.mk
