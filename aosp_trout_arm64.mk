@@ -17,7 +17,7 @@
 $(call inherit-product, device/google/cuttlefish/vsoc_arm64/auto/aosp_cf.mk)
 
 # Audio HAL
-TARGET_USES_CUTTLEFISH_AUDIO := false
+TARGET_USES_CUTTLEFISH_AUDIO ?= false
 
 # Audio Control HAL
 # TODO (chenhaosjtuacm, egranata): move them to kernel command line
@@ -51,5 +51,5 @@ PRODUCT_COPY_FILES += \
 PRODUCT_COPY_FILES += $(SENSOR_HAL_CONFIG_COPY_FILE)
 
 PRODUCT_NAME := aosp_trout_arm64
-PRODUCT_DEVICE := vsoc_arm64
+PRODUCT_DEVICE := trout_arm64
 PRODUCT_MODEL := arm64 trout
