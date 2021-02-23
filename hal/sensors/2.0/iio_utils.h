@@ -63,6 +63,7 @@ struct iio_device_data {
     std::vector<iio_info_channel> channelInfo;
     std::vector<double> sampling_freq_avl;
     uint8_t iio_dev_num;
+    unsigned int power_microwatts;
     int64_t max_range;
 };
 
