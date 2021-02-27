@@ -29,7 +29,6 @@
 #include <memory>
 
 static const char* IIO_DEVICE_BASE = "iio:device";
-static const char* DEVICE_IIO_DIR = "/sys/bus/iio/devices/";
 static const char* IIO_SCAN_ELEMENTS_EN = "_en";
 static const char* IIO_SFA_FILENAME = "sampling_frequency_available";
 static const char* IIO_SCALE_FILENAME = "_scale";
@@ -38,6 +37,7 @@ static const char* IIO_BUFFER_ENABLE = "buffer/enable";
 static const char* IIO_POWER_FILENAME = "sensor_power";
 static const char* IIO_MAX_RANGE_FILENAME = "sensor_max_range";
 static const char* IIO_RESOLUTION_FILENAME = "sensor_resolution";
+static const char* IIO_NAME_FILENAME = "name";
 
 namespace android {
 namespace hardware {
@@ -45,6 +45,8 @@ namespace sensors {
 namespace V2_0 {
 namespace subhal {
 namespace implementation {
+
+const char* DEFAULT_IIO_DIR = "/sys/bus/iio/devices/";
 
 using DirPtr = std::unique_ptr<DIR, decltype(&closedir)>;
 using FilePtr = std::unique_ptr<FILE, decltype(&fclose)>;
@@ -196,6 +198,12 @@ static int get_sensor_max_range(const std::string& device_dir, int64_t* max_rang
     return sysfs_read_int64(filename, max_range);
 }
 
+static int get_sensor_name(const std::string& device_dir, std::string* name) {
+    const std::string filename = device_dir + "/" + IIO_NAME_FILENAME;
+
+    return sysfs_read_str(filename, name);
+}
+
 int set_sampling_frequency(const std::string& device_dir, const double frequency) {
     DirPtr dp(nullptr, closedir);
     const struct dirent* ent;
@@ -240,48 +248,35 @@ static int get_sensor_resolution(const std::string& device_dir, float* resolutio
     return sysfs_read_float(filename, resolution);
 }
 
-static bool is_supported_sensor(const std::string& path,
-                                const std::vector<sensors_supported_hal>& supported_sensors,
-                                std::string* name, sensors_supported_hal* sensor) {
-    std::string name_file = path + "/name";
-    std::ifstream iio_file(name_file.c_str());
-    if (!iio_file) return false;
-    std::string iio_name;
-    std::getline(iio_file, iio_name);
-    auto iter = std::find_if(
-            supported_sensors.begin(), supported_sensors.end(),
-            [&iio_name](const auto& candidate) -> bool { return candidate.name == iio_name; });
-    if (iter == supported_sensors.end()) return false;
-    *sensor = *iter;
-    *name = iio_name;
-    return true;
-}
-
-int load_iio_devices(std::vector<iio_device_data>* iio_data,
-                     const std::vector<sensors_supported_hal>& supported_sensors) {
+int load_iio_devices(std::string iio_dir, std::vector<iio_device_data>* iio_data,
+                     DeviceFilterFunction filter) {
     DirPtr dp(nullptr, closedir);
     const struct dirent* ent;
     int err;
 
+    if (!iio_dir.empty() && iio_dir.back() != '/') iio_dir += '/';
+
     std::ifstream iio_file;
     const auto iio_base_len = strlen(IIO_DEVICE_BASE);
-    err = sysfs_opendir(DEVICE_IIO_DIR, &dp);
+    err = sysfs_opendir(iio_dir, &dp);
     if (err) return err;
     while (ent = readdir(dp.get()), ent != nullptr) {
         if (!str_has_prefix(ent->d_name, IIO_DEVICE_BASE)) continue;
 
-        std::string path_device = DEVICE_IIO_DIR;
+        std::string path_device = iio_dir;
         path_device += ent->d_name;
-        sensors_supported_hal sensor_match;
-        std::string iio_name;
-        if (!is_supported_sensor(path_device, supported_sensors, &iio_name, &sensor_match))
-            continue;
 
-        ALOGI("found sensor %s at path %s", iio_name.c_str(), path_device.c_str());
         iio_device_data iio_dev_data;
-        iio_dev_data.name = iio_name;
-        iio_dev_data.type = sensor_match.type;
-        iio_dev_data.sysfspath.append(path_device, 0, strlen(DEVICE_IIO_DIR) + strlen(ent->d_name));
+        iio_dev_data.sysfspath.append(path_device, 0, iio_dir.size() + strlen(ent->d_name));
+        err = get_sensor_name(iio_dev_data.sysfspath, &iio_dev_data.name);
+        if (err) {
+            ALOGE("get_sensor_name for %s returned error %d", path_device.c_str(), err);
+            continue;
+        }
+
+        if (!filter(&iio_dev_data)) continue;
+
+        ALOGI("found sensor %s at path %s", iio_dev_data.name.c_str(), path_device.c_str());
         err = get_sampling_frequency_available(iio_dev_data.sysfspath,
                                                &iio_dev_data.sampling_freq_avl);
         if (err) {

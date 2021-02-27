@@ -42,20 +42,12 @@ using ::android::hardware::sensors::V2_0::implementation::ScopedWakelock;
 using ::sensor::hal::configuration::V1_0::Sensor;
 using ::sensor::hal::configuration::V1_0::SensorHalConfiguration;
 
-#define SENSOR_SUPPORTED(SENSOR_NAME, SENSOR_TYPE) \
-    { .name = SENSOR_NAME, .type = SENSOR_TYPE, }
-
 #define SENSOR_XML_CONFIG_FILE_NAME "sensor_hal_configuration.xml"
 static const char* gSensorConfigLocationList[] = {"/odm/etc/sensors/", "/vendor/etc/sensors/"};
 static const int gSensorConfigLocationListSize =
         (sizeof(gSensorConfigLocationList) / sizeof(gSensorConfigLocationList[0]));
 
 #define MODULE_NAME "android.hardware.sensors@2.0-Google-IIO-Subhal"
-
-static const std::vector<sensors_supported_hal> sensors_supported = {
-        SENSOR_SUPPORTED("scmi.iio.accel", SensorType::ACCELEROMETER),
-        SENSOR_SUPPORTED("scmi.iio.gyro", SensorType::GYROSCOPE),
-};
 
 static std::optional<std::vector<Sensor>> readSensorsConfigFromXml() {
     for (int i = 0; i < gSensorConfigLocationListSize; i++) {
@@ -86,11 +78,31 @@ static std::optional<std::vector<Configuration>> getSensorConfiguration(
     return std::nullopt;
 }
 
+static bool isSensorSupported(iio_device_data* sensor) {
+#define SENSOR_SUPPORTED(SENSOR_NAME, SENSOR_TYPE) \
+    { .name = SENSOR_NAME, .type = SENSOR_TYPE, }
+    static const std::vector<sensors_supported_hal> supported_sensors = {
+            SENSOR_SUPPORTED("scmi.iio.accel", SensorType::ACCELEROMETER),
+            SENSOR_SUPPORTED("scmi.iio.gyro", SensorType::GYROSCOPE),
+    };
+#undef SENSOR_SUPPORTED
+
+    if (!sensor) return false;
+
+    auto iter = std::find_if(
+            supported_sensors.begin(), supported_sensors.end(),
+            [&sensor](const auto& candidate) -> bool { return candidate.name == sensor->name; });
+    if (iter == supported_sensors.end()) return false;
+
+    sensor->type = iter->type;
+    return true;
+}
+
 SensorsSubHal::SensorsSubHal() : mCallback(nullptr), mNextHandle(1) {
     int err;
     std::vector<iio_device_data> iio_devices;
     const auto sensors_config_list = readSensorsConfigFromXml();
-    err = load_iio_devices(&iio_devices, sensors_supported);
+    err = load_iio_devices(DEFAULT_IIO_DIR, &iio_devices, isSensorSupported);
     if (err == 0) {
         for (auto& iio_device : iio_devices) {
             err = scan_elements(iio_device.sysfspath, &iio_device);
