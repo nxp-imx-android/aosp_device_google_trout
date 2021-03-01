@@ -97,10 +97,11 @@ static bool writeAccelDevice(const std::string& td_path, const iio_device_data& 
     if (!writeFile(concatPaths(dev_path, "in_accel_x_scale"), dev.scale)) return false;
     if (!writeFile(concatPaths(dev_path, "in_accel_y_scale"), dev.scale)) return false;
     if (!writeFile(concatPaths(dev_path, "in_accel_z_scale"), dev.scale)) return false;
-    if (!writeFile(concatPaths(dev_path, "sensor_power"), dev.power_microwatts)) return false;
-    if (!writeFile(concatPaths(dev_path, "sensor_max_range"), dev.max_range)) return false;
-    if (!writeFile(concatPaths(dev_path, "sensor_resolution"), dev.resolution)) return false;
-    if (!writeFile(concatPaths(dev_path, "sampling_frequency_available"), dev.sampling_freq_avl))
+    if (!writeFile(concatPaths(dev_path, "in_accel_raw_available"),
+                   "[-78381056.000000000 2392.000000000 78378664.000000000]"))
+        return false;
+    if (!writeFile(concatPaths(dev_path, "in_accel_sampling_frequency_available"),
+                   dev.sampling_freq_avl))
         return false;
 
     return true;
@@ -113,10 +114,9 @@ static iio_device_data createDefaultAccelerometerDevice(int id) {
     dev.iio_dev_num = id;
     dev.name = "scmi.iio.accel";
     dev.sampling_freq_avl = {12.500000, 26.000364, 52.002080, 104.004160, 208.003993};
-    dev.resolution = 0.002392000f;
+    dev.resolution = 2392;
     dev.scale = 0.000001000f;
     dev.max_range = 78378664;
-    dev.power_microwatts = 0;
 
     return dev;
 }
@@ -141,7 +141,6 @@ TEST(IioUtilsTest, LoadValidSensor) {
 
     EXPECT_NEAR(dev_model.resolution, accel.resolution, 0.0002);
     EXPECT_NEAR(dev_model.scale, accel.scale, 0.0002);
-    EXPECT_EQ(dev_model.power_microwatts, accel.power_microwatts);
     EXPECT_EQ(dev_model.max_range, accel.max_range);
 
     EXPECT_EQ(dev_model.sampling_freq_avl.size(), accel.sampling_freq_avl.size());
