@@ -456,10 +456,9 @@ HWSensorBase::HWSensorBase(int32_t sensorHandle, ISensorsEventCallback* callback
     std::string buffer_path;
     mSensorInfo.flags |= SensorFlagBits::CONTINUOUS_MODE;
     mSensorInfo.name = data.name;
-    mSensorInfo.resolution = data.resolution;
+    mSensorInfo.resolution = data.resolution * data.scale;
     mSensorInfo.maxRange = data.max_range * data.scale;
-    mSensorInfo.power =
-            (data.power_microwatts / 1000.f) / SENSOR_VOLTAGE_DEFAULT;  // converting uW to mA
+    mSensorInfo.power = 0;
     mIioData = data;
     setOrientation(config);
     status_t ret = setAdditionalInfoFrames(config);
