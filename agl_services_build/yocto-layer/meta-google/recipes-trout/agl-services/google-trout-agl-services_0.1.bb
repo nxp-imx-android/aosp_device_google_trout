@@ -16,6 +16,6 @@ TROUT_target_install = "\
 
 COMMON_OPTIMIZATION = ""
 
-inherit perlnative pythonnative
+inherit perlnative python3native
 
 require common.inc
