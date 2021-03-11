@@ -87,6 +87,56 @@ genrule {
     ],
 }
 
+cc_library_static {
+    name: "android.hardware.automotive.vehicle@2.0-virtualization-client-lib",
+    defaults: ["vhal_v2_0_target_defaults"],
+    vendor: true,
+    srcs: [
+        "GrpcVehicleClient.cpp",
+    ],
+    whole_static_libs: [
+        "android.hardware.automotive.utils.vsockinfo",
+        "android.hardware.automotive.vehicle@2.0-manager-lib",
+        "android.hardware.automotive.vehicle@2.0-default-impl-lib",
+        "android.hardware.automotive.vehicle@2.0-grpc-trout",
+        "android.hardware.automotive.vehicle@2.0-virtualization-utils",
+    ],
+    shared_libs: [
+        "libgrpc++",
+        "libprotobuf-cpp-full",
+    ],
+    export_include_dirs: ["."],
+    cflags: [
+        "-Wno-unused-parameter",
+    ],
+}
+
+cc_library_static {
+    name: "android.hardware.automotive.vehicle@2.0-virtualization-grpc-server-lib",
+    defaults: ["vhal_v2_0_defaults"],
+    host_supported: true,
+    vendor: true,
+    srcs: [
+        "GarageModeServerSideHandler.cpp",
+        "GrpcVehicleServer.cpp",
+        "PowerStateListener.cpp",
+    ],
+    whole_static_libs: [
+        "android.hardware.automotive.utils.vsockinfo",
+        "android.hardware.automotive.vehicle@2.0-grpc-trout",
+        "android.hardware.automotive.vehicle@2.0-server-impl-lib",
+        "android.hardware.automotive.vehicle@2.0-virtualization-utils",
+    ],
+    shared_libs: [
+        "libgrpc++",
+        "libprotobuf-cpp-full",
+    ],
+    export_include_dirs: ["."],
+    cflags: [
+        "-Wno-unused-parameter",
+    ],
+}
+
 cc_binary {
     name: "android.hardware.automotive.vehicle@2.0-virtualization-service",
     defaults: ["vhal_v2_0_target_defaults"],
@@ -94,7 +144,6 @@ cc_binary {
     vendor: true,
     relative_install_path: "hw",
     srcs: [
-        "GrpcVehicleClient.cpp",
         "VirtualizedVehicleService.cpp",
     ],
     shared_libs: [
@@ -105,11 +154,7 @@ cc_binary {
         "libgrpc++",
     ],
     static_libs: [
-        "android.hardware.automotive.utils.vsockinfo",
-        "android.hardware.automotive.vehicle@2.0-manager-lib",
-        "android.hardware.automotive.vehicle@2.0-default-impl-lib",
-        "android.hardware.automotive.vehicle@2.0-grpc-trout",
-        "android.hardware.automotive.vehicle@2.0-virtualization-utils",
+        "android.hardware.automotive.vehicle@2.0-virtualization-client-lib",
     ],
     cflags: [
         "-Wno-unused-parameter",
@@ -124,9 +169,6 @@ cc_binary {
     host_supported: true,
     vendor: true,
     srcs: [
-        "GarageModeServerSideHandler.cpp",
-        "GrpcVehicleServer.cpp",
-        "PowerStateListener.cpp",
         "VirtualizationGrpcServer.cpp",
     ],
     shared_libs: [
@@ -136,12 +178,6 @@ cc_binary {
         "libgrpc++",
     ],
     static_libs: [
-        "android.hardware.automotive.utils.vsockinfo",
-        "android.hardware.automotive.vehicle@2.0-server-impl-lib",
-        "android.hardware.automotive.vehicle@2.0-grpc-trout",
-        "android.hardware.automotive.vehicle@2.0-virtualization-utils",
-    ],
-    cflags: [
-        "-Wno-unused-parameter",
+        "android.hardware.automotive.vehicle@2.0-virtualization-grpc-server-lib",
     ],
 }
