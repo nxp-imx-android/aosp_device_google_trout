@@ -28,7 +28,7 @@
   <project path="third_party/grpc-grpc" name="platform/external/grpc-grpc" groups="pdk,tradefed" />
   <project path="third_party/jsoncpp" name="platform/external/jsoncpp" groups="pdk" />
   <project path="third_party/protobuf" name="platform/external/protobuf" groups="pdk" />
-  <project path="hardware/interfaces" name="platform/hardware/interfaces" groups="pdk" >
+  <project path="hardware/interfaces" name="platform/hardware/interfaces" groups="pdk" revision="229e07f9b922522e1612b6dd930919cf58c8865f">
       <linkfile src="automotive/vehicle/2.0/default" dest="third_party/default_native_vehicle_hal" />
   </project>
   <project path="third_party/android/system_core" name="platform/system/core" groups="pdk" />
