@@ -30,7 +30,7 @@ SRC_URI = "\
     ${@trout_git_uri(d, 'ANDROID_REMOTE', 'platform/external/grpc-grpc', 'third_party/grpc-grpc', '75bfcd05212333d0f4247865e3a61eaf6092d932')} \
     ${@trout_git_uri(d, 'ANDROID_REMOTE', 'platform/external/jsoncpp', 'third_party/jsoncpp', 'ceed690fefd71a34154781da01b3bb0294a486eb')} \
     ${@trout_git_uri(d, 'ANDROID_REMOTE', 'platform/external/protobuf', 'third_party/protobuf', '2305946dc587fb5766d207c7e3981375b2aaf5ce')} \
-    ${@trout_git_uri(d, 'ANDROID_REMOTE', 'platform/hardware/interfaces', 'hardware/interfaces', '1eb933123b52d6b1f69acfd87d3aeceb45f6ef1b')} \
+    ${@trout_git_uri(d, 'ANDROID_REMOTE', 'platform/hardware/interfaces', 'hardware/interfaces', '229e07f9b922522e1612b6dd930919cf58c8865f')} \
     ${@trout_git_uri(d, 'ANDROID_REMOTE', 'platform/system/core', 'third_party/android/system_core', 'b1ee3a99d1fc3d41606555e29da484df8a66ed71')} \
     ${@trout_git_uri(d, 'BORINGSSL_REMOTE', 'boringssl', 'third_party/boringssl', '0b710a305b42b67522003a314dea3e3868485665')} \
     ${@trout_git_uri(d, 'GITHUB_REMOTE', 'c-ares/c-ares', 'third_party/cares', '3be1924221e1326df520f8498d704a5c4c8d0cce')} \
