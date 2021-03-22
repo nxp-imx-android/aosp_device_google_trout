@@ -97,3 +97,9 @@ PRODUCT_COPY_FILES += \
 
 # TODO(b/162901005): Include computepipe once this project points to main.
 # include packages/services/Car/cpp/computepipe/products/computepipe.mk
+
+# Trout fstab (workaround b/182190949)
+PRODUCT_COPY_FILES += \
+    device/google/trout/product_files/fstab.trout:$(TARGET_COPY_OUT_RAMDISK)/fstab.trout \
+    device/google/trout/product_files/fstab.trout:$(TARGET_COPY_OUT_VENDOR)/etc/fstab.trout \
+    device/google/trout/product_files/fstab.trout:$(TARGET_COPY_OUT_RECOVERY)/root/first_stage_ramdisk/fstab.trout
