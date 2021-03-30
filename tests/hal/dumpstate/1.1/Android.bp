@@ -16,11 +16,11 @@ android_test {
     name: "TroutDumpstateTest",
     srcs: ["src/**/*.java"],
     sdk_version: "current",
+    libs: ["hwbinder.stubs"],
     static_libs: [
         "android.hardware.dumpstate-V1.1-java",
         "android-support-test",
         "apache-commons-compress",
-        "hwbinder",
     ],
     certificate: "platform",
     test_suites: ["device-tests"],
