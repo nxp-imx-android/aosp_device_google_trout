@@ -15,6 +15,10 @@
 
 // Derived from device/generic/goldfish/audio/Android.mk
 
+package {
+    default_applicable_licenses: ["Android-Apache-2.0"],
+}
+
 cc_library_shared {
 
     vendor: true,
