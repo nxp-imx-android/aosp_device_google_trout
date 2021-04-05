@@ -91,7 +91,7 @@ static struct pcm_config pcm_config_out = {
     .start_threshold = 0,
 };
 
-static int get_int_value(const struct str_parms *str_parms, const char *key, int *return_value) {
+static int get_int_value(struct str_parms *str_parms, const char *key, int *return_value) {
     char value[SIZE_OF_PARSE_BUFFER];
     int results = str_parms_get_str(str_parms, key, value, SIZE_OF_PARSE_BUFFER);
     if (results >= 0) {
@@ -335,7 +335,7 @@ static void *out_write_worker(void *args) {
         int frames = audio_vbuffer_read(&out->buffer, buffer, buffer_frames);
         pthread_mutex_unlock(&out->lock);
 
-        if (is_zone_selected_to_play(out->dev, zone_id)) {
+        if (is_zone_selected_to_play(&out->dev->device, zone_id)) {
             int write_error = ext_pcm_write(ext_pcm, out->bus_address,
                 buffer, ext_pcm_frames_to_bytes(ext_pcm, frames));
             if (write_error) {
@@ -485,7 +485,6 @@ static ssize_t out_write(struct audio_stream_out *stream, const void *buffer, si
 
 static int out_get_presentation_position(const struct audio_stream_out *stream,
         uint64_t *frames, struct timespec *timestamp) {
-    int ret = -EINVAL;
     if (stream == NULL || frames == NULL || timestamp == NULL) {
         return -EINVAL;
     }
@@ -654,7 +653,6 @@ static int refine_input_parameters(uint32_t *sample_rate, audio_format_t *format
 static size_t get_input_buffer_size(uint32_t sample_rate, audio_format_t format,
         audio_channel_mask_t channel_mask) {
     size_t size;
-    size_t device_rate;
     int channel_count = popcount(channel_mask);
     if (refine_input_parameters(&sample_rate, &format, &channel_mask) != 0)
         return 0;
@@ -895,7 +893,7 @@ static void *in_read_worker(void *args) {
     return NULL;
 }
 
-static bool address_has_tone_keyword(char * address) {
+static bool address_has_tone_keyword(const char * address) {
     return strstr(address, TONE_ADDRESS_KEYWORD) != NULL;
 }
 
@@ -927,7 +925,6 @@ static ssize_t in_read(struct audio_stream_in *stream, void *buffer, size_t byte
     struct generic_stream_in *in = (struct generic_stream_in *)stream;
     struct generic_audio_device *adev = in->dev;
     const size_t frames =  bytes / audio_stream_in_frame_size(stream);
-    int ret = 0;
     bool mic_mute = false;
     size_t read_bytes = 0;
 
@@ -1134,9 +1131,8 @@ static int adev_open_output_stream(struct audio_hw_device *dev,
 
     out->enabled_channels = BOTH_CHANNELS;
     if (address) {
-        out->bus_address = calloc(strlen(address) + 1, sizeof(char));
-        strncpy(out->bus_address, address, strlen(address));
-        hashmapPut(adev->out_bus_stream_map, out->bus_address, out);
+        out->bus_address = strdup(address);
+        hashmapPut(adev->out_bus_stream_map, (void*)out->bus_address, out);
         /* TODO: read struct audio_gain from audio_policy_configuration */
         out->gain_stage = (struct audio_gain) {
             .min_value = -3200,
@@ -1175,8 +1171,8 @@ static void adev_close_output_stream(struct audio_hw_device *dev,
     audio_vbuffer_destroy(&out->buffer);
 
     if (out->bus_address) {
-        hashmapRemove(adev->out_bus_stream_map, out->bus_address);
-        free(out->bus_address);
+        hashmapRemove(adev->out_bus_stream_map, (void*)out->bus_address);
+        free((void*)out->bus_address);
     }
     free(stream);
 }
@@ -1279,7 +1275,7 @@ static void adev_close_input_stream(struct audio_hw_device *dev,
     }
 
     if (in->bus_address) {
-        free(in->bus_address);
+        free((void*)in->bus_address);
     }
 
     pthread_mutex_destroy(&in->lock);
@@ -1295,8 +1291,8 @@ static void increase_next_tone_frequency(struct generic_audio_device *adev) {
 }
 
 static int create_or_fetch_tone_frequency(struct generic_audio_device *adev,
-        char *address, int update_frequency) {
-    int *frequency = hashmapGet(adev->in_bus_tone_frequency_map, address);
+        const char *address, int update_frequency) {
+    int *frequency = hashmapGet(adev->in_bus_tone_frequency_map, (void*)address);
     if (frequency == NULL) {
         frequency = calloc(1, sizeof(int));
         *frequency = update_frequency;
@@ -1401,7 +1397,7 @@ static int adev_set_audio_port_config(struct audio_hw_device *dev,
     int ret = 0;
     struct generic_audio_device *adev = (struct generic_audio_device *)dev;
     const char *bus_address = config->ext.device.address;
-    struct generic_stream_out *out = hashmapGet(adev->out_bus_stream_map, bus_address);
+    struct generic_stream_out *out = hashmapGet(adev->out_bus_stream_map, (void*)bus_address);
     if (out) {
         pthread_mutex_lock(&out->lock);
         int gainIndex = (config->gain.values[0] - out->gain_stage.min_value) /
