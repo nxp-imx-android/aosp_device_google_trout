@@ -83,12 +83,13 @@ static const char * const AUDIO_ZONE_KEYWORD = "_audio_zone_";
 static int adev_get_mic_mute(const struct audio_hw_device *dev, bool *state);
 
 static struct pcm_config pcm_config_out = {
-    .channels = 2,
-    .rate = 0,
-    .period_size = 0,
-    .period_count = OUT_PERIOD_COUNT,
-    .format = PCM_FORMAT_S16_LE,
-    .start_threshold = 0,
+        .channels = 2,
+        .rate = 0,
+        .period_size = 0,
+        .period_count = OUT_PERIOD_COUNT,
+        .format = PCM_FORMAT_S16_LE,
+        .start_threshold = 0,
+        .stop_threshold = INT_MAX,
 };
 
 static int get_int_value(const struct str_parms *str_parms, const char *key, int *return_value) {
