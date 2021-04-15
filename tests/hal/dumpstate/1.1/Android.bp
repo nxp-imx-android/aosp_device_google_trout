@@ -23,7 +23,7 @@ android_test {
     libs: ["hwbinder.stubs"],
     static_libs: [
         "android.hardware.dumpstate-V1.1-java",
-        "android-support-test",
+        "androidx.test.rules",
         "apache-commons-compress",
     ],
     certificate: "platform",
