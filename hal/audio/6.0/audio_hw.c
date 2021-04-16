@@ -120,11 +120,12 @@ static int get_in_period_count() {
 }
 
 static struct pcm_config pcm_config_out = {
-    .channels = 2,
-    .rate = 0,
-    .period_size = 0,
-    .format = PCM_FORMAT_S16_LE,
-    .start_threshold = 0,
+        .channels = 2,
+        .rate = 0,
+        .period_size = 0,
+        .format = PCM_FORMAT_S16_LE,
+        .start_threshold = 0,
+        .stop_threshold = INT_MAX,
 };
 
 static int get_int_value(struct str_parms *str_parms, const char *key, int *return_value) {
