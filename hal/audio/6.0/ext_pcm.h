@@ -35,6 +35,7 @@ struct ext_pcm {
   pthread_mutex_t lock;
   unsigned int ref_count;
   pthread_mutex_t mixer_lock;
+  pthread_cond_t mixer_wake;
   struct ext_mixer_pipeline mixer_pipeline;
   pthread_t mixer_thread;
   Hashmap *mixer_pipeline_map;
