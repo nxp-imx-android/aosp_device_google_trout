@@ -83,6 +83,7 @@ static void *mixer_thread_loop(void *context) {
           ext_pcm->mixer_pipeline.position * sizeof(int16_t));
     }
     memset(&ext_pcm->mixer_pipeline, 0, sizeof(struct ext_mixer_pipeline));
+    pthread_cond_signal(&ext_pcm->mixer_wake);
     pthread_mutex_unlock(&ext_pcm->mixer_lock);
     usleep(MIXER_INTERVAL_MS * 1000);
   } while (1);
@@ -97,13 +98,23 @@ static int mixer_pipeline_write(struct ext_pcm *ext_pcm, const char *bus_address
     pipeline = calloc(1, sizeof(struct ext_mixer_pipeline));
     hashmapPut(ext_pcm->mixer_pipeline_map, bus_address, pipeline);
   }
-  unsigned int byteCount = MIN(count,
-      (MIXER_BUFFER_SIZE - pipeline->position) * sizeof(int16_t));
-  unsigned int int16Count = byteCount / sizeof(int16_t);
-  if (int16Count > 0) {
-    memcpy(&pipeline->buffer[pipeline->position], data, byteCount);
-    pipeline->position += int16Count;
-  }
+  unsigned int byteWritten = 0;
+  bool write_incomplete = true;
+  do {
+    const unsigned int byteCount = MIN(count - byteWritten,
+        (MIXER_BUFFER_SIZE - pipeline->position) * sizeof(int16_t));
+    const unsigned int int16Count = byteCount / sizeof(int16_t);
+    if (int16Count > 0) {
+      memcpy(&pipeline->buffer[pipeline->position], (const char*)data + byteWritten, byteCount);
+      pipeline->position += int16Count;
+    }
+    byteWritten += byteCount;
+    write_incomplete = byteWritten < count;
+    if (write_incomplete) {
+      // wait for mixer thread to consume the pipeline buffer
+      pthread_cond_wait(&ext_pcm->mixer_wake, &ext_pcm->mixer_lock);
+    }
+  } while (write_incomplete);
   pthread_mutex_unlock(&ext_pcm->mixer_lock);
   return 0;
 }
