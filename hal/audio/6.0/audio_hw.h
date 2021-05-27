@@ -70,6 +70,7 @@ struct generic_stream_out {
   // Worker
   pthread_t worker_thread;     // Constant after init
   pthread_cond_t worker_wake;  // Protected by this->lock
+  pthread_cond_t write_wake;   // Protected by this->lock
   bool worker_standby;         // Protected by this->lock
   bool worker_exit;            // Protected by this->lock
 };
