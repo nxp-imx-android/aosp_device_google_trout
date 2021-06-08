@@ -83,7 +83,7 @@ static void *mixer_thread_loop(void *context) {
           ext_pcm->mixer_pipeline.position * sizeof(int16_t));
     }
     memset(&ext_pcm->mixer_pipeline, 0, sizeof(struct ext_mixer_pipeline));
-    pthread_cond_signal(&ext_pcm->mixer_wake);
+    pthread_cond_broadcast(&ext_pcm->mixer_wake);
     pthread_mutex_unlock(&ext_pcm->mixer_lock);
     usleep(MIXER_INTERVAL_MS * 1000);
   } while (1);
