@@ -146,19 +146,20 @@ void GarageModeServerSideHandlerImpl::PowerStateWatcher() {
         return;
     }
 
-    int watchDescriptor = inotify_add_watch(inotifyFd, mPowerStateMarkerPath.c_str(), IN_MODIFY);
-    if (watchDescriptor < 0) {
-        LOG(ERROR) << __func__ << ": failed to watch file " << mPowerStateMarkerPath << " : "
-                   << strerror(errno);
-        return;
-    }
-
     alignas(alignof(struct inotify_event)) char inotifyEventBuffer[4096] = {0};
     [[maybe_unused]] struct inotify_event& inotifyEvent =
             *reinterpret_cast<struct inotify_event*>(inotifyEventBuffer);
 
     HandleNewPowerState();
     while (!mShuttingDownFlag.load()) {
+        int watchDescriptor =
+                inotify_add_watch(inotifyFd, mPowerStateMarkerPath.c_str(), IN_MODIFY);
+        if (watchDescriptor < 0) {
+            LOG(ERROR) << __func__ << ": failed to watch file " << mPowerStateMarkerPath << " : "
+                       << strerror(errno);
+            return;
+        }
+
         if (!WaitForReadWithTimeout(inotifyFd, kFileStatusCheckPeriod)) {
             continue;
         }
