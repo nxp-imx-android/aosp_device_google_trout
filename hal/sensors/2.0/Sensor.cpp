@@ -36,7 +36,11 @@ using ::sensor::hal::configuration::V1_0::Location;
 using ::sensor::hal::configuration::V1_0::Orientation;
 
 SensorBase::SensorBase(int32_t sensorHandle, ISensorsEventCallback* callback, SensorType type)
-    : mIsEnabled(false), mSamplingPeriodNs(0), mCallback(callback), mMode(OperationMode::NORMAL) {
+    : mIsEnabled(false),
+      mSamplingPeriodNs(0),
+      mCallback(callback),
+      mMode(OperationMode::NORMAL),
+      mSensorThread(this) {
     mSensorInfo.type = type;
     mSensorInfo.sensorHandle = sensorHandle;
     mSensorInfo.vendor = "Google";
@@ -45,6 +49,7 @@ SensorBase::SensorBase(int32_t sensorHandle, ISensorsEventCallback* callback, Se
     mSensorInfo.fifoMaxEventCount = 0;
     mSensorInfo.requiredPermission = "";
     mSensorInfo.flags = 0;
+
     switch (type) {
         case SensorType::ACCELEROMETER:
             mSensorInfo.typeAsString = SENSOR_STRING_TYPE_ACCELEROMETER;
@@ -56,20 +61,20 @@ SensorBase::SensorBase(int32_t sensorHandle, ISensorsEventCallback* callback, Se
             ALOGE("unsupported sensor type %d", type);
             break;
     }
-    // TODO(jbhayana) : Make the threading policy configurable
-    mRunThread = std::thread(std::bind(&SensorBase::run, this));
+
+    mSensorThread.start();
 }
 
 SensorBase::~SensorBase() {
-    // Ensure that lock is unlocked before calling mRunThread.join() or a
-    // deadlock will occur.
-    {
-        std::unique_lock<std::mutex> lock(mRunMutex);
-        mStopThread = true;
-        mIsEnabled = false;
-        mWaitCV.notify_all();
-    }
-    mRunThread.join();
+    mIsEnabled = false;
+}
+
+bool SensorBase::isEnabled() const {
+    return mIsEnabled;
+}
+
+OperationMode SensorBase::getOperationMode() const {
+    return mMode;
 }
 
 HWSensorBase::~HWSensorBase() {
@@ -93,7 +98,7 @@ void HWSensorBase::batch(int32_t samplingPeriodNs) {
         i = low - mIioData.sampling_freq_avl.begin();
         set_sampling_frequency(mIioData.sysfspath, mIioData.sampling_freq_avl[i]);
         // Wake up the 'run' thread to check if a new event should be generated now
-        mWaitCV.notify_all();
+        mSensorThread.notifyAll();
     }
 }
 
@@ -113,12 +118,12 @@ void HWSensorBase::sendAdditionalInfoReport() {
 }
 
 void HWSensorBase::activate(bool enable) {
-    std::unique_lock<std::mutex> lock(mRunMutex);
+    std::unique_lock<std::mutex> lock(mSensorThread.lock());
     if (mIsEnabled != enable) {
         mIsEnabled = enable;
         enable_sensor(mIioData.sysfspath, enable);
         if (enable) sendAdditionalInfoReport();
-        mWaitCV.notify_all();
+        mSensorThread.notifyAll();
     }
 }
 
@@ -176,36 +181,37 @@ void HWSensorBase::processScanData(uint8_t* data, Event* evt) {
     evt->u.vec3.status = SensorStatus::ACCURACY_HIGH;
 }
 
-void HWSensorBase::run() {
-    int err;
-    int read_size;
-    std::vector<Event> events;
-    Event event;
+void HWSensorBase::pollForEvents() {
+    int err = poll(&mPollFdIio, 1, mSamplingPeriodNs * 1000);
+    if (err <= 0) {
+        ALOGE("Sensor %s poll returned %d", mIioData.name.c_str(), err);
+        return;
+    }
 
-    while (!mStopThread) {
-        if (!mIsEnabled || mMode == OperationMode::DATA_INJECTION) {
-            std::unique_lock<std::mutex> runLock(mRunMutex);
-            mWaitCV.wait(runLock, [&] {
-                return ((mIsEnabled && mMode == OperationMode::NORMAL) || mStopThread);
-            });
-        } else {
-            err = poll(&mPollFdIio, 1, mSamplingPeriodNs * 1000);
-            if (err <= 0) {
-                ALOGE("Sensor %s poll returned %d", mIioData.name.c_str(), err);
-                continue;
-            }
-            if (mPollFdIio.revents & POLLIN) {
-                read_size = read(mPollFdIio.fd, &mSensorRawData[0], mScanSize);
-                if (read_size <= 0) {
-                    ALOGE("%s: Failed to read data from iio char device.", mIioData.name.c_str());
-                    continue;
-                }
-                events.clear();
-                processScanData(&mSensorRawData[0], &event);
-                events.push_back(event);
-                mCallback->postEvents(events, isWakeUpSensor());
-            }
+    if (mPollFdIio.revents & POLLIN) {
+        int read_size = read(mPollFdIio.fd, &mSensorRawData[0], mScanSize);
+        if (read_size <= 0) {
+            ALOGE("%s: Failed to read data from iio char device.", mIioData.name.c_str());
+            return;
         }
+
+        Event evt;
+        processScanData(&mSensorRawData[0], &evt);
+        mCallback->postEvents({evt}, isWakeUpSensor());
+    }
+}
+
+void HWSensorBase::idleLoop() {
+    mSensorThread.wait([this] {
+        return ((mIsEnabled && mMode == OperationMode::NORMAL) || mSensorThread.isStopped());
+    });
+}
+
+void HWSensorBase::pollSensor() {
+    if (!mIsEnabled || mMode == OperationMode::DATA_INJECTION) {
+        idleLoop();
+    } else {
+        pollForEvents();
     }
 }
 
@@ -214,10 +220,10 @@ bool SensorBase::isWakeUpSensor() {
 }
 
 void SensorBase::setOperationMode(OperationMode mode) {
-    std::unique_lock<std::mutex> lock(mRunMutex);
+    std::unique_lock<std::mutex> lock(mSensorThread.lock());
     if (mMode != mode) {
         mMode = mode;
-        mWaitCV.notify_all();
+        mSensorThread.notifyAll();
     }
 }
 
@@ -450,10 +456,9 @@ HWSensorBase::HWSensorBase(int32_t sensorHandle, ISensorsEventCallback* callback
     std::string buffer_path;
     mSensorInfo.flags |= SensorFlagBits::CONTINUOUS_MODE;
     mSensorInfo.name = data.name;
-    mSensorInfo.resolution = data.resolution;
+    mSensorInfo.resolution = data.resolution * data.scale;
     mSensorInfo.maxRange = data.max_range * data.scale;
-    mSensorInfo.power =
-            (data.power_microwatts / 1000.f) / SENSOR_VOLTAGE_DEFAULT;  // converting uW to mA
+    mSensorInfo.power = 0;
     mIioData = data;
     setOrientation(config);
     status_t ret = setAdditionalInfoFrames(config);
