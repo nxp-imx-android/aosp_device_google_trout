@@ -18,7 +18,6 @@
 #include <android/binder_process.h>
 #include <hidl/HidlTransportSupport.h>
 
-#include <vhal_v2_0/EmulatedVehicleConnector.h>
 #include <vhal_v2_0/EmulatedVehicleHal.h>
 #include <vhal_v2_0/VehicleHalManager.h>
 
