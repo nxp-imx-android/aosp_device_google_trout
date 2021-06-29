@@ -41,7 +41,6 @@ int main(int argc, char* argv[]) {
     auto store = std::make_unique<VehiclePropertyStore>();
     auto connector = vhal_impl::makeGrpcVehicleClient(serverInfo->getServerUri());
     auto hal = std::make_unique<vhal_impl::EmulatedVehicleHal>(store.get(), connector.get());
-    auto emulator = std::make_unique<vhal_impl::VehicleEmulator>(hal.get());
     auto service = std::make_unique<VehicleHalManager>(hal.get());
 
     configureRpcThreadpool(4, true /* callerWillJoin */);
