@@ -104,7 +104,7 @@ cc_binary {
     shared_libs: [
         "android.hardware.audiocontrol@2.0-service-audio-control-grpc-server",
         "android.hardware.automotive.utils.watchdog",
-        "carwatchdog_aidl_interface-V2-ndk_platform",
+        "carwatchdog_aidl_interface-V2-ndk",
         "libbinder_ndk",
         "libcutils",
     ],
