@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 The Android Open Source Project
+ * Copyright (C) 2021 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,16 +21,30 @@
 #include <thread>
 
 #include <android-base/logging.h>
+#include <android-base/parseint.h>
+#include <android-base/strings.h>
 #include <grpc++/grpc++.h>
+
+#include <aidl/android/hardware/automotive/audiocontrol/AudioFocusChange.h>
+#include <aidl/android/hardware/automotive/audiocontrol/BnAudioControl.h>
+#include <aidl/android/hardware/automotive/audiocontrol/DuckingInfo.h>
+#include <aidl/android/hardware/automotive/audiocontrol/IFocusListener.h>
+
+#include <android_audio_policy_configuration_V7_0.h>
 
 #include "AudioFocusControl.grpc.pb.h"
 #include "AudioFocusControl.pb.h"
 #include "libandroid_audio_controller/utils.h"
 
-using android::hardware::audio::common::V6_0::AudioUsage;
 using std::literals::chrono_literals::operator""s;
 
-namespace android::hardware::automotive::audiocontrol::V2_0::implementation {
+namespace xsd {
+using namespace ::android::audio::policy::configuration::V7_0;
+}
+
+using xsd::AudioUsage;
+
+namespace aidl::android::hardware::automotive::audiocontrol {
 
 class AudioControlServerImpl : public AudioControlServer,
                                audio_focus_control_proto::AudioFocusControlServer::Service {
@@ -39,7 +53,17 @@ class AudioControlServerImpl : public AudioControlServer,
 
     ~AudioControlServerImpl();
 
-    close_handle_func_t RegisterFocusListener(const sp<IFocusListener>& focusListener) override;
+    close_handle_func_t RegisterFocusListener(std::shared_ptr<IFocusListener> focusListener) override {
+        std::lock_guard<std::mutex> lock(mFocusListenerMutex);
+        mFocusListener = focusListener;
+
+        return [this, focusListener]() {
+            std::lock_guard<std::mutex> lock(mFocusListenerMutex);
+            if (mFocusListener == focusListener) {
+                mFocusListener = nullptr;
+            }
+        };
+    }
 
     grpc::Status AudioRequests(::grpc::ServerContext* context,
                                const audio_focus_control_proto::AudioFocusControlMessage* message,
@@ -63,7 +87,7 @@ class AudioControlServerImpl : public AudioControlServer,
     void HandleReleasing(aafc_session_id_t release_session);
 
     void RequestAudioFocus(aafc_audio_usage_t usage, aafc_zone_id_t zone,
-                           hidl_bitfield<AudioFocusChange> focus_change);
+                           AudioFocusChange focus_change);
 
     void AbandonAudioFocus(aafc_audio_usage_t usage, aafc_zone_id_t zone);
 
@@ -75,7 +99,7 @@ class AudioControlServerImpl : public AudioControlServer,
         std::chrono::steady_clock::time_point mLastHeartbeat;
 
         focus_listener_request_key_t GetRequestKey() const;
-        hidl_bitfield<AudioFocusChange> GetFocusChange() const;
+        AudioFocusChange GetFocusChange() const;
     };
 
     using session_pool_t = std::map<aafc_session_id_t, AudioFocusSession>;
@@ -84,7 +108,7 @@ class AudioControlServerImpl : public AudioControlServer,
 
     std::string mServiceAddr;
     std::unique_ptr<::grpc::Server> mGrpcServer;
-    sp<IFocusListener> mFocusListener{nullptr};
+    std::shared_ptr<IFocusListener> mFocusListener{nullptr};
 
     // grpc request queue
     std::deque<grpc_request_t> mRequestQueue;
@@ -121,19 +145,6 @@ AudioControlServerImpl::~AudioControlServerImpl() {
     if (mRequestWorker.joinable()) {
         mRequestWorker.join();
     }
-}
-
-AudioControlServer::close_handle_func_t AudioControlServerImpl::RegisterFocusListener(
-        const sp<IFocusListener>& focusListener) {
-    std::lock_guard<std::mutex> lock(mFocusListenerMutex);
-    mFocusListener = focusListener;
-
-    return [this, focusListener]() {
-        std::lock_guard<std::mutex> lock(mFocusListenerMutex);
-        if (mFocusListener == focusListener) {
-            mFocusListener = nullptr;
-        }
-    };
 }
 
 void AudioControlServerImpl::Start() {
@@ -244,7 +255,7 @@ void AudioControlServerImpl::HandleAcquiring(
     const auto ref_count_search = mAudioFocusCount.find(request_key);
     const auto& [audio_usage, zone_id] = request_key;
     LOG(DEBUG) << __func__ << ": acquiring: " << toString(static_cast<AudioUsage>(audio_usage))
-               << " " << zone_id << " " << focus_change;
+               << " " << zone_id << " " << toString(focus_change);
 
     const bool not_found = ref_count_search == mAudioFocusCount.end();
     const bool count_zero = !not_found && ref_count_search->second == 0;
@@ -288,31 +299,33 @@ void AudioControlServerImpl::HandleReleasing(aafc_session_id_t release_session) 
 }
 
 void AudioControlServerImpl::RequestAudioFocus(aafc_audio_usage_t usage, aafc_zone_id_t zone,
-                                               hidl_bitfield<AudioFocusChange> focus_change) {
+                                               AudioFocusChange focus_change) {
     std::lock_guard<std::mutex> lock(mFocusListenerMutex);
     auto listener = mFocusListener;
+    const auto audio_usage = static_cast<AudioUsage>(usage);
     LOG(DEBUG) << __func__
-               << ": requesting focus, usage: " << toString(static_cast<AudioUsage>(usage))
+               << ": requesting focus, usage: " << toString(audio_usage)
                << ", zone: " << zone
                << ", focus change: " << toString(static_cast<AudioFocusChange>(focus_change));
     if (!listener) {
         LOG(ERROR) << __func__ << ": audio focus listener has not been registered.";
         return;
     }
-    listener->requestAudioFocus(usage, zone, focus_change);
+    listener->requestAudioFocus(toString(audio_usage), zone, focus_change);
 }
 
 void AudioControlServerImpl::AbandonAudioFocus(aafc_audio_usage_t usage, aafc_zone_id_t zone) {
     std::lock_guard<std::mutex> lock(mFocusListenerMutex);
     auto listener = mFocusListener;
+    const auto audio_usage = static_cast<AudioUsage>(usage);
     LOG(DEBUG) << __func__
-               << ": abandoning focus, usage: " << toString(static_cast<AudioUsage>(usage))
+               << ": abandoning focus, usage: " << toString(audio_usage)
                << ", zone: " << zone;
     if (!listener) {
         LOG(ERROR) << __func__ << ": audio focus listener has not been registered.";
         return;
     }
-    listener->abandonAudioFocus(usage, zone);
+    listener->abandonAudioFocus(toString(audio_usage), zone);
 }
 
 void AudioControlServerImpl::CheckSessionHeartbeats(
@@ -356,9 +369,9 @@ AudioControlServerImpl::AudioFocusSession::GetRequestKey() const {
     return {mRequest.audio_usage(), mRequest.zone_id()};
 }
 
-hidl_bitfield<AudioFocusChange> AudioControlServerImpl::AudioFocusSession::GetFocusChange() const {
+AudioFocusChange AudioControlServerImpl::AudioFocusSession::GetFocusChange() const {
     constexpr auto cast_to_bitfield = [](auto&& focus_change) {
-        return static_cast<hidl_bitfield<AudioFocusChange>>(focus_change);
+        return static_cast<AudioFocusChange>(focus_change);
     };
     if (!mRequest.is_transient()) {
         return cast_to_bitfield(AudioFocusChange::GAIN);
@@ -376,4 +389,4 @@ std::unique_ptr<AudioControlServer> MakeAudioControlServer(const std::string& ad
     return std::make_unique<AudioControlServerImpl>(addr);
 }
 
-}  // namespace android::hardware::automotive::audiocontrol::V2_0::implementation
+}  // namespace aidl::android::hardware::automotive::audiocontrol

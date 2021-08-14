@@ -14,22 +14,19 @@
  * limitations under the License.
  */
 
-#include "CloseHandle.h"
+#pragma once
 
-namespace android::hardware::automotive::audiocontrol::V2_0::implementation {
+#include "ServiceDescriptor.h"
 
-CloseHandle::CloseHandle(Callback callback) : mCallback(callback) {}
+#include <optional>
+#include <ostream>
+#include <vector>
 
-CloseHandle::~CloseHandle() {
-    close();
-}
+struct ServiceSupplier {
+    virtual std::optional<ServiceDescriptor> GetSystemLogsService() const;
+    virtual std::vector<ServiceDescriptor> GetServices() const;
 
-Return<void> CloseHandle::close() {
-    const auto wasClosed = mIsClosed.exchange(true);
-    if (wasClosed) return {};
+    void dump(std::ostream& os) const;
 
-    if (mCallback) mCallback();
-    return {};
-}
-
-}  // namespace android::hardware::automotive::audiocontrol::V2_0::implementation
+    virtual ~ServiceSupplier() = default;
+};
