@@ -13,6 +13,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+BOARD_WITHOUT_RADIO ?= true
+ifeq ($(BOARD_WITHOUT_RADIO),true)
+   PRODUCT_PACKAGE_OVERLAYS += device/google/trout/product_files/bluetooth/overlay
+endif
 
 $(call inherit-product, device/google/cuttlefish/vsoc_arm64/auto/aosp_cf.mk)
 
