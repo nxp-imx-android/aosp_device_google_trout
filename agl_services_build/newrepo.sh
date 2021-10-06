@@ -16,7 +16,7 @@
 #
 
 bash_src_dir=$(realpath $(dirname ${BASH_SOURCE[0]}))
-dest_dir=$(realpath "$1")
+dest_dir=$(realpath "${1:-$PWD}")
 
 echo Initializing an AGL Server build at "${dest_dir}"
 mkdir -p "${dest_dir}/manifest"
