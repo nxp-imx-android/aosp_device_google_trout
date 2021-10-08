@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 The Android Open Source Project
+ * Copyright (C) 2020 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,9 +20,9 @@
 #include <memory>
 #include <string>
 
-#include <aidl/android/hardware/automotive/audiocontrol/BnAudioControl.h>
+#include <android/hardware/automotive/audiocontrol/2.0/IFocusListener.h>
 
-namespace aidl::android::hardware::automotive::audiocontrol {
+namespace android::hardware::automotive::audiocontrol::V2_0::implementation {
 
 class AudioControlServer {
   public:
@@ -30,8 +30,7 @@ class AudioControlServer {
 
     virtual ~AudioControlServer() = default;
 
-    virtual close_handle_func_t RegisterFocusListener(
-            std::shared_ptr<IFocusListener> focusListener) = 0;
+    virtual close_handle_func_t RegisterFocusListener(const sp<IFocusListener>& focusListener) = 0;
 
     virtual void Start() = 0;
 
@@ -40,4 +39,4 @@ class AudioControlServer {
 
 std::unique_ptr<AudioControlServer> MakeAudioControlServer(const std::string& addr);
 
-}  // namespace aidl::android::hardware::automotive::audiocontrol
+}  // namespace android::hardware::automotive::audiocontrol::V2_0::implementation

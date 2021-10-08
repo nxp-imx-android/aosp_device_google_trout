@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 The Android Open Source Project
+ * Copyright (C) 2020 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,9 +24,9 @@
 #include <utils/Looper.h>
 #include <utils/Mutex.h>
 
-namespace aidl::android::hardware::automotive::audiocontrol {
+namespace android::hardware::automotive::audiocontrol::V2_0::implementation {
 
-class WatchdogClient : public ::android::hardware::automotive::utils::BaseWatchdogClient {
+class WatchdogClient : public android::hardware::automotive::utils::BaseWatchdogClient {
   public:
     WatchdogClient(const ::android::sp<::android::Looper>& handlerLooper, AudioControl* audioCtrl);
 
@@ -37,4 +37,4 @@ class WatchdogClient : public ::android::hardware::automotive::utils::BaseWatchd
     AudioControl* mAudioControl;
 };
 
-}  // namespace aidl::android::hardware::automotive::audiocontrol
+}  // namespace android::hardware::automotive::audiocontrol::V2_0::implementation

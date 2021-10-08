@@ -14,16 +14,12 @@
  * limitations under the License.
  */
 
-#pragma once
-
 #include "DumpstateServer.grpc.pb.h"
-#include "DumpstateServer.h"
 #include "DumpstateServer.pb.h"
 
-class DumpstateGrpcServer : public dumpstate_proto::DumpstateServer::Service,
-                            private DumpstateServer {
+class DumpstateGrpcServer : public dumpstate_proto::DumpstateServer::Service {
   public:
-    DumpstateGrpcServer(const std::string& addr, const ServiceSupplier& services);
+    explicit DumpstateGrpcServer(const std::string& addr) : mServiceAddr(addr) {}
 
     grpc::Status GetSystemLogs(
             ::grpc::ServerContext* context, const ::google::protobuf::Empty* request,
@@ -40,5 +36,8 @@ class DumpstateGrpcServer : public dumpstate_proto::DumpstateServer::Service,
     void Start();
 
   private:
+    grpc::Status GetCommandOutput(const std::string& command,
+                                  ::grpc::ServerWriter<dumpstate_proto::DumpstateBuffer>* stream);
+
     std::string mServiceAddr;
 };

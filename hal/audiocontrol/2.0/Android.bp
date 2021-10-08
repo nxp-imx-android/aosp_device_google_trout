@@ -18,77 +18,95 @@ package {
     default_applicable_licenses: ["Android-Apache-2.0"],
 }
 
-genrule {
-    name: "DumpstateServerProtoStub_h",
-    tools: [
-        "aprotoc",
-        "protoc-gen-grpc-cpp-plugin",
-    ],
-    cmd: "$(location aprotoc) -I$$(dirname $(in)) -Iexternal/protobuf/src --plugin=protoc-gen-grpc=$(location protoc-gen-grpc-cpp-plugin) $(in) --grpc_out=$(genDir) --cpp_out=$(genDir)",
-    srcs: [
-        "proto/DumpstateServer.proto",
-    ],
-    out: [
-        "DumpstateServer.pb.h",
-        "DumpstateServer.grpc.pb.h",
-    ],
-}
-
-genrule {
-    name: "DumpstateServerProtoStub_cc",
-    tools: [
-        "aprotoc",
-        "protoc-gen-grpc-cpp-plugin",
-    ],
-    cmd: "$(location aprotoc) -I$$(dirname $(in)) -Iexternal/protobuf/src --plugin=protoc-gen-grpc=$(location protoc-gen-grpc-cpp-plugin) $(in) --grpc_out=$(genDir) --cpp_out=$(genDir)",
-    srcs: [
-        "proto/DumpstateServer.proto",
-    ],
-    out: [
-        "DumpstateServer.pb.cc",
-        "DumpstateServer.grpc.pb.cc",
-    ],
-}
-
-cc_binary {
-    name: "android.hardware.dumpstate@1.1-service.trout",
-    srcs: [
-        "DumpstateDevice.cpp",
-        "service.cpp",
-        "WatchdogClient.cpp",
-    ],
-    generated_headers: [
-        "DumpstateServerProtoStub_h",
-    ],
-    generated_sources: [
-        "DumpstateServerProtoStub_cc",
-    ],
-    static_libs: [
-        "android.hardware.automotive@libc++fs",
-        "android.hardware.automotive.utils.vsockinfo",
+cc_defaults {
+    name: "audio_control_hal_v2_0_default_trout",
+    defaults: [
+        "hidl_defaults",
     ],
     shared_libs: [
-        "android.hardware.automotive.utils.watchdog",
-        "android.hardware.dumpstate@1.0",
-        "android.hardware.dumpstate@1.1",
-        "carwatchdog_aidl_interface-V2-ndk",
+        "android.hardware.automotive.audiocontrol@2.0",
         "libbase",
-        "libbinder_ndk",
-        "libcutils",
-        "libdumpstateutil",
-        "libgrpc++",
         "libhidlbase",
         "liblog",
-        "libprotobuf-cpp-full",
         "libutils",
+    ],
+}
+
+genrule {
+    name: "AudioFocusControlProtoStub_h",
+    tools: [
+        "aprotoc",
+        "protoc-gen-grpc-cpp-plugin",
+    ],
+    cmd: "$(location aprotoc) -I$$(dirname $(in)) -Iexternal/protobuf/src --plugin=protoc-gen-grpc=$(location protoc-gen-grpc-cpp-plugin) $(in) --grpc_out=$(genDir) --cpp_out=$(genDir)",
+    srcs: [
+        "proto/AudioFocusControl.proto",
+    ],
+    out: [
+        "AudioFocusControl.pb.h",
+        "AudioFocusControl.grpc.pb.h",
+    ],
+}
+
+genrule {
+    name: "AudioFocusControlProtoStub_cc",
+    tools: [
+        "aprotoc",
+        "protoc-gen-grpc-cpp-plugin",
+    ],
+    cmd: "$(location aprotoc) -I$$(dirname $(in)) -Iexternal/protobuf/src --plugin=protoc-gen-grpc=$(location protoc-gen-grpc-cpp-plugin) $(in) --grpc_out=$(genDir) --cpp_out=$(genDir)",
+    srcs: [
+        "proto/AudioFocusControl.proto",
+    ],
+    out: [
+        "AudioFocusControl.pb.cc",
+        "AudioFocusControl.grpc.pb.cc",
+    ],
+}
+
+cc_library {
+    name: "android.hardware.audiocontrol@2.0-service-audio-control-grpc-server",
+    vendor: true,
+    defaults: ["audio_control_hal_v2_0_default_trout"],
+    srcs: [
+        "AudioControlServer.cpp",
+    ],
+    generated_headers: [
+        "AudioFocusControlProtoStub_h",
+    ],
+    generated_sources: [
+        "AudioFocusControlProtoStub_cc",
+    ],
+    shared_libs: [
+        "libgrpc++",
+        "libprotobuf-cpp-full",
     ],
     cflags: [
         "-Wno-unused-parameter",
     ],
+}
+
+cc_binary {
+    name: "android.hardware.audiocontrol@2.0-service.trout",
+    defaults: ["audio_control_hal_v2_0_default_trout"],
+    vendor: true,
     relative_install_path: "hw",
-    init_rc: [
-        "android.hardware.dumpstate@1.1-service.trout.rc",
+    srcs: [
+        "AudioControl.cpp",
+        "CloseHandle.cpp",
+        "service.cpp",
+        "WatchdogClient.cpp"
     ],
-    defaults: ["cuttlefish_guest_only"],
-    vintf_fragments: ["manifest_android.hardware.dumpstate@1.1-service.trout.xml"],
+    init_rc: ["android.hardware.audiocontrol@2.0-service.trout.rc"],
+    static_libs: [
+        "android.hardware.automotive.utils.vsockinfo",
+    ],
+    shared_libs: [
+        "android.hardware.audiocontrol@2.0-service-audio-control-grpc-server",
+        "android.hardware.automotive.utils.watchdog",
+        "carwatchdog_aidl_interface-V2-ndk",
+        "libbinder_ndk",
+        "libcutils",
+    ],
+    vintf_fragments: ["manifest_android.hardware.audiocontrol@2.0-service.trout.xml"],
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 The Android Open Source Project
+ * Copyright (C) 2020 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,8 +22,6 @@
 
 using aidl::android::automotive::watchdog::ICarWatchdog;
 using aidl::android::automotive::watchdog::TimeoutLength;
-using ::android::Looper;
-using ::android::sp;
 
 namespace {
 
@@ -31,13 +29,24 @@ enum { WHAT_CHECK_ALIVE = 1 };
 
 }  // namespace
 
-namespace aidl::android::hardware::automotive::audiocontrol {
+namespace android::hardware::automotive::vehicle::V2_0::impl {
 
-WatchdogClient::WatchdogClient(const sp<Looper>& handlerLooper, AudioControl* audioCtrl)
-    : BaseWatchdogClient(handlerLooper), mAudioControl(audioCtrl) {}
+WatchdogClient::WatchdogClient(const sp<Looper>& handlerLooper, VehicleHalManager* vhal)
+    : BaseWatchdogClient(handlerLooper), mHal(vhal) {}
 
 bool WatchdogClient::isClientHealthy() const {
-    return mAudioControl->isHealthy();
+    // This implementation is the same as the one for the default VHAL
+    StatusCode status = StatusCode::TRY_AGAIN;
+    VehiclePropValue propValue = {.prop = (int32_t)VehicleProperty::PERF_VEHICLE_SPEED};
+    while (status == StatusCode::TRY_AGAIN) {
+        mHal->get(propValue, [&propValue, &status](StatusCode s, const VehiclePropValue& v) {
+            status = s;
+            if (s == StatusCode::OK) {
+                propValue = v;
+            }
+        });
+    }
+    return status == StatusCode::OK;
 }
 
-}  // namespace aidl::android::hardware::automotive::audiocontrol
+}  // namespace android::hardware::automotive::vehicle::V2_0::impl
