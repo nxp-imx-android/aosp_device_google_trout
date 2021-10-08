@@ -9,7 +9,7 @@ ANDROID_REMOTE = "git://partner-android.googlesource.com"
 BORINGSSL_REMOTE = "git://boringssl.googlesource.com"
 GITHUB_REMOTE = "git://github.com"
 
-DEFAULT_REVISION = "s-car-fs-release"
+DEFAULT_REVISION = "s-v2-fs-release"
 
 FETCH_CODE_PREFIX = "src"
 
