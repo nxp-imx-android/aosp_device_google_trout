@@ -71,6 +71,10 @@ class GrpcVehicleServerImpl : public GrpcVehicleServer, public vhal_proto::Vehic
                                const vhal_proto::WrappedVehiclePropValue* wrappedPropValue,
                                vhal_proto::VehicleHalCallStatus* status) override;
 
+    ::grpc::Status SendAllPropertyValuesToStream(::grpc::ServerContext* context,
+                                                 const ::google::protobuf::Empty*,
+                                                 ::google::protobuf::Empty*) override;
+
     ::grpc::Status StartPropertyValuesStream(
             ::grpc::ServerContext* context, const ::google::protobuf::Empty* request,
             ::grpc::ServerWriter<vhal_proto::WrappedVehiclePropValue>* stream) override;
@@ -248,6 +252,13 @@ StatusCode GrpcVehicleServerImpl::onSetProperty(const VehiclePropValue& value, b
 
     status->set_status_code(static_cast<vhal_proto::VehicleHalStatusCode>(set_status));
 
+    return ::grpc::Status::OK;
+}
+
+::grpc::Status GrpcVehicleServerImpl::SendAllPropertyValuesToStream(
+        ::grpc::ServerContext* context, const ::google::protobuf::Empty*,
+        ::google::protobuf::Empty*) {
+    sendAllValuesToClient();
     return ::grpc::Status::OK;
 }
 

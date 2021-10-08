@@ -14,24 +14,9 @@
  * limitations under the License.
  */
 
-package {
-    default_applicable_licenses: ["Android-Apache-2.0"],
-}
+#include "gtest/gtest.h"
 
-cc_library {
-    name: "android.hardware.automotive.utils.watchdog",
-    defaults: ["hidl_defaults"],
-    vendor: true,
-    srcs: [
-        "BaseWatchdogClient.cpp"
-    ],
-    export_include_dirs: ["."],
-    shared_libs: [
-        "android.automotive.watchdog-V2-ndk_platform",
-        "libbase",
-        "libbinder_ndk",
-        "libhidlbase",
-        "liblog",
-        "libutils",
-    ],
+int main(int argc, char** argv) {
+    ::testing::InitGoogleTest(&argc, argv);
+    return RUN_ALL_TESTS();
 }

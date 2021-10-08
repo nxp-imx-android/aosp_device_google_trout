@@ -149,10 +149,8 @@ cc_binary {
     relative_install_path: "hw",
     srcs: [
         "VirtualizedVehicleService.cpp",
-        "WatchdogClient.cpp",
     ],
     shared_libs: [
-        "android.hardware.automotive.utils.watchdog",
         "libbase",
         "libcutils",
         "libjsoncpp",
@@ -161,11 +159,6 @@ cc_binary {
     ],
     static_libs: [
         "android.hardware.automotive.vehicle@2.0-virtualization-client-lib",
-        "android.hardware.automotive.utils.vsockinfo",
-        "android.hardware.automotive.vehicle@2.0-manager-lib",
-        "android.hardware.automotive.vehicle@2.0-default-impl-lib",
-        "android.hardware.automotive.vehicle@2.0-grpc-trout",
-        "android.hardware.automotive.vehicle@2.0-virtualization-utils",
     ],
     cflags: [
         "-Wno-unused-parameter",

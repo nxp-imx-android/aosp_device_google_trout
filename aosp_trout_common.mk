@@ -46,7 +46,7 @@ LOCAL_AUDIO_PRODUCT_COPY_FILES ?= \
 endif
 
 # Audio Control HAL
-LOCAL_AUDIOCONTROL_HAL_PRODUCT_PACKAGE ?= android.hardware.audiocontrol@2.0-service.trout
+LOCAL_AUDIOCONTROL_HAL_PRODUCT_PACKAGE ?= android.hardware.automotive.audiocontrol-service.trout
 
 # Dumpstate HAL
 LOCAL_DUMPSTATE_PRODUCT_PACKAGE ?= android.hardware.dumpstate@1.1-service.trout
@@ -59,15 +59,11 @@ LOCAL_DUMPSTATE_PROPERTIES ?= \
 LOCAL_VHAL_PRODUCT_PACKAGE ?= android.hardware.automotive.vehicle@2.0-virtualization-service
 
 # EVS HAL
-LOCAL_EVS_PRODUCT_PACKAGE ?= \
-    android.automotive.evs.manager@1.1 \
-    android.frameworks.automotive.display@1.0-service \
-    android.hardware.automotive.evs@1.1-sample \
-    evs_app \
-
 LOCAL_EVS_PRODUCT_COPY_FILES ?= \
     device/google/trout/product_files/etc/automotive/evs/config_override.json:${TARGET_COPY_OUT_SYSTEM}/etc/automotive/evs/config_override.json \
     device/google/trout/product_files/vendor/etc/automotive/evs/evs_configuration_override.xml:$(TARGET_COPY_OUT_VENDOR)/etc/automotive/evs/evs_configuration_override.xml \
+
+ENABLE_EVS_SAMPLE := true
 
 BOARD_SEPOLICY_DIRS += device/google/trout/sepolicy/vendor/google
 
@@ -80,6 +76,8 @@ PRODUCT_PROPERTY_OVERRIDES += \
     ${LOCAL_AUDIOCONTROL_PROPERTIES} \
     ${LOCAL_DUMPSTATE_PROPERTIES}
 
+PRODUCT_CHARACTERISTICS := nosdcard,automotive
+
 TARGET_BOARD_INFO_FILE ?= device/google/trout/board-info.txt
 
 # Keymaster HAL
@@ -88,18 +86,25 @@ LOCAL_KEYMASTER_PRODUCT_PACKAGE ?= android.hardware.keymaster@4.1-service
 # Gatekeeper HAL
 LOCAL_GATEKEEPER_PRODUCT_PACKAGE ?= android.hardware.gatekeeper@1.0-service.software
 
-PRODUCT_PACKAGES += \
-    tinyplay \
-    ${LOCAL_EVS_PRODUCT_PACKAGE} \
+PRODUCT_PACKAGES += tinyplay
 
 PRODUCT_COPY_FILES += \
     ${LOCAL_EVS_PRODUCT_COPY_FILES} \
 
-# TODO(b/162901005): Include computepipe once this project points to main.
-# include packages/services/Car/cpp/computepipe/products/computepipe.mk
+PRODUCT_COPY_FILES += \
+    ${LOCAL_EVS_PRODUCT_COPY_FILES} \
+
+include packages/services/Car/cpp/computepipe/products/computepipe.mk
 
 # Trout fstab (workaround b/182190949)
 PRODUCT_COPY_FILES += \
     device/google/trout/product_files/fstab.trout:$(TARGET_COPY_OUT_RAMDISK)/fstab.trout \
     device/google/trout/product_files/fstab.trout:$(TARGET_COPY_OUT_VENDOR)/etc/fstab.trout \
     device/google/trout/product_files/fstab.trout:$(TARGET_COPY_OUT_RECOVERY)/root/first_stage_ramdisk/fstab.trout
+
+# User HAL support
+TARGET_SUPPORTS_USER_HAL ?= true
+
+ifeq ($(TARGET_SUPPORTS_USER_HAL),true)
+PRODUCT_SYSTEM_DEFAULT_PROPERTIES += android.car.user_hal_enabled=true
+endif
