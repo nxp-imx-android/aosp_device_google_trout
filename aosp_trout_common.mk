@@ -65,9 +65,11 @@ LOCAL_EVS_PRODUCT_COPY_FILES ?= \
     device/google/trout/product_files/etc/automotive/evs/config_override.json:${TARGET_COPY_OUT_SYSTEM}/etc/automotive/evs/config_override.json \
     device/google/trout/product_files/vendor/etc/automotive/evs/evs_configuration_override.xml:$(TARGET_COPY_OUT_VENDOR)/etc/automotive/evs/evs_configuration_override.xml \
 
+LOCAL_EVS_PROPERTIES ?= persist.automotive.evs.mode=1
 ENABLE_EVS_SAMPLE := true
 
-BOARD_SEPOLICY_DIRS += device/google/trout/sepolicy/vendor/google
+PRODUCT_COPY_FILES += \
+    ${LOCAL_EVS_PRODUCT_COPY_FILES} \
 
 # Disable Vulkan feature flag as it is not supported on trout
 TARGET_VULKAN_SUPPORT := false
@@ -90,12 +92,6 @@ LOCAL_GATEKEEPER_PRODUCT_PACKAGE ?= android.hardware.gatekeeper@1.0-service.soft
 
 PRODUCT_PACKAGES += tinyplay
 
-PRODUCT_COPY_FILES += \
-    ${LOCAL_EVS_PRODUCT_COPY_FILES} \
-
-PRODUCT_COPY_FILES += \
-    ${LOCAL_EVS_PRODUCT_COPY_FILES} \
-
 include packages/services/Car/cpp/computepipe/products/computepipe.mk
 
 # Trout fstab (workaround b/182190949)
@@ -113,3 +109,5 @@ endif
 
 # Android Bluetooth stack configuration
 BOARD_BLUETOOTH_BDROID_BUILDCFG_INCLUDE_DIR ?= device/google/trout/product_files/bluetooth
+
+BOARD_SEPOLICY_DIRS += device/google/trout/sepolicy/vendor/google
