@@ -16,3 +16,7 @@
 /sys/devices/platform/system-controller/scmi_dev\.[0-9]+/iio:device[0-9]+/[^/]+_sampling_frequency$  u:object_r:sysfs_iio_file_ctrl:s0
 /sys/devices/platform/system-controller/scmi_dev\.[0-9]+/iio:device[0-9]+/scan_elements/[^/]+_en$  u:object_r:sysfs_iio_file_ctrl:s0
 /sys/devices/platform/system-controller/scmi_dev\.[0-9]+/iio:device[0-9]+/buffer/enable$  u:object_r:sysfs_iio_file_ctrl:s0
+
+/dev/vport[0-9]+p1  u:object_r:bt_device:s0
+
+/vendor/bin/vport_trigger  u:object_r:vport_trigger_exec:s0
