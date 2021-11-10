@@ -26,6 +26,10 @@ $(call inherit-product, device/google/cuttlefish/vsoc_arm64/auto/aosp_cf.mk)
 # Package ramdisk.img in target package
 BOARD_IMG_USE_RAMDISK := true
 
+# Kernel
+
+TARGET_KERNEL_PATH ?= device/google/trout-kernel/$(TARGET_KERNEL_USE)-arm64/Image
+
 # Audio HAL
 TARGET_USES_CUTTLEFISH_AUDIO ?= false
 

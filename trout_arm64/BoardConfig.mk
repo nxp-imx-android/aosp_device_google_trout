@@ -19,3 +19,5 @@
 #
 
 -include device/google/cuttlefish/vsoc_arm64/BoardConfig.mk
+
+BOARD_BOOT_HEADER_VERSION := 3
