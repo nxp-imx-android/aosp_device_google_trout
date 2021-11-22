@@ -14,11 +14,6 @@
 # limitations under the License.
 #
 
-BOARD_WITHOUT_RADIO ?= true
-ifeq ($(BOARD_WITHOUT_RADIO),true)
-   PRODUCT_PACKAGE_OVERLAYS += device/google/trout/product_files/bluetooth/overlay
-endif
-
 TARGET_USES_CF_RILD ?= false
 
 $(call inherit-product, device/google/cuttlefish/vsoc_arm64/auto/aosp_cf.mk)
