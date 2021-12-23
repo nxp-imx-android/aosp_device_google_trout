@@ -108,7 +108,4 @@ ifeq ($(TARGET_SUPPORTS_USER_HAL),true)
 PRODUCT_SYSTEM_DEFAULT_PROPERTIES += android.car.user_hal_enabled=true
 endif
 
-# Android Bluetooth stack configuration
-BOARD_BLUETOOTH_BDROID_BUILDCFG_INCLUDE_DIR ?= device/google/trout/product_files/bluetooth
-
 BOARD_SEPOLICY_DIRS += device/google/trout/sepolicy/vendor/google
