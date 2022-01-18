@@ -22,7 +22,7 @@ package {
 cc_library_shared {
 
     vendor: true,
-    // vintf_fragments: ["android.hardware.audio@6.0-trout-impl.xml"],
+    vintf_fragments: ["android.hardware.audio@6.0-trout-impl.xml"],
     name: "audio.primary.trout",
     relative_install_path: "hw",
 
