@@ -14,10 +14,7 @@
 # limitations under the License.
 #
 
-$(call inherit-product, device/google/cuttlefish/vsoc_x86/auto/aosp_cf.mk)
-
-# Audio HAL
-TARGET_USES_CUTTLEFISH_AUDIO ?= true
+$(call inherit-product, device/google/cuttlefish/vsoc_x86/auto/device.mk)
 
 # Audio Control HAL
 # TODO (chenhaosjtuacm, egranata): move them to kernel command line

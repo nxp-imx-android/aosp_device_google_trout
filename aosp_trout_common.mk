@@ -51,12 +51,11 @@ endif
 LOCAL_AUDIOCONTROL_HAL_PRODUCT_PACKAGE ?= android.hardware.automotive.audiocontrol-service.trout
 
 # Dumpstate HAL
-# TODO(b/215200137): Re-enable once converted to AIDL
-#LOCAL_DUMPSTATE_PRODUCT_PACKAGE ?= android.hardware.dumpstate@1.1-service.trout
-#LOCAL_DUMPSTATE_PROPERTIES ?= \
-#    ro.vendor.dumpstate.server.cid=2 \
-#    ro.vendor.dumpstate.server.port=9310 \
-#    ro.vendor.helpersystem.log_loc=/data/host_logs \
+LOCAL_DUMPSTATE_PRODUCT_PACKAGE ?= android.hardware.dumpstate@1.1-service.trout
+LOCAL_DUMPSTATE_PROPERTIES ?= \
+    ro.vendor.dumpstate.server.cid=2 \
+    ro.vendor.dumpstate.server.port=9310 \
+    ro.vendor.helpersystem.log_loc=/data/host_logs \
 
 # Vehicle HAL
 LOCAL_VHAL_PRODUCT_PACKAGE ?= android.hardware.automotive.vehicle@2.0-virtualization-service
