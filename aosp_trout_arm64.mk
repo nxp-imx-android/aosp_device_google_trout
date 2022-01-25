@@ -15,7 +15,6 @@
 #
 
 TARGET_USES_CF_RILD ?= false
-
 $(call inherit-product, device/google/cuttlefish/vsoc_arm64_only/auto/aosp_cf.mk)
 
 # Package ramdisk.img in target package
