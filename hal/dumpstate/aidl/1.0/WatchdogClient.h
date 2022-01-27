@@ -16,7 +16,6 @@
 #pragma once
 
 #include "BaseWatchdogClient.h"
-
 #include "DumpstateDevice.h"
 
 #include <aidl/android/automotive/watchdog/BnCarWatchdog.h>
@@ -24,9 +23,9 @@
 #include <utils/Looper.h>
 #include <utils/Mutex.h>
 
-namespace android::hardware::dumpstate::V1_1::implementation {
+namespace aidl::android::hardware::dumpstate::implementation {
 
-class WatchdogClient : public android::hardware::automotive::utils::BaseWatchdogClient {
+class WatchdogClient : public ::android::hardware::automotive::utils::BaseWatchdogClient {
   public:
     WatchdogClient(const ::android::sp<::android::Looper>& handlerLooper, DumpstateDevice* ddh);
 
@@ -37,4 +36,4 @@ class WatchdogClient : public android::hardware::automotive::utils::BaseWatchdog
     DumpstateDevice* mDumpstateImpl;
 };
 
-}  // namespace android::hardware::dumpstate::V1_1::implementation
+}  // namespace aidl::android::hardware::dumpstate::implementation
