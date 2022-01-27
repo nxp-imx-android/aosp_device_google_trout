@@ -107,10 +107,10 @@ PRODUCT_COPY_FILES += \
     device/google/trout/product_files/fstab.trout:$(TARGET_COPY_OUT_RAMDISK)/first_stage_ramdisk/fstab.trout
 
 # User HAL support
-TARGET_SUPPORTS_USER_HAL ?= true
+TARGET_SUPPORTS_USER_HAL ?= false
 
-ifeq ($(TARGET_SUPPORTS_USER_HAL),true)
-PRODUCT_SYSTEM_DEFAULT_PROPERTIES += android.car.user_hal_enabled=true
+ifeq ($(TARGET_SUPPORTS_USER_HAL),false)
+PRODUCT_SYSTEM_DEFAULT_PROPERTIES += android.car.user_hal_enabled=false
 endif
 
 BOARD_SEPOLICY_DIRS += device/google/trout/sepolicy/vendor/google
