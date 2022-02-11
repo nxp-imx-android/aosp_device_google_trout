@@ -14,6 +14,9 @@
 # limitations under the License.
 #
 
+$(call add_soong_config_namespace,audio_extn_config)
+$(call add_soong_config_var_value,audio_extn_config,isHFPEnabled,$(AUDIO_FEATURE_HFP_ENABLED))
+
 ifeq ($(TARGET_USES_CUTTLEFISH_AUDIO),true)
 # Cuttlefish Audio HAL with custom configuration
 LOCAL_AUDIO_PRODUCT_COPY_FILES ?= \
