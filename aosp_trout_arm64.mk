@@ -34,6 +34,7 @@ endif
 
 # Audio HAL
 TARGET_USES_CUTTLEFISH_AUDIO ?= false
+AUDIO_FEATURE_HFP_ENABLED ?= true
 
 # Audio Control HAL
 # TODO (chenhaosjtuacm, egranata): move them to kernel command line
