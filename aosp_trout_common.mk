@@ -78,9 +78,6 @@ PRODUCT_PACKAGES += $(LOCAL_EVS_RRO_PACKAGE_OVERLAYS)
 PRODUCT_COPY_FILES += \
     ${LOCAL_EVS_PRODUCT_COPY_FILES} \
 
-# GNSS HAL
-LOCAL_GNSS_PRODUCT_PACKAGE ?= android.hardware.gnss-service.trout
-
 # Disable Vulkan feature flag as it is not supported on trout
 TARGET_VULKAN_SUPPORT := false
 
