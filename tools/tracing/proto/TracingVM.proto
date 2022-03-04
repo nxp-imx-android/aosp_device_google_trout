@@ -1,0 +1,46 @@
+/*
+ * Copyright (C) 2022 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+syntax = "proto3";
+
+package tracing_vm_proto;
+
+// zero is invalid session id and indicates an error.
+message TracingSessionIdentifier {
+    uint64 session_id = 1;
+}
+
+message StartTracingRequest {
+    // TODO: b/221289678 Replace bytes with perfetto.protos.TraceConfig.
+    bytes host_config = 1;
+}
+
+message RequestStatus {
+    string error_str = 1;
+    TracingSessionIdentifier session_id = 2;
+}
+
+message TracingFileBuffer {
+    bytes buffer = 1;
+}
+
+service TracingServer {
+    rpc StartTracing(StartTracingRequest) returns (RequestStatus) {}
+
+    rpc StopTracing(TracingSessionIdentifier) returns (RequestStatus) {}
+
+    rpc GetTracingFile(TracingSessionIdentifier) returns (stream TracingFileBuffer) {}
+}
