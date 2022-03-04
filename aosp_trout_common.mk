@@ -85,7 +85,8 @@ PRODUCT_PROPERTY_OVERRIDES += \
     ro.hardware.type=automotive \
     ${LOCAL_AUDIO_PROPERTIES} \
     ${LOCAL_AUDIOCONTROL_PROPERTIES} \
-    ${LOCAL_DUMPSTATE_PROPERTIES}
+    ${LOCAL_DUMPSTATE_PROPERTIES} \
+    ${LOCAL_TRACING_SERVER_PROPERTIES}
 
 PRODUCT_CHARACTERISTICS := nosdcard,automotive
 
@@ -115,5 +116,7 @@ TARGET_SUPPORTS_USER_HAL ?= false
 ifeq ($(TARGET_SUPPORTS_USER_HAL),false)
 PRODUCT_SYSTEM_DEFAULT_PROPERTIES += android.car.user_hal_enabled=false
 endif
+
+PRODUCT_PACKAGES += android.tools.tracing-client.trout
 
 BOARD_SEPOLICY_DIRS += device/google/trout/sepolicy/vendor/google
