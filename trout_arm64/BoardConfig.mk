@@ -14,6 +14,11 @@
 # limitations under the License.
 #
 
+# Enable sparse on all filesystem images
+TARGET_USERIMAGES_SPARSE_EROFS_DISABLED ?= false
+TARGET_USERIMAGES_SPARSE_EXT_DISABLED ?= false
+TARGET_USERIMAGES_SPARSE_F2FS_DISABLED ?= false
+
 #
 # arm64 target for Trout
 #
