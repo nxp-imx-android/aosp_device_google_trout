@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-//TODO: b/217374315 organize the tracing server stub in a separate make file and directory.
-
 package {
     default_applicable_licenses: ["Android-Apache-2.0"],
 }
@@ -28,7 +26,7 @@ genrule {
     ],
     cmd: "$(location aprotoc) -I$$(dirname $(in)) --plugin=protoc-gen-grpc=$(location protoc-gen-grpc-cpp-plugin) $(in) --grpc_out=$(genDir) --cpp_out=$(genDir)",
     srcs: [
-        "proto/TracingVM.proto",
+        "TracingVM.proto",
     ],
     out: [
         "TracingVM.pb.h",
@@ -44,7 +42,7 @@ genrule {
     ],
     cmd: "$(location aprotoc) -I$$(dirname $(in)) --plugin=protoc-gen-grpc=$(location protoc-gen-grpc-cpp-plugin) $(in) --grpc_out=$(genDir) --cpp_out=$(genDir)",
     srcs: [
-        "proto/TracingVM.proto",
+        "TracingVM.proto",
     ],
     out: [
         "TracingVM.pb.cc",
@@ -60,7 +58,7 @@ genrule {
     ],
     cmd: "$(location aprotoc) -I$$(dirname $(in)) --plugin=protoc-gen-grpc=$(location protoc-gen-grpc-cpp-plugin) $(in) --grpc_out=$(genDir) --cpp_out=$(genDir)",
     srcs: [
-        "proto/perfetto_trace.proto",
+        "perfetto_trace.proto",
     ],
     out: [
         "perfetto_trace.pb.h",
@@ -76,74 +74,41 @@ genrule {
     ],
     cmd: "$(location aprotoc) -I$$(dirname $(in)) --plugin=protoc-gen-grpc=$(location protoc-gen-grpc-cpp-plugin) $(in) --grpc_out=$(genDir) --cpp_out=$(genDir)",
     srcs: [
-        "proto/perfetto_trace.proto",
+        "perfetto_trace.proto",
     ],
     out: [
         "perfetto_trace.pb.cc",
     ],
 }
 
-
-cc_binary {
-    name: "android.automotive.tracing-client.trout",
-    vendor: true,
-    srcs: [
-        "TracingClient.cpp",
-        "TracingClientTestMain.cpp",
-    ],
-    generated_headers: [
-        "TracingVMProtoStub_h",
-        "perfetto_trace_gen_h",
-    ],
-    generated_sources: [
-        "TracingVMProtoStub_cc",
-        "perfetto_trace_gen_cc",
-    ],
-    shared_libs: [
-        "libbase",
-        "libbinder_ndk",
-        "libcutils",
+cc_library_static {
+  name: "tracing_vm_protos",
+  vendor: true,
+  srcs: [
+     ":TracingVMProtoStub_cc",
+     ":perfetto_trace_gen_cc",
+  ],
+  host_supported: true,
+  generated_headers: [
+    "TracingVMProtoStub_h",
+    "perfetto_trace_gen_h",
+  ],
+  export_generated_headers: [
+    "TracingVMProtoStub_h",
+    "perfetto_trace_gen_h",
+  ],
+  shared_libs: [
         "libgrpc++",
-        "liblog",
-        "libutils",
-        "libprotobuf-cpp-full",
+        "libprotobuf-cpp-lite",
     ],
-    static_libs: [
-        "android.hardware.automotive.utils.vsockinfo",
-    ],
-    cflags: [
+  cflags: [
+        "-O2",
+        "-Wno-error=return-type",
+        "-Wno-sign-compare",
+        "-Wno-sign-promo",
         "-Wno-unused-parameter",
-    ]
-}
-
-cc_binary {
-    name: "android.automotive.tracing-server.trout",
-    vendor: true,
-    srcs: [
-        "TracingServerImpl.cpp",
-        "TracingServerMain.cpp",
+        "-fvisibility=hidden",
+        "-DGOOGLE_PROTOBUF_NO_RTTI",
+        "-DGOOGLE_PROTOBUF_NO_STATIC_INITIALIZER",
     ],
-    generated_headers: [
-        "TracingVMProtoStub_h",
-        "perfetto_trace_gen_h",
-    ],
-    generated_sources: [
-        "TracingVMProtoStub_cc",
-        "perfetto_trace_gen_cc",
-    ],
-    shared_libs: [
-        "libbase",
-        "libjsoncpp",
-        "libgrpc++",
-        "liblog",
-        "libutils",
-        "libcutils",
-        "libprotobuf-cpp-full",
-    ],
-    static_libs: [
-        "android.hardware.automotive.utils.vsockinfo",
-    ],
-    cflags: [
-        "-Wno-unused-parameter",
-    ]
 }
