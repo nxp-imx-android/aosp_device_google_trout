@@ -42,6 +42,11 @@ LOCAL_AUDIOCONTROL_PROPERTIES ?= \
     ro.vendor.audiocontrol.server.cid=1000 \
     ro.vendor.audiocontrol.server.port=9410 \
 
+# Tracing Server Address
+LOCAL_TRACING_SERVER_PROPERTIES ?= \
+    ro.vendor.tracing.server.cid=1000 \
+    ro.vendor.tracing.server.port=9510 \
+
 include device/google/trout/aosp_trout_common.mk
 
 DEVICE_MANIFEST_FILE += device/google/trout/manifest.xml
