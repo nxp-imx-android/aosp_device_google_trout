@@ -42,9 +42,17 @@ bool TracingClient::StartTracing(const std::string& host_config, uint64_t& sessi
         return false;
     }
 
-    // TODO: b/221289678 read from host_config_file.
+    std::ifstream config_file_stream(host_config, std::fstream::binary);
+    if (!config_file_stream) {
+        std::cerr << __func__ << ": file not found " << host_config << std::endl;
+        return false;
+    }
+
     perfetto::protos::TraceConfig trace_config;
-    trace_config.set_write_into_file(true);
+    if (trace_config.ParseFromIstream(&config_file_stream)) {
+        std::cerr << __func__ << ": faled to parse the host_config file " << std::endl;
+        return false;
+    }
     request.set_host_config(trace_config.SerializeAsString());
     tracing_vm_proto::RequestStatus request_status;
     auto grpc_status = mGrpcStub->StartTracing(&context, request, &request_status);
