@@ -15,6 +15,7 @@
  */
 
 syntax = "proto3";
+import "perfetto_trace.proto";
 
 package tracing_vm_proto;
 
@@ -24,8 +25,7 @@ message TracingSessionIdentifier {
 }
 
 message StartTracingRequest {
-    // TODO: b/221289678 Replace bytes with perfetto.protos.TraceConfig.
-    bytes host_config = 1;
+    perfetto.protos.TraceConfig host_config = 1;
 }
 
 message RequestStatus {
