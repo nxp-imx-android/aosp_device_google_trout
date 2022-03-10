@@ -48,12 +48,12 @@ bool TracingClient::StartTracing(const std::string& host_config, uint64_t& sessi
         return false;
     }
 
-    perfetto::protos::TraceConfig trace_config;
-    if (trace_config.ParseFromIstream(&config_file_stream)) {
+    perfetto::protos::TraceConfig* trace_config = request.mutable_host_config();
+    if (trace_config->ParseFromIstream(&config_file_stream)) {
         std::cerr << __func__ << ": faled to parse the host_config file " << std::endl;
         return false;
     }
-    request.set_host_config(trace_config.SerializeAsString());
+
     tracing_vm_proto::RequestStatus request_status;
     auto grpc_status = mGrpcStub->StartTracing(&context, request, &request_status);
     if (!grpc_status.ok()) {
