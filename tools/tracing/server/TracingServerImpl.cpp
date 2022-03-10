@@ -56,9 +56,8 @@ grpc::Status TracingServerImpl::StartTracing(::grpc::ServerContext* context,
                                              const tracing_vm_proto::StartTracingRequest* request,
                                              tracing_vm_proto::RequestStatus* request_status) {
     LOG(INFO) << "Received StartTracing rquest";
-    perfetto::protos::TraceConfig trace_config;
-    trace_config.ParseFromString(request->host_config());
     request_status->mutable_session_id()->set_session_id(mSessionId.fetch_add(1));
+    request_status->set_is_ok(true);
     return ::grpc::Status::OK;
 }
 
@@ -67,6 +66,7 @@ grpc::Status TracingServerImpl::StopTracing(
         const tracing_vm_proto::TracingSessionIdentifier* session_id,
         tracing_vm_proto::RequestStatus* request_status) {
     LOG(INFO) << "Received StopTracing request";
+    request_status->set_is_ok(true);
     return ::grpc::Status::OK;
 }
 
