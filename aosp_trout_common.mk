@@ -99,7 +99,7 @@ LOCAL_KEYMASTER_PRODUCT_PACKAGE ?= android.hardware.keymaster@4.1-service
 # Gatekeeper HAL
 LOCAL_GATEKEEPER_PRODUCT_PACKAGE ?= android.hardware.gatekeeper@1.0-service.software
 
-PRODUCT_PACKAGES += tinyplay
+PRODUCT_PACKAGES += tinyplay tinycap
 
 include packages/services/Car/cpp/computepipe/products/computepipe.mk
 
