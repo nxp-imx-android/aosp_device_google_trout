@@ -14,6 +14,8 @@
 # limitations under the License.
 #
 
+#RBC# type_hint string TROUT_KERNEL_IMAGE
+
 TARGET_USES_CF_RILD ?= false
 $(call inherit-product, device/google/cuttlefish/vsoc_arm64_only/auto/aosp_cf.mk)
 
