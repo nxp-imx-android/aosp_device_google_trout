@@ -69,8 +69,8 @@ LOCAL_EVS_PRODUCT_COPY_FILES ?= \
     device/google/trout/product_files/etc/automotive/evs/config_override.json:${TARGET_COPY_OUT_SYSTEM}/etc/automotive/evs/config_override.json \
     device/google/trout/product_files/vendor/etc/automotive/evs/evs_configuration_override.xml:$(TARGET_COPY_OUT_VENDOR)/etc/automotive/evs/evs_configuration_override.xml \
 
-LOCAL_EVS_PROPERTIES ?= persist.automotive.evs.mode=1
 LOCAL_EVS_RRO_PACKAGE_OVERLAYS ?= TroutEvsOverlay
+ENABLE_EVS_SERVICE ?= true
 ENABLE_EVS_SAMPLE ?= true
 ENABLE_CAREVSSERVICE_SAMPLE ?= true
 
