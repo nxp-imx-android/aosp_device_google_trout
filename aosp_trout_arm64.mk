@@ -25,16 +25,19 @@ BOARD_IMG_USE_RAMDISK := true
 # Kernel - prefer version 5.10 by default for trout
 TARGET_KERNEL_USE ?= 5.10
 
+TROUT_KERNEL_DIR ?= $(wildcard device/google/trout-kernel/$(TARGET_KERNEL_USE)-arm64)
+
 # Currently, the trout kernel prebuilt is not being distributed to partners and AOSP,
 # and thus we cannot rely on it existing outside of Google-internal builds. Make sure not to try
 # and include a missing kernel image.
-TROUT_KERNEL_IMAGE := $(wildcard device/google/trout-kernel/$(TARGET_KERNEL_USE)-arm64/Image)
+TROUT_KERNEL_IMAGE := $(wildcard $(TROUT_KERNEL_DIR)/Image)
 ifneq ($(TROUT_KERNEL_IMAGE),)
 TARGET_KERNEL_PATH ?= $(TROUT_KERNEL_IMAGE)
 endif
 
-ifneq ($(BOARD_VENDOR_RAMDISK_KERNEL_MODULES_DIR),)
-BOARD_VENDOR_RAMDISK_KERNEL_MODULES := $(wildcard $(BOARD_VENDOR_RAMDISK_KERNEL_MODULES_DIR)/*.ko)
+TROUT_KO_DIR ?= $(TROUT_KERNEL_DIR)
+ifneq ($(TROUT_KO_DIR),)
+BOARD_VENDOR_RAMDISK_KERNEL_MODULES := $(wildcard $(TROUT_KO_DIR)/*.ko)
 endif
 
 # Audio HAL
