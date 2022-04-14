@@ -19,10 +19,12 @@ $(call add_soong_config_var_value,audio_extn_config,isHFPEnabled,$(AUDIO_FEATURE
 
 ifeq ($(TARGET_USES_CUTTLEFISH_AUDIO),true)
 # Cuttlefish Audio HAL with custom configuration
-LOCAL_AUDIO_PRODUCT_COPY_FILES ?= \
+ifndef LOCAL_AUDIO_PRODUCT_COPY_FILES
+LOCAL_AUDIO_PRODUCT_COPY_FILES := \
     device/google/cuttlefish/shared/config/audio_policy.conf:$(TARGET_COPY_OUT_VENDOR)/etc/audio_policy.conf \
     frameworks/av/services/audiopolicy/config/audio_policy_configuration_generic.xml:$(TARGET_COPY_OUT_VENDOR)/etc/audio_policy_configuration.xml \
     device/google/trout/product_files/vendor/etc/primary_audio_policy_configuration.cf.xml:$(TARGET_COPY_OUT_VENDOR)/etc/primary_audio_policy_configuration.xml
+endif
 
 LOCAL_AUDIO_PROPERTIES ?=
 else
@@ -42,12 +44,14 @@ LOCAL_AUDIO_PROPERTIES ?= \
     ro.vendor.caremu.audiohal.out_period_ms=40 \
     ro.vendor.caremu.audiohal.in_period_ms=40 \
 
-LOCAL_AUDIO_PRODUCT_COPY_FILES ?= \
+ifndef LOCAL_AUDIO_PRODUCT_COPY_FILES
+LOCAL_AUDIO_PRODUCT_COPY_FILES := \
     device/google/trout/product_files/vendor/etc/audio_policy_configuration.emulator.xml:$(TARGET_COPY_OUT_VENDOR)/etc/audio_policy_configuration.xml \
     device/generic/car/emulator/audio/car_audio_configuration.xml:$(TARGET_COPY_OUT_VENDOR)/etc/car_audio_configuration.xml \
     frameworks/native/data/etc/android.hardware.broadcastradio.xml:system/etc/permissions/android.hardware.broadcastradio.xml \
     frameworks/av/services/audiopolicy/config/a2dp_audio_policy_configuration.xml:$(TARGET_COPY_OUT_VENDOR)/etc/a2dp_audio_policy_configuration.xml \
     frameworks/av/services/audiopolicy/config/usb_audio_policy_configuration.xml:$(TARGET_COPY_OUT_VENDOR)/etc/usb_audio_policy_configuration.xml
+endif
 endif
 
 # Audio Control HAL
@@ -65,10 +69,6 @@ LOCAL_AUDIOCONTROL_HAL_PRODUCT_PACKAGE ?= android.hardware.automotive.audiocontr
 LOCAL_VHAL_PRODUCT_PACKAGE ?= android.hardware.automotive.vehicle@2.0-virtualization-service
 
 # EVS HAL
-LOCAL_EVS_PRODUCT_COPY_FILES ?= \
-    device/google/trout/product_files/etc/automotive/evs/config_override.json:${TARGET_COPY_OUT_SYSTEM}/etc/automotive/evs/config_override.json \
-    device/google/trout/product_files/vendor/etc/automotive/evs/evs_configuration_override.xml:$(TARGET_COPY_OUT_VENDOR)/etc/automotive/evs/evs_configuration_override.xml \
-
 LOCAL_EVS_RRO_PACKAGE_OVERLAYS ?= TroutEvsOverlay
 ENABLE_EVS_SERVICE ?= true
 ENABLE_EVS_SAMPLE ?= true
@@ -77,7 +77,8 @@ ENABLE_CAREVSSERVICE_SAMPLE ?= true
 PRODUCT_PACKAGES += $(LOCAL_EVS_RRO_PACKAGE_OVERLAYS)
 
 PRODUCT_COPY_FILES += \
-    ${LOCAL_EVS_PRODUCT_COPY_FILES} \
+    device/google/trout/product_files/etc/automotive/evs/config_override.json:${TARGET_COPY_OUT_SYSTEM}/etc/automotive/evs/config_override.json \
+    device/google/trout/product_files/vendor/etc/automotive/evs/evs_configuration_override.xml:$(TARGET_COPY_OUT_VENDOR)/etc/automotive/evs/evs_configuration_override.xml \
 
 # Disable Vulkan feature flag as it is not supported on trout
 TARGET_VULKAN_SUPPORT := false
