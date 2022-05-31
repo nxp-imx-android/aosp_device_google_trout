@@ -78,8 +78,8 @@ LOCAL_EVS_PRODUCT_COPY_FILES := \
 endif
 PRODUCT_COPY_FILES += $(LOCAL_EVS_PRODUCT_COPY_FILES)
 
-# Disable Vulkan feature flag as it is not supported on trout
-TARGET_VULKAN_SUPPORT := false
+# A device inheriting trout can enable Vulkan support.
+TARGET_VULKAN_SUPPORT ?= false
 
 PRODUCT_PROPERTY_OVERRIDES += \
     ro.hardware.type=automotive \
