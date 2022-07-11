@@ -19,17 +19,7 @@ $(call add_soong_config_var_value,audio_extn_config,isHFPEnabled,$(AUDIO_FEATURE
 
 PRODUCT_PACKAGE_OVERLAYS += device/google/trout/product_files/overlay
 
-ifeq ($(TARGET_USES_CUTTLEFISH_AUDIO),true)
-# Cuttlefish Audio HAL with custom configuration
-ifndef LOCAL_AUDIO_PRODUCT_COPY_FILES
-LOCAL_AUDIO_PRODUCT_COPY_FILES := \
-    device/google/cuttlefish/shared/config/audio_policy.conf:$(TARGET_COPY_OUT_VENDOR)/etc/audio_policy.conf \
-    frameworks/av/services/audiopolicy/config/audio_policy_configuration_generic.xml:$(TARGET_COPY_OUT_VENDOR)/etc/audio_policy_configuration.xml \
-    device/google/trout/product_files/vendor/etc/primary_audio_policy_configuration.cf.xml:$(TARGET_COPY_OUT_VENDOR)/etc/primary_audio_policy_configuration.xml
-endif
-
-LOCAL_AUDIO_PROPERTIES ?=
-else
+ifeq ($(TARGET_USES_CUTTLEFISH_AUDIO),false)
 # Car Emulator Audio HAL
 LOCAL_AUDIO_PRODUCT_PACKAGE ?= \
     audio.primary.caremu \
