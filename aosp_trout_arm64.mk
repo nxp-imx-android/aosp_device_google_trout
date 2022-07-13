@@ -43,8 +43,12 @@ BOARD_VENDOR_RAMDISK_KERNEL_MODULES := $(wildcard $(TROUT_KO_DIR)/*.ko)
 endif
 
 # Audio HAL
-TARGET_USES_CUTTLEFISH_AUDIO ?= false
-AUDIO_FEATURE_HFP_ENABLED ?= true
+# TODO: turn back on goldfish HAL and HFP
+TARGET_USES_CUTTLEFISH_AUDIO ?= true
+AUDIO_FEATURE_HFP_ENABLED ?= false
+
+# HWComposer choice
+TARGET_ENABLE_DRMHWCOMPOSER ?= true
 
 # Audio Control HAL
 # TODO (chenhaosjtuacm, egranata): move them to kernel command line
@@ -79,7 +83,7 @@ LOCAL_SENSOR_FILE_OVERRIDES := true
 UEVENTD_ODM_COPY_FILE ?= device/google/trout/product_files/odm/ueventd.rc
 
 PRODUCT_COPY_FILES += \
-    $(UEVENTD_ODM_COPY_FILE):$(TARGET_COPY_OUT_ODM)/ueventd.rc \
+    $(UEVENTD_ODM_COPY_FILE):$(TARGET_COPY_OUT_ODM)/etc/ueventd.rc \
     device/google/trout/hal/sensors/2.0/config/sensor_hal_configuration.xml:$(TARGET_COPY_OUT_VENDOR)/etc/sensors/sensor_hal_configuration.xml \
     device/google/trout/product_files/odm/usr/idc/Vendor_0fff_Product_0fff.idc:$(TARGET_COPY_OUT_ODM)/usr/idc/Vendor_0fff_Product_0fff.idc \
     device/google/trout/product_files/vendor/etc/sensors/hals.conf:$(TARGET_COPY_OUT_VENDOR)/etc/sensors/hals.conf \
