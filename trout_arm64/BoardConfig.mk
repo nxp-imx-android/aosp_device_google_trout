@@ -28,7 +28,20 @@ endif
 
 BOARD_BOOT_HEADER_VERSION := 3
 
--include device/google/cuttlefish/vsoc_arm64/BoardConfig.mk
+-include device/google/cuttlefish/shared/BoardConfig.mk
+
+TARGET_BOARD_PLATFORM := vsoc_arm64
+TARGET_ARCH := arm64
+TARGET_ARCH_VARIANT := armv8-a
+TARGET_CPU_ABI := arm64-v8a
+TARGET_CPU_VARIANT := cortex-a53
+
+AUDIOSERVER_MULTILIB := first
+BOARD_VENDOR_RAMDISK_KERNEL_MODULES += $(wildcard kernel/prebuilts/common-modules/virtual-device/$(TARGET_KERNEL_USE)/arm64/*.ko)
+
+HOST_CROSS_OS := linux_bionic
+HOST_CROSS_ARCH := arm64
+HOST_CROSS_2ND_ARCH :=
 
 # Reset this variable to re-enable ramdisk.
 BOARD_INIT_BOOT_IMAGE_PARTITION_SIZE :=
