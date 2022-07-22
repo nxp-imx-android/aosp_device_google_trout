@@ -27,6 +27,30 @@ BOARD_BOOT_HEADER_VERSION := 3
 
 -include device/google/cuttlefish/vsoc_arm64/BoardConfig.mk
 
+# Reset this variable to re-enable ramdisk.
+BOARD_INIT_BOOT_IMAGE_PARTITION_SIZE :=
+
 # Android Bluetooth stack configuration
 LOCAL_BLUETOOTH_BDROID_BUILDCFG_INCLUDE_DIR ?= device/google/trout/product_files/bluetooth
 BOARD_BLUETOOTH_BDROID_BUILDCFG_INCLUDE_DIR := $(LOCAL_BLUETOOTH_BDROID_BUILDCFG_INCLUDE_DIR)
+
+# Turn off AVB so that trout can boot
+BOARD_AVB_MAKE_VBMETA_IMAGE_ARGS += --flag 2
+BOARD_KERNEL_CMDLINE += androidboot.verifiedbootstate=orange
+
+# Set SELinux to permissive mode for trout
+BOARD_KERNEL_CMDLINE += androidboot.selinux=permissive
+BOARD_KERNEL_CMDLINE += enforcing=0
+
+# Declare trout as a Cuttlefish HW
+BOARD_KERNEL_CMDLINE += androidboot.hardware=cutf_cvm
+BOARD_KERNEL_CMDLINE += androidboot.serialno=CUTTLEFISHCVD01
+BOARD_KERNEL_CMDLINE += androidboot.cf_devcfg=1
+
+# Set GPU properties
+BOARD_KERNEL_CMDLINE += androidboot.cpuvulkan.version=0
+BOARD_KERNEL_CMDLINE += androidboot.hardware.gralloc=minigbm
+BOARD_KERNEL_CMDLINE += androidboot.hardware.hwcomposer=drm
+BOARD_KERNEL_CMDLINE += androidboot.hardware.egl=mesa
+BOARD_KERNEL_CMDLINE += androidboot.hardware.hwcomposer.mode=noop
+BOARD_KERNEL_CMDLINE += androidboot.lcd_density=160
