@@ -63,7 +63,7 @@ LOCAL_TRACING_SERVER_PROPERTIES ?= \
 
 include device/google/trout/aosp_trout_common.mk
 
-DEVICE_MANIFEST_FILE += device/google/trout/manifest.xml
+DEVICE_MANIFEST_FILE += device/google/trout/trout_arm64/manifest.xml
 
 PRODUCT_PROPERTY_OVERRIDES += \
 	vendor.ser.bt-uart?= \
