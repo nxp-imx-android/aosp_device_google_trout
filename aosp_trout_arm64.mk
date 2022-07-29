@@ -44,8 +44,8 @@ endif
 
 # Audio HAL
 # TODO: turn back on goldfish HAL and HFP
-TARGET_USES_CUTTLEFISH_AUDIO ?= true
-AUDIO_FEATURE_HFP_ENABLED ?= false
+TARGET_USES_CUTTLEFISH_AUDIO ?= false
+AUDIO_FEATURE_HFP_ENABLED ?= true
 
 # HWComposer choice
 TARGET_ENABLE_DRMHWCOMPOSER ?= true
