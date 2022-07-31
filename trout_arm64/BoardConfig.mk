@@ -59,3 +59,6 @@ BOARD_KERNEL_CMDLINE += androidboot.lcd_density=160
 # of some UI rendering issues; it should be reverted once
 # those issues are solved
 BOARD_KERNEL_CMDLINE += androidboot.setupwizard_mode=DISABLED
+
+# Add WiFi configuration for VirtWifi network
+BOARD_KERNEL_CMDLINE += androidboot.wifi_mac_prefix=5554
