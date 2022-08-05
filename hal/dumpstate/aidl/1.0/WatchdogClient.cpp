@@ -22,6 +22,8 @@
 
 using aidl::android::automotive::watchdog::ICarWatchdog;
 using aidl::android::automotive::watchdog::TimeoutLength;
+using ::android::Looper;
+using ::android::sp;
 
 namespace {
 
@@ -29,7 +31,7 @@ enum { WHAT_CHECK_ALIVE = 1 };
 
 }  // namespace
 
-namespace android::hardware::dumpstate::V1_1::implementation {
+namespace aidl::android::hardware::dumpstate::implementation {
 
 WatchdogClient::WatchdogClient(const sp<Looper>& handlerLooper, DumpstateDevice* ddh)
     : BaseWatchdogClient(handlerLooper), mDumpstateImpl(ddh) {}
@@ -38,4 +40,4 @@ bool WatchdogClient::isClientHealthy() const {
     return mDumpstateImpl->isHealthy();
 }
 
-}  // namespace android::hardware::dumpstate::V1_1::implementation
+}  // namespace aidl::android::hardware::dumpstate::implementation

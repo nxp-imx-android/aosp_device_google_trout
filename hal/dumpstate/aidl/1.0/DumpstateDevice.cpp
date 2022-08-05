@@ -39,9 +39,10 @@ static constexpr const char* VENDOR_VERBOSE_LOGGING_ENABLED_PROPERTY =
 static constexpr const char* VENDOR_HELPER_SYSTEM_LOG_LOC_PROPERTY =
         "ro.vendor.helpersystem.log_loc";
 
-static constexpr const char* BOOT_HYPERVISOR_VERSION_PROPERTY = "ro.boot.hypervisor.version";
+static constexpr const char* BOOT_HYPERVISOR_VERSION_PROPERTY =
+        "ro.boot.hypervisor.version";
 
-namespace android::hardware::dumpstate::V1_1::implementation {
+namespace aidl::android::hardware::dumpstate::implementation {
 
 static std::shared_ptr<::grpc::ChannelCredentials> getChannelCredentials() {
     // TODO(chenhaosjtuacm): get secured credentials here
@@ -137,7 +138,7 @@ bool DumpstateDevice::dumpString(const std::string& text, const fs::path& dumpPa
 
 bool DumpstateDevice::dumpHelperSystem(int textFd, int binFd) {
     std::string helperSystemLogDir =
-            android::base::GetProperty(VENDOR_HELPER_SYSTEM_LOG_LOC_PROPERTY, "");
+            ::android::base::GetProperty(VENDOR_HELPER_SYSTEM_LOG_LOC_PROPERTY, "");
 
     if (helperSystemLogDir.empty()) {
         LOG(ERROR) << "Helper system log location '" << VENDOR_HELPER_SYSTEM_LOG_LOC_PROPERTY
@@ -236,63 +237,37 @@ DumpstateDevice::DumpstateDevice(const std::string& addr)
       mGrpcChannel(::grpc::CreateChannel(mServiceAddr, getChannelCredentials())),
       mGrpcStub(dumpstate_proto::DumpstateServer::NewStub(mGrpcChannel)) {}
 
-// Methods from ::android::hardware::dumpstate::V1_0::IDumpstateDevice follow.
-Return<void> DumpstateDevice::dumpstateBoard(const hidl_handle& handle) {
-    // Ignore return value, just return an empty status.
-    dumpstateBoard_1_1(handle, DumpstateMode::DEFAULT, 30 * 1000 /* timeoutMillis */);
-    return Void();
-}
-
-// Methods from ::android::hardware::dumpstate::V1_1::IDumpstateDevice follow.
-Return<DumpstateStatus> DumpstateDevice::dumpstateBoard_1_1(const hidl_handle& handle,
-                                                            const DumpstateMode /* mode */,
-                                                            const uint64_t /* timeoutMillis */) {
-    if (handle == nullptr || handle->numFds < 1) {
-        LOG(ERROR) << "No FDs";
-        return DumpstateStatus::ILLEGAL_ARGUMENT;
+::ndk::ScopedAStatus DumpstateDevice::dumpstateBoard(
+        const std::vector<::ndk::ScopedFileDescriptor>& in_fds,
+        IDumpstateDevice::DumpstateMode in_mode, int64_t in_timeoutMillis) {
+    if (in_fds.size() < 1) {
+        return ndk::ScopedAStatus::fromExceptionCodeWithMessage(EX_ILLEGAL_ARGUMENT,
+                                                                "No file descriptor");
     }
 
-    const int textFd = handle->data[0];
-    const int binFd = handle->numFds >= 2 ? handle->data[1] : -1;
+    const int textFd = in_fds[0].get();
+    const int binFd = in_fds.size() >= 2 ? in_fds[1].get() : -1;
 
     if (!dumpHelperSystem(textFd, binFd)) {
-        return DumpstateStatus::DEVICE_LOGGING_NOT_ENABLED;
+        // TODO(egranata,chenhaosjtuacm): provide more helpful info here
+        return ndk::ScopedAStatus::fromExceptionCodeWithMessage(
+                EX_UNSUPPORTED_OPERATION, "Host system unable to gather required logs");
     }
 
-    return DumpstateStatus::OK;
+    return ndk::ScopedAStatus::ok();
 }
 
-Return<void> DumpstateDevice::setVerboseLoggingEnabled(const bool enable) {
-    android::base::SetProperty(VENDOR_VERBOSE_LOGGING_ENABLED_PROPERTY, enable ? "true" : "false");
-    return Void();
+::ndk::ScopedAStatus DumpstateDevice::getVerboseLoggingEnabled(bool* _aidl_return) {
+    if (_aidl_return)
+        *_aidl_return =
+                ::android::base::GetBoolProperty(VENDOR_VERBOSE_LOGGING_ENABLED_PROPERTY, false);
+    return ndk::ScopedAStatus::ok();
 }
 
-Return<bool> DumpstateDevice::getVerboseLoggingEnabled() {
-    return android::base::GetBoolProperty(VENDOR_VERBOSE_LOGGING_ENABLED_PROPERTY, false);
+::ndk::ScopedAStatus DumpstateDevice::setVerboseLoggingEnabled(bool in_enable) {
+    ::android::base::SetProperty(VENDOR_VERBOSE_LOGGING_ENABLED_PROPERTY,
+                                 in_enable ? "true" : "false");
+    return ndk::ScopedAStatus::ok();
 }
 
-Return<void> DumpstateDevice::debug(const hidl_handle& h, const hidl_vec<hidl_string>& options) {
-    if (h.getNativeHandle() == nullptr || h->numFds == 0) {
-        LOG(ERROR) << "Invalid FD passed to debug() function";
-        return Void();
-    }
-
-    const int fd = h->data[0];
-    auto pf = [fd](std::string s) -> void { dprintf(fd, "%s\n", s.c_str()); };
-    debugDumpServices(pf);
-
-    return Void();
-}
-
-void DumpstateDevice::debugDumpServices(std::function<void(std::string)> f) {
-    f("Available services for Dumpstate:");
-    for (const auto& svc : getAvailableServices()) {
-        f("  " + svc);
-    }
-}
-
-sp<DumpstateDevice> makeVirtualizationDumpstateDevice(const std::string& addr) {
-    return new DumpstateDevice(addr);
-}
-
-}  // namespace android::hardware::dumpstate::V1_1::implementation
+}  // namespace aidl::android::hardware::dumpstate::implementation

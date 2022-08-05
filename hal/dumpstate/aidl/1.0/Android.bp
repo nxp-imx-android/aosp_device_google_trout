@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 The Android Open Source Project
+ * Copyright (C) 2022 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -51,12 +51,11 @@ genrule {
 }
 
 cc_binary {
-    name: "android.hardware.dumpstate@1.1-service.trout",
-    srcs: [
-        "DumpstateDevice.cpp",
-        "service.cpp",
-        "WatchdogClient.cpp",
-    ],
+    name: "android.hardware.automotive.dumpstate-service.trout",
+    relative_install_path: "hw",
+    init_rc: ["dumpstate-trout.rc"],
+    vintf_fragments: ["dumpstate-trout.xml"],
+    vendor: true,
     generated_headers: [
         "dumpstate_hal_configuration_V1_0",
         "DumpstateServerProtoStub_h",
@@ -65,16 +64,11 @@ cc_binary {
         "dumpstate_hal_configuration_V1_0",
         "DumpstateServerProtoStub_cc",
     ],
-    static_libs: [
-        "android.hardware.automotive@libc++fs",
-        "android.hardware.automotive.utils.vsockinfo",
-        "libxml2",
-    ],
+    header_libs: ["libxsdc-utils"],
     shared_libs: [
         "android.hardware.automotive.utils.watchdog",
-        "android.hardware.dumpstate@1.0",
-        "android.hardware.dumpstate@1.1",
         "android.automotive.watchdog-V2-ndk",
+        "android.hardware.dumpstate-V1-ndk",
         "libbase",
         "libbinder_ndk",
         "libcutils",
@@ -85,13 +79,18 @@ cc_binary {
         "libprotobuf-cpp-full",
         "libutils",
     ],
+    srcs: [
+        "DumpstateDevice.cpp",
+        "service.cpp",
+        "WatchdogClient.cpp",
+    ],
+    static_libs: [
+        "android.hardware.automotive@libc++fs",
+        "android.hardware.automotive.utils.vsockinfo",
+        "libxml2",
+    ],
     cflags: [
         "-Wno-unused-parameter",
     ],
-    relative_install_path: "hw",
-    init_rc: [
-        "android.hardware.dumpstate@1.1-service.trout.rc",
-    ],
     defaults: ["cuttlefish_guest_only"],
-    vintf_fragments: ["manifest_android.hardware.dumpstate@1.1-service.trout.xml"],
 }
