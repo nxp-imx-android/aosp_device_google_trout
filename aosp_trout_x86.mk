@@ -17,7 +17,7 @@
 $(call inherit-product, device/google/cuttlefish/vsoc_x86/auto/aosp_cf.mk)
 
 # Audio HAL
-TARGET_USES_CUTTLEFISH_AUDIO ?= true
+TARGET_USES_CUTTLEFISH_AUDIO ?= false
 
 # Audio Control HAL
 # TODO (chenhaosjtuacm, egranata): move them to kernel command line
@@ -27,7 +27,7 @@ LOCAL_AUDIOCONTROL_PROPERTIES ?= \
 
 include device/google/trout/aosp_trout_common.mk
 
-DEVICE_MANIFEST_FILE += device/google/trout_x86/manifest.xml
+DEVICE_MANIFEST_FILE += device/google/trout/trout_x86/manifest.xml
 DEVICE_MATRIX_FILE += device/google/trout/compatibility_matrix.xml
 DEVICE_FRAMEWORK_COMPATIBILITY_MATRIX_FILE := device/google/trout/framework_compatibility_matrix.xml
 
