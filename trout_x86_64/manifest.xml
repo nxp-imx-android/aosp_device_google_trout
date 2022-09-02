@@ -8,7 +8,7 @@
 ** limitations under the License.
 */
 -->
-<!-- x86 specific HALs-->
+<!-- x86_64 specific HALs-->
 <manifest version="1.0" type="device">
    <hal format="aidl" optional="true">
        <name>android.automotive.computepipe.registry</name>
