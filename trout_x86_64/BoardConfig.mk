@@ -15,25 +15,27 @@
 #
 
 #
-# x86 target for Trout
+# x86_64 target for Trout
 #
 
-TARGET_BOARD_PLATFORM := vsoc_x86
-TARGET_ARCH := x86
-TARGET_ARCH_VARIANT := x86
-TARGET_CPU_ABI := x86
+TARGET_BOARD_PLATFORM := vsoc_x86_64
+TARGET_ARCH := x86_64
+TARGET_ARCH_VARIANT := silvermont
+TARGET_CPU_ABI := x86_64
 
-TARGET_NATIVE_BRIDGE_ARCH := arm
-TARGET_NATIVE_BRIDGE_ARCH_VARIANT := armv7-a-neon
+TARGET_2ND_ARCH := x86
+TARGET_2ND_CPU_ABI := x86
+TARGET_2ND_ARCH_VARIANT := silvermont
+
+TARGET_NATIVE_BRIDGE_ARCH := arm64
+TARGET_NATIVE_BRIDGE_ARCH_VARIANT := armv8-a
 TARGET_NATIVE_BRIDGE_CPU_VARIANT := generic
-TARGET_NATIVE_BRIDGE_ABI := armeabi-v7a armeabi
+TARGET_NATIVE_BRIDGE_ABI := arm64-v8a
 
-# TODO(b/156534160): Temporarily allow for the old style PRODUCT_COPY_FILES for ndk_translation_prebuilt
-ifeq ($(USE_NDK_TRANSLATION_BINARY),true)
-BUILD_BROKEN_ELF_PREBUILT_PRODUCT_COPY_FILES := true
-endif
-
-TARGET_KERNEL_ARCH := x86_64
+TARGET_NATIVE_BRIDGE_2ND_ARCH := arm
+TARGET_NATIVE_BRIDGE_2ND_ARCH_VARIANT := armv7-a-neon
+TARGET_NATIVE_BRIDGE_2ND_CPU_VARIANT := generic
+TARGET_NATIVE_BRIDGE_2ND_ABI := armeabi-v7a armeabi
 
 -include device/google/cuttlefish/shared/BoardConfig.mk
 -include device/google/cuttlefish/shared/camera/BoardConfig.mk
