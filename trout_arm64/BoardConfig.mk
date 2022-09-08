@@ -56,5 +56,10 @@ BOARD_KERNEL_CMDLINE += androidboot.hardware.hwcomposer.mode=client
 BOARD_KERNEL_CMDLINE += androidboot.hardware.hwcomposer.display_finder_mode=drm
 BOARD_KERNEL_CMDLINE += androidboot.lcd_density=160
 
+# HACK(egranata): this turns off Car Setup Wizard because
+# of some UI rendering issues; it should be reverted once
+# those issues are solved
+BOARD_KERNEL_CMDLINE += androidboot.setupwizard_mode=DISABLED
+
 # Add WiFi configuration for VirtWifi network
 BOARD_KERNEL_CMDLINE += androidboot.wifi_mac_prefix=5554
