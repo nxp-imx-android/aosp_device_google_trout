@@ -63,6 +63,7 @@ LOCAL_VHAL_PRODUCT_PACKAGE ?= android.hardware.automotive.vehicle@2.0-virtualiza
 # EVS HAL
 LOCAL_EVS_RRO_PACKAGE_OVERLAYS ?= TroutEvsOverlay
 ENABLE_EVS_SERVICE ?= true
+ENABLE_MOCK_EVSHAL ?= false
 ENABLE_EVS_SAMPLE ?= true
 ENABLE_SAMPLE_EVS_APP ?= false
 ENABLE_CAREVSSERVICE_SAMPLE ?= true
