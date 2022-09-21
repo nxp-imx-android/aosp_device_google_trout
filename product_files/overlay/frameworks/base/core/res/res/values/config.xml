@@ -27,8 +27,14 @@
     OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
     IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
 -->
-<resources>
+
+<!-- These resources are around just to allow their values to be customized
+    for different hardware and product builds.  Do not translate. -->
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
    <!-- This device does not support mobile data. -->
    <bool name="config_mobile_data_capable">false</bool>
+
+   <!-- Do not mirror content of the primary display to other displays (instrument cluster) -->
+   <bool name="config_localDisplaysMirrorContent">false</bool>
 </resources>
 
