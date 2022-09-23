@@ -47,8 +47,14 @@ endif
 TARGET_USES_CUTTLEFISH_AUDIO ?= false
 AUDIO_FEATURE_HFP_ENABLED ?= true
 
-# HWComposer choice
-TARGET_ENABLE_DRMHWCOMPOSER ?= true
+# HWComposer choice. Setting this flag to true
+# will disable Ranchu and turn on the legacy
+# drmhwc. This is not a supported configuration and
+# should only be turned on for debugging and experimental
+# purposes. In general, omitting this line or leaving the
+# default configured (false) will do the right thing and pick
+# Ranchu from upstream Cuttlefish
+TARGET_ENABLE_DRMHWCOMPOSER ?= false
 
 # Audio Control HAL
 # TODO (chenhaosjtuacm, egranata): move them to kernel command line
