@@ -56,6 +56,12 @@ AUDIO_FEATURE_HFP_ENABLED ?= true
 # Ranchu from upstream Cuttlefish
 TARGET_ENABLE_DRMHWCOMPOSER ?= false
 
+# Workaround for b/246500971 - OpSy host virtio-gpu process
+# crashes while booting.
+# Setting this flag to true will disable the Android boot
+# animation which provokes the crash.
+TARGET_DISABLE_BOOT_ANIMATION ?= true
+
 # Audio Control HAL
 # TODO (chenhaosjtuacm, egranata): move them to kernel command line
 LOCAL_AUDIOCONTROL_PROPERTIES ?= \

@@ -83,6 +83,10 @@ PRODUCT_PROPERTY_OVERRIDES += \
     ${LOCAL_DUMPSTATE_PROPERTIES} \
     ${LOCAL_TRACING_SERVER_PROPERTIES}
 
+ifeq ($(TARGET_DISABLE_BOOT_ANIMATION),true)
+PRODUCT_PROPERTY_OVERRIDES += debug.sf.nobootanimation=1
+endif
+
 PRODUCT_CHARACTERISTICS := nosdcard,automotive
 
 TARGET_BOARD_INFO_FILE ?= device/google/trout/board-info.txt
