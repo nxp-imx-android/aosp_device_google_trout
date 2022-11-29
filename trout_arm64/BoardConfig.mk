@@ -29,6 +29,7 @@ endif
 BOARD_BOOT_HEADER_VERSION := 3
 
 -include device/google/cuttlefish/shared/BoardConfig.mk
+-include device/google/cuttlefish/shared/virgl/BoardConfig.mk
 
 TARGET_BOARD_PLATFORM := vsoc_arm64
 TARGET_ARCH := arm64
