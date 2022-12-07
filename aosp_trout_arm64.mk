@@ -98,6 +98,12 @@ PRODUCT_COPY_FILES += \
 
 TARGET_USES_INITBOOT ?= false
 
+# WiFi configuration
+ifndef DEVICE_VIRTWIFI_PORT
+DEVICE_VIRTWIFI_PORT := eth0
+endif
+PRODUCT_PROPERTY_OVERRIDES += ro.vendor.disable_rename_eth0?=true
+
 PRODUCT_NAME := aosp_trout_arm64
 PRODUCT_DEVICE := trout_arm64
 PRODUCT_MODEL := arm64 trout
