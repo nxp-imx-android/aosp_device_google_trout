@@ -96,6 +96,11 @@ PRODUCT_COPY_FILES += \
     frameworks/native/data/etc/android.hardware.sensor.gyroscope.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.sensor.gyroscope.xml \
     frameworks/native/data/etc/android.hardware.sensor.accelerometer.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.sensor.accelerometer.xml \
 
+# WiFi configuration
+ifndef DEVICE_VIRTWIFI_PORT
+DEVICE_VIRTWIFI_PORT := eth0
+endif
+PRODUCT_PROPERTY_OVERRIDES += ro.vendor.disable_rename_eth0?=true
 PRODUCT_NAME := aosp_trout_arm64
 PRODUCT_DEVICE := trout_arm64
 PRODUCT_MODEL := arm64 trout
