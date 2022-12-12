@@ -33,8 +33,8 @@ LOCAL_AUDIO_DEVICE_PACKAGE_OVERLAYS ?= device/generic/car/emulator/audio/overlay
 
 LOCAL_AUDIO_PROPERTIES ?= \
     ro.hardware.audio.primary=caremu \
-    ro.vendor.caremu.audiohal.out_period_ms=40 \
-    ro.vendor.caremu.audiohal.in_period_ms=40 \
+    ro.vendor.caremu.audiohal.out_period_ms=16 \
+    ro.vendor.caremu.audiohal.in_period_ms=16
 
 ifndef LOCAL_AUDIO_PRODUCT_COPY_FILES
 LOCAL_AUDIO_PRODUCT_COPY_FILES := \
@@ -85,7 +85,8 @@ PRODUCT_PROPERTY_OVERRIDES += \
     ${LOCAL_AUDIO_PROPERTIES} \
     ${LOCAL_AUDIOCONTROL_PROPERTIES} \
     ${LOCAL_DUMPSTATE_PROPERTIES} \
-    ${LOCAL_TRACING_SERVER_PROPERTIES}
+    ${LOCAL_TRACING_SERVER_PROPERTIES} \
+    ro.audio.flinger_standbytime_ms=0
 
 ifeq ($(TARGET_DISABLE_BOOT_ANIMATION),true)
 PRODUCT_PROPERTY_OVERRIDES += debug.sf.nobootanimation=1
