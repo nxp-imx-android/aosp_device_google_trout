@@ -24,3 +24,4 @@
 /dev/vport[0-9]+p2  u:object_r:gnss_device:s0
 
 /vendor/bin/vport_trigger  u:object_r:vport_trigger_exec:s0
+/vendor/bin/virtwifi.sh    u:object_r:trout_virtwifi_setup_exec:s0
