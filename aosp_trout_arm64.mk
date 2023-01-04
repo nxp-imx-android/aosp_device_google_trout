@@ -101,6 +101,9 @@ ifndef DEVICE_VIRTWIFI_PORT
 DEVICE_VIRTWIFI_PORT := eth0
 endif
 PRODUCT_PROPERTY_OVERRIDES += ro.vendor.disable_rename_eth0?=true
+PRODUCT_COPY_FILES += device/google/trout/trout_arm64/wifi/virtwifi.sh:$(TARGET_COPY_OUT_VENDOR)/bin/virtwifi.sh
+PRODUCT_COPY_FILES += device/google/trout/trout_arm64/wifi/virtwifi.rc:$(TARGET_COPY_OUT_VENDOR)/etc/init/virtwifi.rc
+
 PRODUCT_NAME := aosp_trout_arm64
 PRODUCT_DEVICE := trout_arm64
 PRODUCT_MODEL := arm64 trout
