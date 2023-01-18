@@ -19,29 +19,6 @@
 TARGET_USES_CF_RILD ?= false
 $(call inherit-product, device/google/cuttlefish/vsoc_arm64_only/auto/aosp_cf.mk)
 
-# Package ramdisk.img in target package
-BOARD_IMG_USE_RAMDISK := true
-
-# Kernel - prefer version 5.10 by default for trout
-TARGET_KERNEL_USE ?= 5.10
-
-TROUT_KERNEL_DIR ?= $(wildcard device/google/trout-kernel/$(TARGET_KERNEL_USE)-arm64)
-
-# Currently, the trout kernel prebuilt is not being distributed to partners and AOSP,
-# and thus we cannot rely on it existing outside of Google-internal builds. Make sure not to try
-# and include a missing kernel image.
-TROUT_KERNEL_IMAGE := $(wildcard $(TROUT_KERNEL_DIR)/Image)
-ifneq ($(TROUT_KERNEL_IMAGE),)
-ifndef TARGET_KERNEL_PATH
-TARGET_KERNEL_PATH := $(TROUT_KERNEL_IMAGE)
-endif
-endif
-
-TROUT_KO_DIR ?= $(TROUT_KERNEL_DIR)
-ifneq ($(TROUT_KO_DIR),)
-BOARD_VENDOR_RAMDISK_KERNEL_MODULES := $(wildcard $(TROUT_KO_DIR)/*.ko)
-endif
-
 # Audio HAL
 # TODO: turn back on goldfish HAL and HFP
 TARGET_USES_CUTTLEFISH_AUDIO ?= false
