@@ -25,14 +25,14 @@ TARGET_USERIMAGES_SPARSE_F2FS_DISABLED ?= false
 
 BOARD_BOOT_HEADER_VERSION := 3
 
--include device/google/cuttlefish/shared/BoardConfig.mk
--include device/google/cuttlefish/shared/virgl/BoardConfig.mk
-
 TARGET_BOARD_PLATFORM := vsoc_arm64
 TARGET_ARCH := arm64
 TARGET_ARCH_VARIANT := armv8-a
 TARGET_CPU_ABI := arm64-v8a
 TARGET_CPU_VARIANT := cortex-a53
+
+-include device/google/cuttlefish/shared/BoardConfig.mk
+-include device/google/cuttlefish/shared/virgl/BoardConfig.mk
 
 AUDIOSERVER_MULTILIB := first
 BOARD_VENDOR_RAMDISK_KERNEL_MODULES += $(wildcard kernel/prebuilts/common-modules/virtual-device/$(TARGET_KERNEL_USE)/arm64/*.ko)
