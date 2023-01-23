@@ -19,6 +19,8 @@ $(call add_soong_config_var_value,audio_extn_config,isHFPEnabled,$(AUDIO_FEATURE
 
 PRODUCT_PACKAGE_OVERLAYS += device/google/trout/product_files/overlay
 
+LOCAL_DEVICE_FCM_MANIFEST_FILE ?= device/google/trout/manifest.xml
+
 ifeq ($(TARGET_USES_CUTTLEFISH_AUDIO),false)
 # Car Emulator Audio HAL
 LOCAL_AUDIO_PRODUCT_PACKAGE ?= \
@@ -77,6 +79,11 @@ LOCAL_EVS_PRODUCT_COPY_FILES := \
 endif
 PRODUCT_COPY_FILES += $(LOCAL_EVS_PRODUCT_COPY_FILES)
 
+# Other HALs
+# We are inheriting Configurations from Cuttlefish, but our FCM level might lag behind, so we may select some older HAL implentations
+# if the Cuttlefish default HALs are too new.
+LOCAL_THERMAL_HAL_PRODUCT_PACKAGE ?= android.hardware.thermal@2.0-service.mock
+
 # Disable Vulkan feature flag as it is not supported on trout
 TARGET_VULKAN_SUPPORT := false
 
@@ -124,5 +131,3 @@ endif
 PRODUCT_PACKAGES += android.automotive.tracing-client.trout
 
 BOARD_SEPOLICY_DIRS += device/google/trout/sepolicy/vendor/google
-
-DEVICE_MANIFEST_FILE += device/google/trout/manifest.xml
