@@ -50,8 +50,7 @@ TARGET_ARCH_VARIANT := armv8-a
 TARGET_CPU_ABI := arm64-v8a
 TARGET_CPU_VARIANT := cortex-a53
 
--include device/google/cuttlefish/shared/BoardConfig.mk
--include device/google/cuttlefish/shared/virgl/BoardConfig.mk
+-include device/google/trout/shared/BoardConfig.mk
 
 TROUT_KO_DIR ?= $(TROUT_KERNEL_DIR)
 ifneq ($(TROUT_KO_DIR),)
