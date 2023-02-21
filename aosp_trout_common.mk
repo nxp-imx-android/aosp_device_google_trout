@@ -103,8 +103,6 @@ LOCAL_GATEKEEPER_PRODUCT_PACKAGE ?= android.hardware.gatekeeper@1.0-service.soft
 
 PRODUCT_PACKAGES += tinyplay tinycap
 
-include packages/services/Car/cpp/computepipe/products/computepipe.mk
-
 # Trout fstab (workaround b/182190949)
 PRODUCT_COPY_FILES += \
     device/google/trout/product_files/fstab.trout:$(TARGET_COPY_OUT_RAMDISK)/fstab.trout \
