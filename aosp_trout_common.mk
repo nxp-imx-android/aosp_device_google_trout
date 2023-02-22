@@ -78,11 +78,6 @@ LOCAL_EVS_PRODUCT_COPY_FILES := \
 endif
 PRODUCT_COPY_FILES += $(LOCAL_EVS_PRODUCT_COPY_FILES)
 
-# Other HALs
-# We are inheriting Configurations from Cuttlefish, but our FCM level might lag behind, so we may select some older HAL implentations
-# if the Cuttlefish default HALs are too new.
-LOCAL_THERMAL_HAL_PRODUCT_PACKAGE ?= android.hardware.thermal@2.0-service.mock
-
 # Disable Vulkan feature flag as it is not supported on trout
 TARGET_VULKAN_SUPPORT := false
 
