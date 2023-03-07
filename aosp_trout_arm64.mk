@@ -42,6 +42,12 @@ LOCAL_AUDIOCONTROL_PROPERTIES ?= \
     ro.vendor.audiocontrol.server.cid=1000 \
     ro.vendor.audiocontrol.server.port=9410 \
 
+# Vehicle HAL
+# TODO(chenhaosjtuacm):
+# Remove the following setting and use the AIDL VHAL implementation when the new server is
+# implemented and running on the host VM.
+LOCAL_VHAL_PRODUCT_PACKAGE ?= android.hardware.automotive.vehicle@2.0-virtualization-service
+
 # Tracing Server Address
 LOCAL_TRACING_SERVER_PROPERTIES ?= \
     ro.vendor.tracing.server.cid=1000 \
