@@ -99,3 +99,34 @@ cc_library_static {
         "-Wno-unused-parameter",
     ],
 }
+
+cc_binary {
+    name: "android.hardware.automotive.vehicle@V1-trout-service",
+    defaults: ["VehicleHalDefaults"],
+    init_rc: ["android.hardware.automotive.vehicle@V1-trout-service.rc"],
+    vendor: true,
+    relative_install_path: "hw",
+    srcs: [
+        "VirtualizedVehicleService.cpp",
+    ],
+    header_libs: [
+        "IVehicleHardware",
+    ],
+    static_libs: [
+        "android.hardware.automotive.utils.vsockinfo",
+        "android.hardware.automotive.vehicle@V1-grpc-trout-hardware",
+        "DefaultVehicleHal",
+        "VehicleHalUtils",
+    ],
+    shared_libs: [
+        "libbase",
+        "libcutils",
+        "libgrpc++",
+        "liblog",
+        "libprotobuf-cpp-full",
+    ],
+    cflags: [
+        "-Wno-unused-parameter",
+    ],
+    vintf_fragments: ["manifest_android.hardware.automotive.vehicle@V1-trout-service.xml"],
+}
