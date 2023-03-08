@@ -76,8 +76,6 @@ PRODUCT_COPY_FILES += \
     frameworks/native/data/etc/android.hardware.sensor.gyroscope.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.sensor.gyroscope.xml \
     frameworks/native/data/etc/android.hardware.sensor.accelerometer.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.sensor.accelerometer.xml \
 
-TARGET_USES_INITBOOT ?= false
-
 # WiFi configuration
 PRODUCT_ENFORCE_MAC80211_HWSIM ?= false
 ifndef DEVICE_VIRTWIFI_PORT
