@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 
-$(call inherit-product, device/google/cuttlefish/vsoc_x86_64/auto/aosp_cf.mk)
+$(call inherit-product, device/google/cuttlefish/vsoc_x86_64_only/auto/aosp_cf.mk)
 
 # Audio HAL
 TARGET_USES_CUTTLEFISH_AUDIO ?= false
