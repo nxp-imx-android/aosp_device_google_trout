@@ -37,8 +37,10 @@ from paramiko import AutoAddPolicy
 # Install  traceprinter utility in QNX Software and setup proper path for it.
 # One can Install QNX Software Center from the following location:
 # https://www.qnx.com/download/group.html?programid=29178
+#
 # Define an environment varialbe QNX_DEV_DIR, the script will read this environment variable.
 # export QNX_DEV_DIR=/to/qns_dev_dir/
+# Make symbolic link or copy traceprinter, qnx_perfetto.py under this directory.
 #
 # Usage:
 # python3 tracing_agent.py --guest_serial 10.42.0.235 --host_ip
@@ -65,11 +67,43 @@ def parseArguments():
                              help = 'tracing time')
     return parser.parse_args()
 
-# TODO(b/267675642): add HostTracingAgent as an interface and
-# QnxHostTracingAgent.
+
+def subprocessRun(cmd):
+    print(f'Subprocess executing command {cmd}')
+    subprocess.run(cmd, check=True)
+
+# This is the base class for tracing agent.
+class TracingAgent:
+    # abstract method
+    # Start tracing on the device.
+    # Raise exception when there is an error.
+    def startTracing(self):
+        pass
+
+    # abstract method
+    # Copy tracing file from device to worksstation.
+    # Raise exception when there is an error.
+    def copyTracingFile(self):
+        pass
+
+    # abstract method
+    # Parse tracing file to perfetto input format.
+    # Raise exception when there is an error.
+    def parseTracingFile(self):
+        pass
+
+    def run(self):
+        try:
+            self.startTracing()
+            self.copyTracingFile()
+            self.parseTracingFile()
+        except Exception as e:
+            traceresult = traceback.format_exc()
+            error_msg = f'Caught an exception: {traceback.format_exc()}'
+            sys.exit(error_msg)
 
 # HostTracingAgent for QNX
-class HostTracingAgent:
+class QnxTracingAgent(TracingAgent):
     def __init__(self, args):
         self.ip = args.host_ip
         self.username = args.host_username
@@ -86,11 +120,6 @@ class HostTracingAgent:
         elif stderr.channel.recv_exit_status():
             raise Exception(stderr.read())
 
-    def subprocessRun(self, cmd):
-        print(f'Subprocess executing command {cmd}')
-        result = subprocess.run(cmd)
-        return result
-
     def doesDirExist(self, dirpath):
         cmd = f'ls -d {dirpath}'
         (stdin, stdout, stderr) = self.client.exec_command(cmd)
@@ -102,7 +131,6 @@ class HostTracingAgent:
     def startTracing(self):
         print('**********start tracing host vm')
         try:
-
             # start a sshclien to start tracing
             with SSHClient() as sshclient:
                 sshclient = SSHClient()
@@ -136,9 +164,7 @@ class HostTracingAgent:
         scp_cmd = ['scp', '-F', '/dev/null',
                    f'{self.username}@{self.ip}:{self.tracing_kev_file_path}',
                    f'{self.tracing_kev_file_path}']
-        result = self.subprocessRun(scp_cmd)
-        if result.returncode != 0:
-            raise Exception(result.stderr)
+        subprocessRun(scp_cmd)
 
     def parseTracingFile(self):
         print('\n**********start to parse host tracing file')
@@ -151,31 +177,17 @@ class HostTracingAgent:
                             '-p', '%C %t %Z %z',
                             '-f', f'{self.tracing_kev_file_path}',
                             '-o', f'{self.tracing_printer_file_path}']
-        result = self.subprocessRun(traceprinter_cmd)
-        if result.returncode != 0:
-            raise Exception(result.stderr)
+        subprocessRun(traceprinter_cmd)
 
         # convert tracing file in text format to json format:
-        convert_cmd = ['qnx_perfetto.py',
+        qnx2perfetto = os.path.join(qnx_dev_dir, 'qnx_perfetto.py')
+        convert_cmd = [qnx2perfetto,
                        f'{self.tracing_printer_file_path}']
-        result = self.subprocessRun(convert_cmd)
-        if result.returncode != 0:
-            raise Exception(result.stderr)
-
-    def run(self):
-        try:
-            self.startTracing()
-            self.copyTracingFile()
-            self.parseTracingFile()
-
-        except Exception as e:
-            traceresult = traceback.format_exc()
-            error_msg = f'Caught an exception: {traceback.format_exc()}'
-            sys.exit(error_msg)
+        subprocessRun(convert_cmd)
 
 def main():
     args = parseArguments()
-    host_agent = HostTracingAgent(args)
+    host_agent = QnxTracingAgent(args)
     host_agent.run()
 
 if __name__ == "__main__":
