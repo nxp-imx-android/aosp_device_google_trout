@@ -1,4 +1,3 @@
-
 #!/usr/bin/env python3
 #
 # Copyright (C) 2023 The Android Open Source Project
@@ -17,6 +16,7 @@
 #
 import argparse
 from datetime import datetime
+from threading import Thread
 import os
 import sys
 import subprocess
@@ -54,6 +54,8 @@ def parseArguments():
         description='VM Tracing Driver')
     parser.add_argument('--guest_serial', required=True,
                              help = 'guest VM serial number')
+    parser.add_argument('--guest_config', required=True,
+                             help = 'guest VM configuration file')
     parser.add_argument('--host_ip', required=True,
                              help = 'host IP address')
     #TODO(b/267675642): read user name from user ssh_config.
@@ -65,8 +67,8 @@ def parseArguments():
                              help = 'directory to store output file')
     parser.add_argument('--duration', type=int, required=True,
                              help = 'tracing time')
+    parser.add_argument('--verbose', action='store_true')
     return parser.parse_args()
-
 
 def subprocessRun(cmd):
     print(f'Subprocess executing command {cmd}')
@@ -74,6 +76,12 @@ def subprocessRun(cmd):
 
 # This is the base class for tracing agent.
 class TracingAgent:
+    # child class should extend this function
+    def __init__(self, name='TracingAgent'):
+        self.name = name
+        self.thread = Thread(target=self.run)
+        self.error_msg = None
+
     # abstract method
     # Start tracing on the device.
     # Raise exception when there is an error.
@@ -92,20 +100,43 @@ class TracingAgent:
     def parseTracingFile(self):
         pass
 
+    def verbose_print(self, str):
+        if self.verbose:
+            print(str)
+
     def run(self):
         try:
+            print(f'**********start tracing on {self.name} vm')
             self.startTracing()
+
+            print(f'**********copy tracing file from {self.name} vm')
             self.copyTracingFile()
+
+            print(f'**********parse tracing file of {self.name} vm')
             self.parseTracingFile()
         except Exception as e:
             traceresult = traceback.format_exc()
-            error_msg = f'Caught an exception: {traceback.format_exc()}'
-            sys.exit(error_msg)
+            self.error_msg = f'Caught an exception: {traceback.format_exc()}'
+            sys.exit()
+
+    def start(self):
+        self.thread.start()
+
+    def join(self):
+        self.thread.join()
+        # Check if the thread exit cleanly or not.
+        # If the thread doesn't exit cleanly, will throw an exception in the main process.
+        if self.error_msg != None:
+            sys.exit(self.error_msg)
+
+        print(f'**********tracing done on {self.name}')
 
 # HostTracingAgent for QNX
 class QnxTracingAgent(TracingAgent):
     def __init__(self, args):
+        self.verbose = args.verbose
         self.ip = args.host_ip
+        super().__init__(f'qnx host at ssh://{self.ip}')
         self.username = args.host_username
         self.out_dir = args.out_dir
         self.duration = args.duration
@@ -113,7 +144,7 @@ class QnxTracingAgent(TracingAgent):
         self.tracing_printer_file_path = os.path.join(args.out_dir, args.host_tracing_file_name)
 
     def clientExecuteCmd(self, cmd_str):
-        print(f'sshclient executing command {cmd_str}')
+        self.verbose_print(f'sshclient executing command {cmd_str}')
         (stdin, stdout, stderr) = self.client.exec_command(cmd_str)
         if stdout.channel.recv_exit_status():
             raise Exception(stderr.read())
@@ -129,7 +160,6 @@ class QnxTracingAgent(TracingAgent):
         return False
 
     def startTracing(self):
-        print('**********start tracing host vm')
         try:
             # start a sshclien to start tracing
             with SSHClient() as sshclient:
@@ -158,7 +188,6 @@ class QnxTracingAgent(TracingAgent):
             sys.exit(error_msg)
 
     def copyTracingFile(self):
-        print('\n**********start to copy host tracing file to workstation')
         # copy tracing output file from host to workstation
         os.makedirs(self.out_dir, exist_ok=True)
         scp_cmd = ['scp', '-F', '/dev/null',
@@ -167,7 +196,6 @@ class QnxTracingAgent(TracingAgent):
         subprocessRun(scp_cmd)
 
     def parseTracingFile(self):
-        print('\n**********start to parse host tracing file')
         # using traceprinter to convert binary file to text file
         # for traceprinter options, reference:
         # http://www.qnx.com/developers/docs/7.0.0/index.html#com.qnx.doc.neutrino.utilities/topic/t/traceprinter.html
@@ -185,10 +213,44 @@ class QnxTracingAgent(TracingAgent):
                        f'{self.tracing_printer_file_path}']
         subprocessRun(convert_cmd)
 
+class AndroidTracingAgent(TracingAgent):
+    def __init__(self, args):
+        self.verbose = args.verbose
+        self.vm_trace_file = 'guest.trace'
+        self.vm_config = 'guest_config.pbtx'
+        self.ip = args.guest_serial
+        self.out_dir = args.out_dir
+        self.trace_file_path = os.path.join(args.out_dir, self.vm_trace_file)
+        self.config_file_path = args.guest_config
+        self.vm_config_file_path = os.path.join('/data/misc/perfetto-configs/', self.vm_config)
+        self.vm_trace_file_path = os.path.join('/data/misc/perfetto-traces/', self.vm_trace_file)
+        super().__init__(f'android vm at adb://{self.ip}')
+
+        subprocessRun(['adb', 'connect', self.ip])
+        subprocessRun(['adb', 'root'])
+        subprocessRun(['adb', 'remount'])
+
+    def copyConfigFile(self):
+        subprocessRun(['adb', 'push', self.config_file_path, self.vm_config_file_path])
+
+    def startTracing(self):
+        subprocessRun(['adb', 'shell', '-t', 'perfetto',
+                       '--txt', '-c', self.vm_config_file_path,
+                       '--out', self.vm_trace_file_path])
+
+    def copyTracingFile(self):
+        os.makedirs(self.out_dir, exist_ok=True)
+        subprocessRun(['adb', 'pull', self.vm_trace_file_path, self.trace_file_path])
+
 def main():
     args = parseArguments()
     host_agent = QnxTracingAgent(args)
-    host_agent.run()
+    guest_agent = AndroidTracingAgent(args)
+
+    host_agent.start()
+    guest_agent.start()
+    host_agent.join()
+    guest_agent.join()
 
 if __name__ == "__main__":
     main()
