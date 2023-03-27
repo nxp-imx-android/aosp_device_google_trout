@@ -143,6 +143,20 @@ class QnxTracingAgent(TracingAgent):
         self.tracing_kev_file_path = os.path.join(args.out_dir, f'{args.host_tracing_file_name}.kev')
         self.tracing_printer_file_path = os.path.join(args.out_dir, args.host_tracing_file_name)
 
+        # setup a sshclient
+        self.client = SSHClient()
+        self.client.load_system_host_keys()
+        self.client.set_missing_host_key_policy(AutoAddPolicy())
+        self.client.connect(self.ip, username=self.username)
+
+        # create directory at the host to store tracing config and tracing output
+        if self.doesDirExist(self.out_dir) == False:
+            mkdir_cmd = f'mkdir {self.out_dir}'
+            self.clientExecuteCmd(mkdir_cmd)
+
+        # TODO(b/267675642):
+        # read the trace configuration file to get the tracing parameters
+
     def clientExecuteCmd(self, cmd_str):
         self.verbose_print(f'sshclient executing command {cmd_str}')
         (stdin, stdout, stderr) = self.client.exec_command(cmd_str)
@@ -160,32 +174,8 @@ class QnxTracingAgent(TracingAgent):
         return False
 
     def startTracing(self):
-        try:
-            # start a sshclien to start tracing
-            with SSHClient() as sshclient:
-                sshclient = SSHClient()
-                sshclient.load_system_host_keys()
-                sshclient.set_missing_host_key_policy(AutoAddPolicy())
-                sshclient.connect(self.ip, username=self.username)
-                self.client = sshclient
-
-                # create directory at the host to store tracing config and tracing output
-                if self.doesDirExist(self.out_dir) == False:
-                    mkdir_cmd = f'mkdir {self.out_dir}'
-                    self.clientExecuteCmd(mkdir_cmd)
-
-                # TODO(b/267675642):
-                # read the trace configuration file to get the tracing parameters
-                # add wrapper function for command execution to report tracing status.
-                # split the main() function into incremental steps and report tracing status.
-
-                # start tracing host
-                tracing_cmd = f'on -p15 tracelogger  -s {self.duration} -f {self.tracing_kev_file_path}'
-                self.clientExecuteCmd(tracing_cmd)
-        except Exception as e:
-            traceresult = traceback.format_exc()
-            error_msg = f'Caught an exception: {traceback.format_exc()}'
-            sys.exit(error_msg)
+        tracing_cmd = f'on -p15 tracelogger  -s {self.duration} -f {self.tracing_kev_file_path}'
+        self.clientExecuteCmd(tracing_cmd)
 
     def copyTracingFile(self):
         # copy tracing output file from host to workstation
