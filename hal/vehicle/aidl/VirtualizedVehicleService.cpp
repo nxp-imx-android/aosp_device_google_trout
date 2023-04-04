@@ -22,9 +22,11 @@
 #include <android/binder_manager.h>
 #include <android/binder_process.h>
 
+#include <chrono>
 #include <memory>
 #include <utility>
 
+using ::android::hardware::automotive::utils::VsockConnectionInfo;
 using ::android::hardware::automotive::vehicle::DefaultVehicleHal;
 using ::android::hardware::automotive::vehicle::virtualization::GRPCVehicleHardware;
 
@@ -36,7 +38,7 @@ int main(int /* argc */, char* /* argv */[]) {
     }
     ABinderProcess_startThreadPool();
 
-    auto vsock = android::hardware::automotive::utils::VsockConnectionInfo::fromRoPropertyStore(
+    auto vsock = VsockConnectionInfo::fromRoPropertyStore(
             {
                     "ro.boot.vendor.vehiclehal.server.cid",
                     "ro.vendor.vehiclehal.server.cid",
@@ -49,9 +51,17 @@ int main(int /* argc */, char* /* argv */[]) {
 
     LOG(INFO) << "Connecting to vsock server at " << vsock->str();
 
+    constexpr auto maxConnectWaitTime = std::chrono::seconds(5);
     auto hardware = std::make_unique<GRPCVehicleHardware>(vsock->str());
-    auto vhal = ::ndk::SharedRefBase::make<DefaultVehicleHal>(std::move(hardware));
+    if (const auto connected = hardware->waitForConnected(maxConnectWaitTime)) {
+        LOG(INFO) << "Connected to vsock server at " << vsock->str();
+    } else {
+        LOG(INFO) << "Failed to connect to vsock server at " << vsock->str()
+                  << ", check if it is working, or maybe the server is coming up late.";
+        return 1;
+    }
 
+    auto vhal = ::ndk::SharedRefBase::make<DefaultVehicleHal>(std::move(hardware));
     LOG(INFO) << "Registering as service...";
     binder_exception_t err = AServiceManager_addService(
             vhal->asBinder().get(), "android.hardware.automotive.vehicle.IVehicle/default");
