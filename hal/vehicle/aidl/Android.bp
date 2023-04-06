@@ -46,3 +46,32 @@ cc_binary {
     ],
     vintf_fragments: ["manifest_android.hardware.automotive.vehicle@default-trout-service.xml"],
 }
+
+cc_binary {
+    name: "android.hardware.automotive.vehicle@default-trout-fake-hardware-grpc-server",
+    defaults: [
+        "VehicleHalDefaults",
+        "FakeVehicleHardwareDefaults",
+    ],
+    init_rc: ["android.hardware.automotive.vehicle@default-trout-fake-hardware-grpc-server.rc"],
+    vendor: true,
+    relative_install_path: "hw",
+    srcs: [
+        "VirtualizedVehicleServer.cpp",
+    ],
+    static_libs: [
+        "android.hardware.automotive.utils.vsockinfo",
+        "android.hardware.automotive.vehicle@default-grpc-server-lib",
+        "FakeVehicleHardware",
+    ],
+    shared_libs: [
+        "libbase",
+        "libcutils",
+        "libgrpc++",
+        "liblog",
+        "libprotobuf-cpp-full",
+    ],
+    cflags: [
+        "-Wno-unused-parameter",
+    ],
+}

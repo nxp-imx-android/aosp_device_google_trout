@@ -21,6 +21,9 @@
 #include <android-base/logging.h>
 #include <android/binder_manager.h>
 #include <android/binder_process.h>
+#include <cutils/properties.h>
+#include <sys/socket.h>
+#include <linux/vm_sockets.h>
 
 #include <chrono>
 #include <memory>
@@ -48,6 +51,15 @@ int main(int /* argc */, char* /* argv */[]) {
                     "ro.vendor.vehiclehal.server.port",
             });
     CHECK(vsock.has_value()) << "Cannot read VHAL server address.";
+
+    if (property_get_bool("ro.vendor.vehiclehal.server.use_local_fake_server",
+                          /* default_value = */ false)) {
+        // When using the local fake server in the same VM, the CID read from the system properties
+        // will be ignored. We use the loopback CID instead.
+        LOG(INFO)
+                << "Using the local GRPC vehicle server that running on the same VM as the client.";
+        vsock->cid = VMADDR_CID_LOCAL;
+    }
 
     LOG(INFO) << "Connecting to vsock server at " << vsock->str();
 

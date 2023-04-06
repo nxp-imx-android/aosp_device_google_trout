@@ -3,9 +3,11 @@
 
 # Virtualized Vehicle HAL (Client)
 /(vendor|system/vendor)/bin/hw/android\.hardware\.automotive\.vehicle@2\.0-virtualization-service  u:object_r:hal_vehicle_default_exec:s0
+/(vendor|system/vendor)/bin/hw/android\.hardware\.automotive\.vehicle@default-trout-service  u:object_r:hal_vehicle_default_exec:s0
 
 # Virtualized Vehicle HAL (Server)
 /(vendor|system/vendor)/bin/hw/android\.hardware\.automotive\.vehicle@2\.0-virtualization-grpc-server  u:object_r:hal_vehicle_default_exec:s0
+/(vendor|system/vendor)/bin/hw/android\.hardware\.automotive\.vehicle@default-trout-.*-grpc-server  u:object_r:hal_vehicle_default_exec:s0
 
 # Audio Control HAL
 /vendor/bin/hw/android\.hardware\.automotive\.audiocontrol-service\.trout  u:object_r:hal_audiocontrol_impl_exec:s0
