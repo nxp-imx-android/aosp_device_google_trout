@@ -16,90 +16,6 @@ package {
     default_applicable_licenses: ["Android-Apache-2.0"],
 }
 
-genrule {
-    name: "VehicleServerProtoStub_h@V1-grpc-trout",
-    tools: [
-        "aprotoc",
-        "protoc-gen-grpc-cpp-plugin",
-    ],
-    cmd: "$(location aprotoc) -I$$(dirname $(in)) -Ihardware/interfaces/automotive/vehicle/aidl/impl/proto -Iexternal/protobuf/src --plugin=protoc-gen-grpc=$(location protoc-gen-grpc-cpp-plugin) $(in) --grpc_out=$(genDir) --cpp_out=$(genDir)",
-    srcs: [
-        "proto/VehicleServer.proto",
-    ],
-    out: [
-        "VehicleServer.pb.h",
-        "VehicleServer.grpc.pb.h",
-    ],
-    visibility: ["//visibility:private"],
-}
-
-genrule {
-    name: "VehicleServerProtoStub_cc@V1-grpc-trout",
-    tools: [
-        "aprotoc",
-        "protoc-gen-grpc-cpp-plugin",
-    ],
-    cmd: "$(location aprotoc) -I$$(dirname $(in)) -Ihardware/interfaces/automotive/vehicle/aidl/impl/proto -Iexternal/protobuf/src --plugin=protoc-gen-grpc=$(location protoc-gen-grpc-cpp-plugin) $(in) --grpc_out=$(genDir) --cpp_out=$(genDir)",
-    srcs: [
-        "proto/VehicleServer.proto",
-    ],
-    out: [
-        "VehicleServer.pb.cc",
-        "VehicleServer.grpc.pb.cc",
-    ],
-    visibility: ["//visibility:private"],
-}
-
-cc_library_static {
-    name: "android.hardware.automotive.vehicle@V1-grpc-trout-libgrpc",
-    vendor: true,
-    host_supported: true,
-    include_dirs: [
-        "external/protobuf/src",
-    ],
-    generated_headers: [
-        "VehicleServerProtoStub_h@V1-grpc-trout",
-    ],
-    export_generated_headers: [
-        "VehicleServerProtoStub_h@V1-grpc-trout",
-    ],
-    generated_sources: [
-        "VehicleServerProtoStub_cc@V1-grpc-trout",
-    ],
-    whole_static_libs: [
-        "VehicleHalProtos",
-    ],
-    shared_libs: [
-        "libgrpc++",
-    ],
-    cflags: [
-        "-Wno-unused-parameter",
-    ],
-}
-
-cc_library_static {
-    name: "android.hardware.automotive.vehicle@V1-grpc-trout-hardware",
-    defaults: ["VehicleHalDefaults"],
-    vendor: true,
-    srcs: [
-        "GRPCVehicleHardware.cpp",
-    ],
-    whole_static_libs: [
-        "android.hardware.automotive.vehicle@V1-grpc-trout-libgrpc",
-    ],
-    header_libs: [
-        "IVehicleHardware",
-    ],
-    shared_libs: [
-        "libgrpc++",
-        "libprotobuf-cpp-full",
-    ],
-    export_include_dirs: ["."],
-    cflags: [
-        "-Wno-unused-parameter",
-    ],
-}
-
 cc_binary {
     name: "android.hardware.automotive.vehicle@V1-trout-service",
     defaults: ["VehicleHalDefaults"],
@@ -114,7 +30,7 @@ cc_binary {
     ],
     static_libs: [
         "android.hardware.automotive.utils.vsockinfo",
-        "android.hardware.automotive.vehicle@V1-grpc-trout-hardware",
+        "android.hardware.automotive.vehicle@default-grpc-hardware-lib",
         "DefaultVehicleHal",
         "VehicleHalUtils",
     ],
