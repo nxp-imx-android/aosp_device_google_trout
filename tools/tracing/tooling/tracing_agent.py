@@ -1,3 +1,4 @@
+
 #!/usr/bin/env python3
 #
 # Copyright (C) 2023 The Android Open Source Project
@@ -15,9 +16,11 @@
 # limitations under the License.
 #
 import argparse
+from datetime import datetime
 import os
 import sys
 import subprocess
+import time
 import traceback
 
 # May import this package in the workstation with:
@@ -25,13 +28,23 @@ import traceback
 from paramiko import SSHClient
 from paramiko import AutoAddPolicy
 
+# This script works on Linux workstation.
+# We haven't tested on Windows/macOS.
+
 # Demonstration of tracing QNX host and get tracelogger output as a binary file.
+#
+# Prerequirements for run the script:
+# Install  traceprinter utility in QNX Software and setup proper path for it.
+# One can Install QNX Software Center from the following location:
+# https://www.qnx.com/download/group.html?programid=29178
+# Define an environment varialbe QNX_DEV_DIR, the script will read this environment variable.
+# export QNX_DEV_DIR=/to/qns_dev_dir/
+#
 # Usage:
 # python3 tracing_agent.py --guest_serial 10.42.0.235 --host_ip
 # 10.42.0.235 --host_tracing_file_name qnx.trace --out_dir test_trace
 # --duration 2 --host_username root
 #
-# TODO((b/267675642): add steps to convert QNX binary file to pefetto compatible format.
 
 def parseArguments():
     parser = argparse.ArgumentParser(
@@ -62,14 +75,21 @@ class HostTracingAgent:
         self.username = args.host_username
         self.out_dir = args.out_dir
         self.duration = args.duration
-        self.tracing_output_path = os.path.join(args.out_dir, args.host_tracing_file_name)
+        self.tracing_kev_file_path = os.path.join(args.out_dir, f'{args.host_tracing_file_name}.kev')
+        self.tracing_printer_file_path = os.path.join(args.out_dir, args.host_tracing_file_name)
 
     def clientExecuteCmd(self, cmd_str):
+        print(f'sshclient executing command {cmd_str}')
         (stdin, stdout, stderr) = self.client.exec_command(cmd_str)
         if stdout.channel.recv_exit_status():
             raise Exception(stderr.read())
         elif stderr.channel.recv_exit_status():
             raise Exception(stderr.read())
+
+    def subprocessRun(self, cmd):
+        print(f'Subprocess executing command {cmd}')
+        result = subprocess.run(cmd)
+        return result
 
     def doesDirExist(self, dirpath):
         cmd = f'ls -d {dirpath}'
@@ -80,7 +100,7 @@ class HostTracingAgent:
         return False
 
     def startTracing(self):
-        error_msg = {}
+        print('**********start tracing host vm')
         try:
 
             # start a sshclien to start tracing
@@ -96,20 +116,58 @@ class HostTracingAgent:
                     mkdir_cmd = f'mkdir {self.out_dir}'
                     self.clientExecuteCmd(mkdir_cmd)
 
-                #TODO(b/267675642): read the trace configuration file to get the tracing parameters
+                # TODO(b/267675642):
+                # read the trace configuration file to get the tracing parameters
+                # add wrapper function for command execution to report tracing status.
+                # split the main() function into incremental steps and report tracing status.
 
                 # start tracing host
-                tracing_cmd = f'on -p15 tracelogger  -s {self.duration} -f {self.tracing_output_path}'
+                tracing_cmd = f'on -p15 tracelogger  -s {self.duration} -f {self.tracing_kev_file_path}'
                 self.clientExecuteCmd(tracing_cmd)
+        except Exception as e:
+            traceresult = traceback.format_exc()
+            error_msg = f'Caught an exception: {traceback.format_exc()}'
+            sys.exit(error_msg)
 
-            # copy tracing output file from host to workstation
-            os.makedirs(self.out_dir, exist_ok=True)
-            scp_cmd = ['scp', '-F', '/dev/null',
-                       f'{self.username}@{self.ip}:{self.tracing_output_path}',
-                       f'{self.tracing_output_path}']
-            result = subprocess.run(scp_cmd)
-            if result.returncode != 0:
-                raise Exception(result.stderr)
+    def copyTracingFile(self):
+        print('\n**********start to copy host tracing file to workstation')
+        # copy tracing output file from host to workstation
+        os.makedirs(self.out_dir, exist_ok=True)
+        scp_cmd = ['scp', '-F', '/dev/null',
+                   f'{self.username}@{self.ip}:{self.tracing_kev_file_path}',
+                   f'{self.tracing_kev_file_path}']
+        result = self.subprocessRun(scp_cmd)
+        if result.returncode != 0:
+            raise Exception(result.stderr)
+
+    def parseTracingFile(self):
+        print('\n**********start to parse host tracing file')
+        # using traceprinter to convert binary file to text file
+        # for traceprinter options, reference:
+        # http://www.qnx.com/developers/docs/7.0.0/index.html#com.qnx.doc.neutrino.utilities/topic/t/traceprinter.html
+        qnx_dev_dir = os.environ.get('QNX_DEV_DIR')
+        traceprinter = os.path.join(qnx_dev_dir, 'traceprinter')
+        traceprinter_cmd = [traceprinter,
+                            '-p', '%C %t %Z %z',
+                            '-f', f'{self.tracing_kev_file_path}',
+                            '-o', f'{self.tracing_printer_file_path}']
+        result = self.subprocessRun(traceprinter_cmd)
+        if result.returncode != 0:
+            raise Exception(result.stderr)
+
+        # convert tracing file in text format to json format:
+        convert_cmd = ['qnx_perfetto.py',
+                       f'{self.tracing_printer_file_path}']
+        result = self.subprocessRun(convert_cmd)
+        if result.returncode != 0:
+            raise Exception(result.stderr)
+
+    def run(self):
+        try:
+            self.startTracing()
+            self.copyTracingFile()
+            self.parseTracingFile()
+
         except Exception as e:
             traceresult = traceback.format_exc()
             error_msg = f'Caught an exception: {traceback.format_exc()}'
@@ -118,7 +176,7 @@ class HostTracingAgent:
 def main():
     args = parseArguments()
     host_agent = HostTracingAgent(args)
-    host_agent.startTracing()
+    host_agent.run()
 
 if __name__ == "__main__":
     main()
