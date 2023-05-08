@@ -19,10 +19,10 @@ package {
 }
 
 cc_binary {
-    name: "android.automotive.tracing.time-util.trout",
+    name: "android.automotive.time_util",
     vendor:true,
     srcs: [
-        "ClockTime.cpp",
+        "ClocktimeMain.cpp",
     ],
     shared_libs: [
         "libbase",
