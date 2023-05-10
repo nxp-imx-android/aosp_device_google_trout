@@ -30,8 +30,11 @@ from paramiko import SSHClient
 from paramiko import AutoAddPolicy
 
 # Usage:
-# ./ptp_qnx_android.py --host_username root --host_ip 10.42.0.247
+# ./calculate_time_offset.py --host_username root --host_ip 10.42.0.247
 # --guest_serial 10.42.0.247 --clock_name CLOCK_REALTIME
+# or
+# ./calculate_time_offset.py --host_username root --host_ip 10.42.0.247
+# --guest_serial 10.42.0.247 --clock_name CLOCK_REALTIME --mode trace
 
 def subprocessRun(cmd):
     try :
@@ -44,6 +47,13 @@ def subprocessRun(cmd):
 
 class Device:
     # Get the machine time
+    def __init__(self, args):
+        if args.clock_name != None:
+            self.time_cmd += f' {args.clock_name}'
+        if args.trace:
+            if args.clock_name == None:
+                raise SystemExit("Error: with trace mode, clock_name must be specified")
+            self.time_cmd = f'{self.time_cmd} --trace'
     def GetTime(self):
         pass
 
@@ -54,8 +64,15 @@ class Device:
             traceresult = traceback.format_exc()
             error_msg = f'ParseTime no match time string({time_str}): {traceback.format_exc()}'
             sys.exit(error_msg)
-
         return int(match.group())
+
+    def TraceTime(self, ts_str):
+        lines = ts_str.split("\n")
+        if len(lines) != 3:
+            sys.exit(f'{ts_str} should be three lines')
+        self.cpu_ts = int(lines[0])
+        self.clock_ts = int(lines[1])
+        self.cpu_cycles = float(lines[2])
 
 class QnxDevice(Device):
     def __init__(self, args):
@@ -64,29 +81,31 @@ class QnxDevice(Device):
         self.sshclient.set_missing_host_key_policy(AutoAddPolicy())
         self.sshclient.connect(args.host_ip, username=args.host_username)
         self.time_cmd = "/bin/QnxClocktime"
-        if args.clock_name != None:
-            self.time_cmd += f' {args.clock_name}'
+        super().__init__(args)
 
     def GetTime(self):
         (stdin, stdout, stderr) = self.sshclient.exec_command(self.time_cmd)
         return stdout
-
     def ParseTime(self, time_str):
         time_decoded_str = time_str.read().decode()
         return super().ParseTime(time_decoded_str)
+
+    def TraceTime(self):
+        result_str = self.GetTime()
+        ts_str = result_str.read().decode()
+        super().TraceTime(ts_str)
 
 class AndroidDevice(Device):
     def __init__(self, args):
         subprocessRun(['adb', 'connect', args.guest_serial])
         self.time_cmd =  "/vendor/bin/android.automotive.time_util"
-        if args.clock_name != None:
-            self.time_cmd += f' {args.clock_name}'
         self.serial = args.guest_serial
-
+        super().__init__(args)
     def GetTime(self):
         ts = subprocessRun(['adb', '-s',  self.serial, 'shell', self.time_cmd])
         return ts
-
+    def TraceTime(self):
+        super().TraceTime(self.GetTime())
 # measure the time offset between device1 and device2 with ptp,
 # return the average value over cnt times.
 def Ptp(device1, device2):
@@ -113,6 +132,12 @@ def Ptp(device1, device2):
             return int(offset)
     raise SystemExit(f"Network delay is still too big after {max_retry} retries")
 
+def TraceTimeOffset(device1, device2):
+    device1.TraceTime()
+    device2.TraceTime()
+    offset = device2.clock_ts - device1.clock_ts - ((device2.cpu_ts - device1.cpu_ts)/device2.cpu_cycles)
+    return int(offset)
+
 def ParseArguments():
     parser = argparse.ArgumentParser(
         prog = 'ptp_qnx_android.py',
@@ -125,13 +150,18 @@ def ParseArguments():
                         help = 'guest VM serial number')
     parser.add_argument('--clock_name', required=False, choices =['CLOCK_REALTIME','CLOCK_MONOTONIC'],
                         help = 'clock that will be used for the measument. By default CPU counter is used.')
+    parser.add_argument('--mode', choices=['ptp', 'trace'], default='ptp',
+                    help='select the mode of operation. trace option meaning using CPU counter to calculate the time offset between devices')
     return parser.parse_args()
 
 def main():
     args = ParseArguments()
     qnx = QnxDevice(args)
     android = AndroidDevice(args)
-    offset = Ptp(android, qnx)
-    print(f"Time offset between QNX hostand Android Guest VM is {offset} nanoseconds")
+    if args.mode == "trace":
+        offset = TraceTimeOffset(qnx, android)
+    else:
+        offset = Ptp(qnx, android)
+    print(f'Time offset between {type(qnx).__name__} and {type(qnx).__name__} is {offset} nanoseconds')
 if __name__ == "__main__":
     main()
