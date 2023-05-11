@@ -50,7 +50,7 @@ class Device:
     def __init__(self, args):
         if args.clock_name != None:
             self.time_cmd += f' {args.clock_name}'
-        if args.trace:
+        if args.mode == "trace":
             if args.clock_name == None:
                 raise SystemExit("Error: with trace mode, clock_name must be specified")
             self.time_cmd = f'{self.time_cmd} --trace'
@@ -68,7 +68,7 @@ class Device:
 
     def TraceTime(self, ts_str):
         lines = ts_str.split("\n")
-        if len(lines) != 3:
+        if len(lines) < 3:
             sys.exit(f'{ts_str} should be three lines')
         self.cpu_ts = int(lines[0])
         self.clock_ts = int(lines[1])
@@ -162,6 +162,7 @@ def main():
         offset = TraceTimeOffset(qnx, android)
     else:
         offset = Ptp(qnx, android)
-    print(f'Time offset between {type(qnx).__name__} and {type(qnx).__name__} is {offset} nanoseconds')
+    print(f'Time offset between {type(qnx).__name__} and {type(android).__name__} is {offset} nanoseconds')
+
 if __name__ == "__main__":
     main()
