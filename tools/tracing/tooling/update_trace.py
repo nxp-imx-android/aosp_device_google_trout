@@ -49,6 +49,31 @@ def update_pid_perfetto_trace(trace_dict, start_pid, max_pid):
                     raise SystemExit("Error: due to out of range for allocating pids")
             event['pid'] = new_pid
 
+def update_trace_file(input_file, time_offset, start_pid=(1<<16), max_pid = (1<<32)):
+    try:
+        with open(input_file, 'r') as f:
+            trace_dict = json.loads(f.read())
+    except Exception as e:
+        print(f'Error: update_trace_file open input file: {input_file} : {e}')
+        return False
+
+    update_timestamp_perfetto_trace(trace_dict, time_offset)
+    update_pid_perfetto_trace(trace_dict, start_pid, max_pid)
+
+    # Save the updated trace data to a new JSON file
+    # add '_updated' to the output filename
+    file_path = os.path.splitext(input_file)
+    output_file = f"{file_path[0]}_updated.json"
+    try:
+        with open(output_file, 'w') as f:
+            json.dump(trace_dict, f)
+    except Exception as e:
+        print(f'Error: update_trace_file open output_file {output_file} : {e}')
+        return False
+
+    print(f"Updated trace data saved to {output_file}")
+    return True
+
 def parseArguments():
     parser = argparse.ArgumentParser(
         description='Update perfetto trace event timestamp with the given offset.')
@@ -68,17 +93,4 @@ def parseArguments():
 
 if __name__ == '__main__':
     args = parseArguments();
-
-    with open(args.input_file, 'r') as f:
-        trace_dict = json.loads(f.read())
-
-    update_timestamp_perfetto_trace(trace_dict, args.time_offset)
-    update_pid_perfetto_trace(trace_dict, args.start_pid, args.max_pid)
-
-    # Save the updated trace data to a new JSON file
-    # add '_updated' to the output filename
-    file_path = os.path.splitext(args.input_file)
-    output_file = f"{file_path[0]}_updated.json"
-    with open(output_file, 'w') as f:
-        json.dump(trace_dict, f)
-    print(f"Updated trace data saved to {output_file}")
+    update_trace_file(args.input_file, args.time_offset, args.start_pid, args.max_pid)
