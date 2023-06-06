@@ -30,6 +30,8 @@ import traceback
 from paramiko import SSHClient
 from paramiko import AutoAddPolicy
 
+from remote_slay import slay_process
+
 # This script works on Linux workstation.
 # We haven't tested on Windows/macOS.
 
@@ -168,6 +170,11 @@ class QnxTracingAgent(TracingAgent):
 
         # TODO(b/267675642):
         # read the trace configuration file to get the tracing parameters
+
+        if not slay_process(self.client, "memdump_tracelogger"):
+            print("Warning: could not kill memdump_tracelogger on QNX."
+                  "If there is a resource busy error reported by QNX, "
+                  "execute slay memdump_tracelogger on QNX.")
 
     def clientExecuteCmd(self, cmd_str):
         self.verbose_print(f'sshclient executing command {cmd_str}')
