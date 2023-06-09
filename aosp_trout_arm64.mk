@@ -72,6 +72,8 @@ LOCAL_SENSOR_PRODUCT_PACKAGE ?= \
 
 LOCAL_SENSOR_FILE_OVERRIDES := true
 
+LOCAL_ENABLE_OEMLOCK ?= false
+
 UEVENTD_ODM_COPY_FILE ?= device/google/trout/product_files/odm/ueventd.rc
 
 PRODUCT_COPY_FILES += \
