@@ -20,20 +20,21 @@ import os
 import subprocess
 import sys
 
-def subprocess_run(command):
+def subprocess_run(command, shell=True):
     try:
         print(f'subprocess run {command}')
-        subprocess.run(command, shell=True, check=True)
+        result = subprocess.run(command, shell=shell, stdout=subprocess.PIPE, check=True)
     except Exception as e:
-        print(f'Execution error: {command}')
-        sys.exit(f"{type(e).__name__}: {e}")
+        raise Exception(f'Execution error for {command}: {e}')
+
+    return result.stdout.decode('utf-8')
 
 def adb_run(ip, cmd):
-    if cmd == 'connect':
-        adb_cmd = f'adb connect {ip}'
+    if cmd == ['connect']:
+        adb_cmd = ['adb', 'connect', ip]
     else:
-        adb_cmd = f'adb -s {ip} {cmd}'
-    subprocess_run(adb_cmd)
+        adb_cmd = ['adb', '-s', ip] + cmd
+    return subprocess_run(adb_cmd, False)
 
 def prepare_qnx(tracing_dir, qnx_dev_dir, qnx_ip, filepath):
     source_file = os.path.join(tracing_dir, 'tooling', 'qnx_perfetto.py')
@@ -55,11 +56,11 @@ def prepare_qnx(tracing_dir, qnx_dev_dir, qnx_ip, filepath):
     subprocess_run(command)
 
 def prepare_android(serial_num, aaos_time_util):
-    adb_run(serial_num, 'connect')
-    adb_run(serial_num, 'root')
-    adb_run(serial_num, 'remount')
+    adb_run(serial_num, ['connect'])
+    adb_run(serial_num, ['root'])
+    adb_run(serial_num, ['remount'])
 
-    command = f'push {aaos_time_util} /vendor/bin/android.automotive.time_util'
+    command = ['push', aaos_time_util, '/vendor/bin/android.automotive.time_util']
     adb_run(serial_num, command)
 
 def parse_arguments():

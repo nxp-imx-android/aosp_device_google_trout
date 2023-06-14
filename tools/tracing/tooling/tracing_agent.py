@@ -30,7 +30,9 @@ import traceback
 from paramiko import SSHClient
 from paramiko import AutoAddPolicy
 
+import calculate_time_offset
 from remote_slay import slay_process
+import update_trace
 
 # This script works on Linux workstation.
 # We haven't tested on Windows/macOS.
@@ -209,7 +211,7 @@ class QnxTracingAgent(TracingAgent):
         # for traceprinter options, reference:
         # http://www.qnx.com/developers/docs/7.0.0/index.html#com.qnx.doc.neutrino.utilities/topic/t/traceprinter.html
         global qnx_dev_dir
-        traceprinter = os.path.join(qnx_dev_dir, 'traceprinter')
+        traceprinter = os.path.join(qnx_dev_dir, 'host/linux/x86_64/usr/bin/', 'traceprinter')
         traceprinter_cmd = [traceprinter,
                             '-p', '%C %t %Z %z',
                             '-f', f'{self.tracing_kev_file_path}',
@@ -217,7 +219,7 @@ class QnxTracingAgent(TracingAgent):
         subprocessRun(traceprinter_cmd)
 
         # convert tracing file in text format to json format:
-        qnx2perfetto = os.path.join(qnx_dev_dir, 'qnx_perfetto.py')
+        qnx2perfetto = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'qnx_perfetto.py')
         convert_cmd = [qnx2perfetto,
                        f'{self.tracing_printer_file_path}']
         subprocessRun(convert_cmd)
@@ -263,41 +265,32 @@ class AndroidTracingAgent(TracingAgent):
         return subprocessRun(adb_cmd)
 
 def merge_files(in_file1, in_file2, out_file):
-    with open(in_file1, 'r') as f:
-        trace_dict1 = json.loads(f.read())
+    try:
+        with open(in_file1, 'r') as f:
+            trace_dict1 = json.loads(f.read())
 
-    with open(in_file2, 'r') as f:
-        trace_dict2 = json.loads(f.read())
+        with open(in_file2, 'r') as f:
+            trace_dict2 = json.loads(f.read())
 
-    trace_dict1.update(trace_dict2)
-    with open(out_file, 'w') as f:
-        json.dump(trace_dict1, f)
-    print(f"Updated trace data saved to {out_file}")
+        trace_dict1.update(trace_dict2)
+        with open(out_file, 'w') as f:
+            json.dump(trace_dict1, f)
+        print(f"Updated trace data saved to {out_file}")
+    except Exception as e:
+        sys.exit(f'merge_files failure due to: {e}')
 
 def update_and_merge_files(args, host_agent, guest_agent):
     # calculate the time offset
-    # TODO(b/267675642): plugin calculate_time_offset library function.
-    calculate_time_offset_cmd = os.path.join(os.getcwd(), 'calculate_time_offset.py')
-    result = subprocessRun([calculate_time_offset_cmd,
-                                  "--host_username", args.host_username,
-                                  "--host_ip", args.host_ip,
-                                  "--guest_serial", args.guest_serial,
-                                  "--clock_name", "CLOCK_REALTIME",
-                                  "--mode", "trace"])
-    pattern = r'\d+'
-    match = re.search(pattern, result.stdout.decode('utf-8'))
-    if match is None:
-        traceresult = traceback.format_exc()
-        error_msg = f'ParseTime no match time string({result.stdout}): {traceback.format_exc()}'
-        sys.exit(error_msg)
-    time_offset =  int(match.group())
+    try:
+        time_offset = calculate_time_offset.CalculateTimeOffset(
+            args.host_username, args.host_ip, args.guest_serial, "CLOCK_REALTIME", "trace")
+    except Exception as e:
+        sys.exit(f'Exception: catch calculate_time_offset exception {e}')
 
     # update the timestamp and process id in the host json file
-    # TODO(b/267675642): plugin update_trace library function.
     host_json_file = '{}.json'.format(host_agent.tracing_printer_file_path)
-    update_trace_cmd = os.path.join(os.getcwd(), 'update_trace.py')
-    subprocessRun([update_trace_cmd, '--input_file', f'{host_json_file}',
-                   '--time_offset', f'{time_offset}'])
+    if not update_trace.update_trace_file(host_json_file, time_offset):
+        sys.exit('Error: update_trace_file')
 
     # convert guest trace file to .json format
     global perfetto_dev_dir
