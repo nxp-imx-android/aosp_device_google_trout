@@ -21,6 +21,9 @@ PRODUCT_PACKAGE_OVERLAYS += device/google/trout/product_files/overlay
 
 LOCAL_DEVICE_FCM_MANIFEST_FILE ?= device/google/trout/manifest.xml
 
+# Disable shared system image checking
+PRODUCT_ENFORCE_ARTIFACT_PATH_REQUIREMENTS := false
+
 ifeq ($(TARGET_USES_CUTTLEFISH_AUDIO),false)
 # Car Emulator Audio HAL
 LOCAL_AUDIO_PRODUCT_PACKAGE ?= \
