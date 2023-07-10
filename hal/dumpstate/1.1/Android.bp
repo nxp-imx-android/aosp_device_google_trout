@@ -24,9 +24,10 @@ genrule {
         "aprotoc",
         "protoc-gen-grpc-cpp-plugin",
     ],
-    cmd: "$(location aprotoc) -I$$(dirname $(in)) -Iexternal/protobuf/src --plugin=protoc-gen-grpc=$(location protoc-gen-grpc-cpp-plugin) $(in) --grpc_out=$(genDir) --cpp_out=$(genDir)",
+    cmd: "$(location aprotoc) -Idevice/google/trout/hal/dumpstate/1.1/proto -Iexternal/protobuf/src --plugin=protoc-gen-grpc=$(location protoc-gen-grpc-cpp-plugin) $(location proto/DumpstateServer.proto) --grpc_out=$(genDir) --cpp_out=$(genDir)",
     srcs: [
         "proto/DumpstateServer.proto",
+        ":libprotobuf-internal-protos",
     ],
     out: [
         "DumpstateServer.pb.h",
@@ -40,9 +41,10 @@ genrule {
         "aprotoc",
         "protoc-gen-grpc-cpp-plugin",
     ],
-    cmd: "$(location aprotoc) -I$$(dirname $(in)) -Iexternal/protobuf/src --plugin=protoc-gen-grpc=$(location protoc-gen-grpc-cpp-plugin) $(in) --grpc_out=$(genDir) --cpp_out=$(genDir)",
+    cmd: "$(location aprotoc) -Idevice/google/trout/hal/dumpstate/1.1/proto -Iexternal/protobuf/src --plugin=protoc-gen-grpc=$(location protoc-gen-grpc-cpp-plugin) $(location proto/DumpstateServer.proto) --grpc_out=$(genDir) --cpp_out=$(genDir)",
     srcs: [
         "proto/DumpstateServer.proto",
+        ":libprotobuf-internal-protos",
     ],
     out: [
         "DumpstateServer.pb.cc",
