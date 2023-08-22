@@ -13,10 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef ANDROID_HARDWARE_SENSORS_V2_0_SENSOR_H
-#define ANDROID_HARDWARE_SENSORS_V2_0_SENSOR_H
+#ifndef ANDROID_HARDWARE_SENSORS_V2_1_SENSOR_H
+#define ANDROID_HARDWARE_SENSORS_V2_1_SENSOR_H
 
-#include <android/hardware/sensors/1.0/types.h>
+#include <android/hardware/sensors/2.1/types.h>
 #include <poll.h>
 #include <condition_variable>
 #include <memory>
@@ -25,6 +25,7 @@
 #include <vector>
 
 #include "SensorThread.h"
+#include "V2_0/ScopedWakelock.h"
 #include "iio_utils.h"
 #include "sensor_hal_configuration_V1_0.h"
 
@@ -33,17 +34,18 @@
 #define NUM_OF_DATA_CHANNELS NUM_OF_CHANNEL_SUPPORTED - 1
 
 using ::android::hardware::sensors::V1_0::AdditionalInfo;
-using ::android::hardware::sensors::V1_0::Event;
 using ::android::hardware::sensors::V1_0::OperationMode;
 using ::android::hardware::sensors::V1_0::Result;
-using ::android::hardware::sensors::V1_0::SensorInfo;
-using ::android::hardware::sensors::V1_0::SensorType;
+using ::android::hardware::sensors::V2_0::implementation::ScopedWakelock;
+using ::android::hardware::sensors::V2_1::Event;
+using ::android::hardware::sensors::V2_1::SensorInfo;
+using ::android::hardware::sensors::V2_1::SensorType;
 using ::sensor::hal::configuration::V1_0::Configuration;
 
 namespace android {
 namespace hardware {
 namespace sensors {
-namespace V2_0 {
+namespace V2_1 {
 namespace subhal {
 namespace implementation {
 
@@ -63,7 +65,8 @@ constexpr auto SENSOR_VOLTAGE_DEFAULT = 3.6f;
 class ISensorsEventCallback {
   public:
     virtual ~ISensorsEventCallback() = default;
-    virtual void postEvents(const std::vector<Event>& events, bool wakeup) = 0;
+    virtual void postEvents(const std::vector<Event>& events, ScopedWakelock wakelock) = 0;
+    virtual ScopedWakelock createScopedWakelock(bool lock) = 0;
 };
 
 // Virtual Base Class for Sensor
@@ -147,8 +150,8 @@ class HWSensorBase : public SensorBase {
 };
 }  // namespace implementation
 }  // namespace subhal
-}  // namespace V2_0
+}  // namespace V2_1
 }  // namespace sensors
 }  // namespace hardware
 }  // namespace android
-#endif  // ANDROID_HARDWARE_SENSORS_V2_0_SENSOR_H
+#endif  // ANDROID_HARDWARE_SENSORS_V2_1_SENSOR_H

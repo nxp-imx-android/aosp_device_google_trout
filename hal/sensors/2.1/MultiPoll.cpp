@@ -16,7 +16,7 @@
 
 #include "MultiPoll.h"
 
-namespace android::hardware::sensors::V2_0::subhal::implementation {
+namespace android::hardware::sensors::V2_1::subhal::implementation {
 
 MultiPoll::MultiPoll(uint64_t periodMs) : mSamplingPeriodMs(periodMs) {}
 
@@ -46,4 +46,4 @@ int MultiPoll::poll(OnPollIn in) {
     return 0;
 }
 
-}  // namespace android::hardware::sensors::V2_0::subhal::implementation
+}  // namespace android::hardware::sensors::V2_1::subhal::implementation

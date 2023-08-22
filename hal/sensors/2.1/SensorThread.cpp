@@ -17,7 +17,7 @@
 #include "SensorThread.h"
 #include "Sensor.h"
 
-namespace android::hardware::sensors::V2_0::subhal::implementation {
+namespace android::hardware::sensors::V2_1::subhal::implementation {
 
 SensorThread::SensorThread(SensorBase* sensor)
     : mSensor(sensor), mStopThread(false), mWaitCV(), mRunMutex() {}
@@ -61,4 +61,4 @@ std::unique_lock<std::mutex> SensorThread::lock() {
     return std::move(std::unique_lock<std::mutex>(mRunMutex));
 }
 
-}  // namespace android::hardware::sensors::V2_0::subhal::implementation
+}  // namespace android::hardware::sensors::V2_1::subhal::implementation
