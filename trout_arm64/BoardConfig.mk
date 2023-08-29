@@ -26,7 +26,7 @@ ifndef TARGET_BOOTLOADER_BOARD_NAME
 TARGET_BOOTLOADER_BOARD_NAME := trout
 endif
 
-BOARD_BOOT_HEADER_VERSION := 3
+BOARD_BOOT_HEADER_VERSION := 4
 
 # Kernel - prefer version 5.10 by default for trout
 TARGET_KERNEL_USE ?= 5.10
