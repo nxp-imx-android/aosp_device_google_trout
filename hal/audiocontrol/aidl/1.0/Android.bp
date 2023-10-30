@@ -36,9 +36,10 @@ genrule {
         "aprotoc",
         "protoc-gen-grpc-cpp-plugin",
     ],
-    cmd: "$(location aprotoc) -I$$(dirname $(in)) -Iexternal/protobuf/src --plugin=protoc-gen-grpc=$(location protoc-gen-grpc-cpp-plugin) $(in) --grpc_out=$(genDir) --cpp_out=$(genDir)",
+    cmd: "$(location aprotoc) -I$$(dirname $(location proto/AudioFocusControl.proto)) -Iexternal/protobuf/src --plugin=protoc-gen-grpc=$(location protoc-gen-grpc-cpp-plugin) $(location proto/AudioFocusControl.proto) --grpc_out=$(genDir) --cpp_out=$(genDir)",
     srcs: [
         "proto/AudioFocusControl.proto",
+        ":libprotobuf-internal-protos",
     ],
     out: [
         "AudioFocusControl.pb.h",
@@ -52,9 +53,10 @@ genrule {
         "aprotoc",
         "protoc-gen-grpc-cpp-plugin",
     ],
-    cmd: "$(location aprotoc) -I$$(dirname $(in)) -Iexternal/protobuf/src --plugin=protoc-gen-grpc=$(location protoc-gen-grpc-cpp-plugin) $(in) --grpc_out=$(genDir) --cpp_out=$(genDir)",
+    cmd: "$(location aprotoc) -I$$(dirname $(location proto/AudioFocusControl.proto)) -Iexternal/protobuf/src --plugin=protoc-gen-grpc=$(location protoc-gen-grpc-cpp-plugin) $(location proto/AudioFocusControl.proto) --grpc_out=$(genDir) --cpp_out=$(genDir)",
     srcs: [
         "proto/AudioFocusControl.proto",
+        ":libprotobuf-internal-protos",
     ],
     out: [
         "AudioFocusControl.pb.cc",
