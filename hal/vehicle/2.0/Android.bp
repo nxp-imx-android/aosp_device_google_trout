@@ -65,9 +65,11 @@ genrule {
         "aprotoc",
         "protoc-gen-grpc-cpp-plugin",
     ],
-    cmd: "$(location aprotoc) -I$$(dirname $(in)) -Ihardware/interfaces/automotive/vehicle/proto -Iexternal/protobuf/src --plugin=protoc-gen-grpc=$(location protoc-gen-grpc-cpp-plugin) $(in) --grpc_out=$(genDir) --cpp_out=$(genDir)",
+    cmd: "$(location aprotoc) -I$$(dirname $(location proto/VehicleServer.proto)) -Ihardware/interfaces/automotive/vehicle/proto -Iexternal/protobuf/src --plugin=protoc-gen-grpc=$(location protoc-gen-grpc-cpp-plugin) $(location proto/VehicleServer.proto) --grpc_out=$(genDir) --cpp_out=$(genDir)",
     srcs: [
         "proto/VehicleServer.proto",
+        ":vhal-proto-src",
+        ":libprotobuf-internal-protos",
     ],
     out: [
         "VehicleServer.pb.h",
@@ -81,9 +83,11 @@ genrule {
         "aprotoc",
         "protoc-gen-grpc-cpp-plugin",
     ],
-    cmd: "$(location aprotoc) -I$$(dirname $(in)) -Ihardware/interfaces/automotive/vehicle/proto -Iexternal/protobuf/src --plugin=protoc-gen-grpc=$(location protoc-gen-grpc-cpp-plugin) $(in) --grpc_out=$(genDir) --cpp_out=$(genDir)",
+    cmd: "$(location aprotoc) -I$$(dirname $(location proto/VehicleServer.proto)) -Ihardware/interfaces/automotive/vehicle/proto -Iexternal/protobuf/src --plugin=protoc-gen-grpc=$(location protoc-gen-grpc-cpp-plugin) $(location proto/VehicleServer.proto) --grpc_out=$(genDir) --cpp_out=$(genDir)",
     srcs: [
         "proto/VehicleServer.proto",
+        ":vhal-proto-src",
+        ":libprotobuf-internal-protos",
     ],
     out: [
         "VehicleServer.pb.cc",
