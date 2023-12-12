@@ -40,7 +40,7 @@ static const char* IIO_RANGE_AVAIL_FILENAME = "raw_available";
 namespace android {
 namespace hardware {
 namespace sensors {
-namespace V2_0 {
+namespace V2_1 {
 namespace subhal {
 namespace implementation {
 
@@ -413,7 +413,7 @@ int scan_elements(const std::string& device_dir, struct iio_device_data* iio_dat
 }
 }  // namespace implementation
 }  // namespace subhal
-}  // namespace V2_0
+}  // namespace V2_1
 }  // namespace sensors
 }  // namespace hardware
 }  // namespace android

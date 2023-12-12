@@ -21,7 +21,7 @@
 #include <mutex>
 #include <thread>
 
-namespace android::hardware::sensors::V2_0::subhal::implementation {
+namespace android::hardware::sensors::V2_1::subhal::implementation {
 
 class SensorBase;
 
@@ -52,4 +52,4 @@ class SensorThread {
     std::thread mThread;
 };
 
-}  // namespace android::hardware::sensors::V2_0::subhal::implementation
+}  // namespace android::hardware::sensors::V2_1::subhal::implementation

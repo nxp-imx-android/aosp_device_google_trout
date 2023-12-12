@@ -15,7 +15,7 @@
  */
 
 #include <android-base/file.h>
-#include <android/hardware/sensors/2.0/types.h>
+#include <android/hardware/sensors/2.1/types.h>
 #include <gtest/gtest.h>
 #include <sys/stat.h>
 #include <fstream>
@@ -25,10 +25,10 @@
 
 #include "iio_utils.h"
 
-using ::android::hardware::sensors::V1_0::SensorType;
-using android::hardware::sensors::V2_0::subhal::implementation::iio_device_data;
-using android::hardware::sensors::V2_0::subhal::implementation::load_iio_devices;
-using android::hardware::sensors::V2_0::subhal::implementation::sensors_supported_hal;
+using ::android::hardware::sensors::V2_1::SensorType;
+using android::hardware::sensors::V2_1::subhal::implementation::iio_device_data;
+using android::hardware::sensors::V2_1::subhal::implementation::load_iio_devices;
+using android::hardware::sensors::V2_1::subhal::implementation::sensors_supported_hal;
 
 static bool sensorFilter(iio_device_data* dev) {
     static std::map<std::string, SensorType> KNOWN_SENSORS = {

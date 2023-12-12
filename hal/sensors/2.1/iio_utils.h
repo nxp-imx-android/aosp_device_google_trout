@@ -16,7 +16,7 @@
 #ifndef ANDROID_SENSORS_IIO_UTILS_H
 #define ANDROID_SENSORS_IIO_UTILS_H
 
-#include <android/hardware/sensors/1.0/types.h>
+#include <android/hardware/sensors/2.1/types.h>
 #include <dirent.h>
 #include <linux/ioctl.h>
 #include <linux/types.h>
@@ -27,11 +27,11 @@
 namespace android {
 namespace hardware {
 namespace sensors {
-namespace V2_0 {
+namespace V2_1 {
 namespace subhal {
 namespace implementation {
 
-using ::android::hardware::sensors::V1_0::SensorType;
+using ::android::hardware::sensors::V2_1::SensorType;
 
 extern const char* DEFAULT_IIO_DIR;
 
@@ -75,7 +75,7 @@ int enable_sensor(const std::string& name, const bool flag);
 int set_sampling_frequency(const std::string& name, const double frequency);
 }  // namespace implementation
 }  // namespace subhal
-}  // namespace V2_0
+}  // namespace V2_1
 }  // namespace sensors
 }  // namespace hardware
 }  // namespace android
