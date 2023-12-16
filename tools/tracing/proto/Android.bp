@@ -24,9 +24,10 @@ genrule {
         "aprotoc",
         "protoc-gen-grpc-cpp-plugin",
     ],
-    cmd: "$(location aprotoc) -I$$(dirname $(in)) --plugin=protoc-gen-grpc=$(location protoc-gen-grpc-cpp-plugin) $(in) --grpc_out=$(genDir) --cpp_out=$(genDir)",
+    cmd: "$(location aprotoc) -I$$(dirname $(location TracingVM.proto)) --plugin=protoc-gen-grpc=$(location protoc-gen-grpc-cpp-plugin) $(location TracingVM.proto) --grpc_out=$(genDir) --cpp_out=$(genDir)",
     srcs: [
         "TracingVM.proto",
+        "perfetto_trace.proto",
     ],
     out: [
         "TracingVM.pb.h",
@@ -40,9 +41,10 @@ genrule {
         "aprotoc",
         "protoc-gen-grpc-cpp-plugin",
     ],
-    cmd: "$(location aprotoc) -I$$(dirname $(in)) --plugin=protoc-gen-grpc=$(location protoc-gen-grpc-cpp-plugin) $(in) --grpc_out=$(genDir) --cpp_out=$(genDir)",
+    cmd: "$(location aprotoc) -I$$(dirname $(location TracingVM.proto)) --plugin=protoc-gen-grpc=$(location protoc-gen-grpc-cpp-plugin) $(location TracingVM.proto) --grpc_out=$(genDir) --cpp_out=$(genDir)",
     srcs: [
         "TracingVM.proto",
+        "perfetto_trace.proto",
     ],
     out: [
         "TracingVM.pb.cc",

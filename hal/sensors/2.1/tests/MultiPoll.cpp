@@ -21,7 +21,7 @@
 
 #include "MultiPoll.h"
 
-using android::hardware::sensors::V2_0::subhal::implementation::MultiPoll;
+using android::hardware::sensors::V2_1::subhal::implementation::MultiPoll;
 
 // using namespace here is the sanctioned C++ way
 // NOLINTNEXTLINE(build/namespaces)

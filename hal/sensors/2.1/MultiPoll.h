@@ -21,7 +21,7 @@
 #include <mutex>
 #include <vector>
 
-namespace android::hardware::sensors::V2_0::subhal::implementation {
+namespace android::hardware::sensors::V2_1::subhal::implementation {
 
 class MultiPoll {
   public:
@@ -39,4 +39,4 @@ class MultiPoll {
     std::vector<pollfd> mDescriptors;
 };
 
-}  // namespace android::hardware::sensors::V2_0::subhal::implementation
+}  // namespace android::hardware::sensors::V2_1::subhal::implementation

@@ -18,7 +18,7 @@ package {
 }
 
 cc_library {
-    name: "android.hardware.sensors@2.0-Google-IIO-Subhal",
+    name: "android.hardware.sensors@2.1-Google-IIO-Subhal",
     vendor: true,
     srcs: [
         "iio_utils.cpp",
@@ -28,11 +28,12 @@ cc_library {
         "SensorThread.cpp",
     ],
     header_libs: [
-        "android.hardware.sensors@2.0-multihal.header",
+        "android.hardware.sensors@2.1-multihal.header",
     ],
     shared_libs: [
         "android.hardware.sensors@1.0",
         "android.hardware.sensors@2.0",
+        "android.hardware.sensors@2.1",
         "android.hardware.sensors@2.0-ScopedWakelock",
         "libcutils",
         "libfmq",
@@ -57,7 +58,7 @@ cc_library {
 }
 
 cc_test_host {
-    name: "android.hardware.sensors@2.0-Google-IIO-Subhal_test",
+    name: "android.hardware.sensors@2.1-Google-IIO-Subhal_test",
     srcs: [
         "iio_utils.cpp",
         "tests/IioUtilsTest.cpp",
@@ -66,6 +67,7 @@ cc_test_host {
         "libgtest",
         "android.hardware.sensors@1.0",
         "android.hardware.sensors@2.0",
+        "android.hardware.sensors@2.1",
     ],
     shared_libs: [
         "libbase",
@@ -74,7 +76,7 @@ cc_test_host {
 }
 
 cc_test_host {
-    name: "android.hardware.sensors@2.0-Google-IIO-Subhal_test-MultiPoll",
+    name: "android.hardware.sensors@2.1-Google-IIO-Subhal_test-MultiPoll",
     srcs: [
         "MultiPoll.cpp",
         "tests/MultiPoll.cpp"
@@ -83,6 +85,7 @@ cc_test_host {
         "libgtest",
         "android.hardware.sensors@1.0",
         "android.hardware.sensors@2.0",
+        "android.hardware.sensors@2.1",
     ],
     shared_libs: [
         "libbase",

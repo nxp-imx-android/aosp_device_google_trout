@@ -16,29 +16,31 @@
 #define LOG_TAG "GoogleIIOSensorSubHal"
 
 #include "SensorsSubHal.h"
-#include <android/hardware/sensors/2.0/types.h>
+#include <android/hardware/sensors/2.1/types.h>
 #include <log/log.h>
 
-ISensorsSubHal* sensorsHalGetSubHal(uint32_t* version) {
-    static ::android::hardware::sensors::V2_0::subhal::implementation::SensorsSubHal subHal;
-    *version = SUB_HAL_2_0_VERSION;
+using ::android::hardware::sensors::V2_1::implementation::ISensorsSubHal;
+
+ISensorsSubHal* sensorsHalGetSubHal_2_1(uint32_t* version) {
+    static ::android::hardware::sensors::V2_1::subhal::implementation::SensorsSubHal subHal;
+    *version = SUB_HAL_2_1_VERSION;
     return &subHal;
 }
 
 namespace android {
 namespace hardware {
 namespace sensors {
-namespace V2_0 {
+namespace V2_1 {
 namespace subhal {
 namespace implementation {
 
 using ::android::hardware::Void;
-using ::android::hardware::sensors::V1_0::Event;
 using ::android::hardware::sensors::V1_0::RateLevel;
 using ::android::hardware::sensors::V1_0::SharedMemInfo;
 using ::android::hardware::sensors::V2_0::SensorTimeout;
 using ::android::hardware::sensors::V2_0::WakeLockQueueFlagBits;
 using ::android::hardware::sensors::V2_0::implementation::ScopedWakelock;
+using ::android::hardware::sensors::V2_1::Event;
 using ::sensor::hal::configuration::V1_0::Sensor;
 using ::sensor::hal::configuration::V1_0::SensorHalConfiguration;
 
@@ -47,7 +49,7 @@ static const char* gSensorConfigLocationList[] = {"/odm/etc/sensors/", "/vendor/
 static const int gSensorConfigLocationListSize =
         (sizeof(gSensorConfigLocationList) / sizeof(gSensorConfigLocationList[0]));
 
-#define MODULE_NAME "android.hardware.sensors@2.0-Google-IIO-Subhal"
+#define MODULE_NAME "android.hardware.sensors@2.1-Google-IIO-Subhal"
 
 static std::optional<std::vector<Sensor>> readSensorsConfigFromXml() {
     for (int i = 0; i < gSensorConfigLocationListSize; i++) {
@@ -134,8 +136,8 @@ SensorsSubHal::SensorsSubHal() : mCallback(nullptr), mNextHandle(1) {
     }
 }
 
-// Methods from ::android::hardware::sensors::V2_0::ISensors follow.
-Return<void> SensorsSubHal::getSensorsList(getSensorsList_cb _hidl_cb) {
+// Methods from ::android::hardware::sensors::V2_1::ISensors follow.
+Return<void> SensorsSubHal::getSensorsList_2_1(getSensorsList_2_1_cb _hidl_cb) {
     std::vector<SensorInfo> sensors;
     for (const auto& sensor : mSensors) {
         SensorInfo sensorInfo = sensor.second->getSensorInfo();
@@ -183,7 +185,7 @@ Return<Result> SensorsSubHal::flush(int32_t sensorHandle) {
     return Result::BAD_VALUE;
 }
 
-Return<Result> SensorsSubHal::injectSensorData(const Event& /* event */) {
+Return<Result> SensorsSubHal::injectSensorData_2_1(const Event& /* event */) {
     return Result::INVALID_OPERATION;
 }
 
@@ -244,10 +246,14 @@ Return<Result> SensorsSubHal::initialize(const sp<IHalProxyCallback>& halProxyCa
     return Result::OK;
 }
 
-void SensorsSubHal::postEvents(const std::vector<Event>& events, bool wakeup) {
-    ScopedWakelock wakelock = mCallback->createScopedWakelock(wakeup);
+void SensorsSubHal::postEvents(const std::vector<Event>& events, ScopedWakelock wakelock) {
     mCallback->postEvents(events, std::move(wakelock));
 }
+
+ScopedWakelock SensorsSubHal::createScopedWakelock(bool lock) {
+    return mCallback->createScopedWakelock(lock);
+}
+
 void SensorsSubHal::AddSensor(const struct iio_device_data& iio_data,
                               const std::optional<std::vector<Configuration>>& config) {
     HWSensorBase* sensor = HWSensorBase::buildSensor(mNextHandle++ /* sensorHandle */,
@@ -260,7 +266,7 @@ void SensorsSubHal::AddSensor(const struct iio_device_data& iio_data,
 
 }  // namespace implementation
 }  // namespace subhal
-}  // namespace V2_0
+}  // namespace V2_1
 }  // namespace sensors
 }  // namespace hardware
 }  // namespace android

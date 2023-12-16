@@ -24,7 +24,7 @@
 namespace android {
 namespace hardware {
 namespace sensors {
-namespace V2_0 {
+namespace V2_1 {
 namespace subhal {
 namespace implementation {
 
@@ -114,7 +114,9 @@ void HWSensorBase::sendAdditionalInfoReport() {
         });
     }
 
-    if (!events.empty()) mCallback->postEvents(events, isWakeUpSensor());
+    if (!events.empty()) {
+        mCallback->postEvents(events, mCallback->createScopedWakelock(isWakeUpSensor()));
+    }
 }
 
 void HWSensorBase::activate(bool enable) {
@@ -141,7 +143,7 @@ Result SensorBase::flush() {
     ev.sensorType = SensorType::META_DATA;
     ev.u.meta.what = MetaDataEventType::META_DATA_FLUSH_COMPLETE;
     std::vector<Event> evs{ev};
-    mCallback->postEvents(evs, isWakeUpSensor());
+    mCallback->postEvents(evs, mCallback->createScopedWakelock(isWakeUpSensor()));
     return Result::OK;
 }
 
@@ -198,7 +200,7 @@ void HWSensorBase::pollForEvents() {
 
         Event evt;
         processScanData(&mSensorRawData[0], &evt);
-        mCallback->postEvents({evt}, isWakeUpSensor());
+        mCallback->postEvents({evt}, mCallback->createScopedWakelock(isWakeUpSensor()));
     }
 }
 
@@ -240,7 +242,7 @@ Result SensorBase::injectEvent(const Event& event) {
     } else if (!supportsDataInjection()) {
         result = Result::INVALID_OPERATION;
     } else if (mMode == OperationMode::DATA_INJECTION) {
-        mCallback->postEvents(std::vector<Event>{event}, isWakeUpSensor());
+        mCallback->postEvents({event}, mCallback->createScopedWakelock(isWakeUpSensor()));
     } else {
         result = Result::BAD_VALUE;
     }
@@ -488,7 +490,7 @@ HWSensorBase::HWSensorBase(int32_t sensorHandle, ISensorsEventCallback* callback
 
 }  // namespace implementation
 }  // namespace subhal
-}  // namespace V2_0
+}  // namespace V2_1
 }  // namespace sensors
 }  // namespace hardware
 }  // namespace android
