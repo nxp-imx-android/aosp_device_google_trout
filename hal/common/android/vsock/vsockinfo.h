@@ -28,8 +28,10 @@ struct VsockConnectionInfo {
     unsigned cid = 0;
     unsigned port = 0;
 
+#ifdef __BIONIC__
     static std::optional<VsockConnectionInfo> fromRoPropertyStore(const PropertyList& cid_props,
                                                                   const PropertyList& port_props);
+#endif  // __BIONIC__
 
     std::string str() const;
 };

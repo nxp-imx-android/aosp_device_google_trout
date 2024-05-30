@@ -16,13 +16,16 @@
 
 #include "vsockinfo.h"
 
-#ifdef __BIONIC__
 #include <sstream>
 
+#ifdef __BIONIC__
 #include <android-base/logging.h>
 #include <cutils/properties.h>
+#endif  // __BIONIC__
 
 namespace android::hardware::automotive::utils {
+
+#ifdef __BIONIC__
 
 namespace {
 std::optional<unsigned> getNumberFromProperty(const char* key) {
@@ -57,6 +60,8 @@ std::optional<VsockConnectionInfo> VsockConnectionInfo::fromRoPropertyStore(
     }
 }
 
+#endif  // __BIONIC__
+
 std::string VsockConnectionInfo::str() const {
     std::stringstream ss;
 
@@ -65,4 +70,3 @@ std::string VsockConnectionInfo::str() const {
 }
 
 }  // namespace android::hardware::automotive::utils
-#endif  // __BIONIC__
