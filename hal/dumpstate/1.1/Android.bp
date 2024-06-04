@@ -68,7 +68,6 @@ cc_binary {
         "DumpstateServerProtoStub_cc",
     ],
     static_libs: [
-        "android.hardware.automotive@libc++fs",
         "android.hardware.automotive.utils.vsockinfo",
         "libxml2",
     ],

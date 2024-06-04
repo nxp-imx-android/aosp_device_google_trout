@@ -31,8 +31,6 @@ using std::chrono::duration_cast;
 using std::chrono::seconds;
 using std::literals::chrono_literals::operator""s;
 
-namespace fs = android::hardware::automotive::filesystem;
-
 static constexpr const char* VENDOR_VERBOSE_LOGGING_ENABLED_PROPERTY =
         "persist.vendor.verbose_logging_enabled";
 
