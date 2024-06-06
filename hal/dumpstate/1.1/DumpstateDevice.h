@@ -17,7 +17,7 @@
 
 #include <android/hardware/dumpstate/1.1/IDumpstateDevice.h>
 
-#include <automotive/filesystem>
+#include <filesystem>
 #include <functional>
 
 #include <grpc++/grpc++.h>
@@ -27,7 +27,7 @@
 
 namespace android::hardware::dumpstate::V1_1::implementation {
 
-namespace fs = android::hardware::automotive::filesystem;
+namespace fs = std::filesystem;
 
 class DumpstateDevice : public IDumpstateDevice {
   public:
