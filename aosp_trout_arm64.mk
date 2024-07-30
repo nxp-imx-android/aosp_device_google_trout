@@ -18,6 +18,7 @@
 
 TARGET_USES_CF_RILD ?= false
 $(call inherit-product, device/google/cuttlefish/vsoc_arm64_only/auto/aosp_cf.mk)
+$(call inherit-product, device/google/cuttlefish/shared/virgl/device_vendor.mk)
 
 # Prefer ext4 for the system image
 TARGET_RO_FILE_SYSTEM_TYPE := ext4
