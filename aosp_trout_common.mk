@@ -63,42 +63,42 @@ LOCAL_AUDIOCONTROL_HAL_PRODUCT_PACKAGE ?= android.hardware.automotive.audiocontr
 #    ro.vendor.helpersystem.log_loc=/data/host_logs \
 
 # Vehicle HAL
-ENABLE_VHAL_FAKE_GRPC_SERVER ?= false
-LOCAL_VHAL_PROPERTIES ?=
-TROUT_DEFAULT_VHAL_PACKAGES = android.hardware.automotive.vehicle@default-trout-service
-ifeq ($(ENABLE_VHAL_FAKE_GRPC_SERVER),true)
-TROUT_DEFAULT_VHAL_PACKAGES += android.hardware.automotive.vehicle@default-trout-fake-hardware-grpc-server
-LOCAL_VHAL_PROPERTIES += ro.vendor.vehiclehal.server.use_local_fake_server=true
-endif
-LOCAL_VHAL_PRODUCT_PACKAGE ?= ${TROUT_DEFAULT_VHAL_PACKAGES}
+#ENABLE_VHAL_FAKE_GRPC_SERVER ?= false
+#LOCAL_VHAL_PROPERTIES ?=
+#TROUT_DEFAULT_VHAL_PACKAGES = android.hardware.automotive.vehicle@default-trout-service
+#ifeq ($(ENABLE_VHAL_FAKE_GRPC_SERVER),true)
+#TROUT_DEFAULT_VHAL_PACKAGES += android.hardware.automotive.vehicle@default-trout-fake-hardware-grpc-server
+#LOCAL_VHAL_PROPERTIES += ro.vendor.vehiclehal.server.use_local_fake_server=true
+#endif
+#LOCAL_VHAL_PRODUCT_PACKAGE ?= ${TROUT_DEFAULT_VHAL_PACKAGES}
 
-# EVS HAL
-LOCAL_EVS_RRO_PACKAGE_OVERLAYS ?= TroutEvsOverlay
-ENABLE_EVS_SERVICE ?= true
-ENABLE_MOCK_EVSHAL ?= false
-ENABLE_EVS_SAMPLE ?= true
-ENABLE_SAMPLE_EVS_APP ?= false
-ENABLE_CAREVSSERVICE_SAMPLE ?= true
+## EVS HAL
+#LOCAL_EVS_RRO_PACKAGE_OVERLAYS ?= TroutEvsOverlay
+#ENABLE_EVS_SERVICE ?= true
+#ENABLE_MOCK_EVSHAL ?= false
+#ENABLE_EVS_SAMPLE ?= true
+#ENABLE_SAMPLE_EVS_APP ?= false
+#ENABLE_CAREVSSERVICE_SAMPLE ?= true
 
-PRODUCT_PACKAGES += $(LOCAL_EVS_RRO_PACKAGE_OVERLAYS)
+#PRODUCT_PACKAGES += $(LOCAL_EVS_RRO_PACKAGE_OVERLAYS)
+#PRODUCT_PACKAGES += android.hardware.automotive.evs@1.1-service
+#PRODUCT_PACKAGES += android.hardware.automotive.evs-default
+PRODUCT_PACKAGES += android.hardware.automotive.vehicle@2.0-default-service
 
-ifeq ($(LOCAL_EVS_PRODUCT_COPY_FILES),)
-LOCAL_EVS_PRODUCT_COPY_FILES := \
-    device/google/trout/product_files/etc/automotive/evs/config_override.json:${TARGET_COPY_OUT_VENDOR}/etc/automotive/evs/config_override.json \
-    device/google/trout/product_files/vendor/etc/automotive/evs/evs_configuration_override.xml:$(TARGET_COPY_OUT_VENDOR)/etc/automotive/evs/evs_configuration_override.xml
-endif
-PRODUCT_COPY_FILES += $(LOCAL_EVS_PRODUCT_COPY_FILES)
+#ifeq ($(LOCAL_EVS_PRODUCT_COPY_FILES),)
+#LOCAL_EVS_PRODUCT_COPY_FILES := \
+#    device/google/trout/product_files/etc/automotive/evs/config_override.json:${TARGET_COPY_OUT_VENDOR}/etc/automotive/evs/config_override.json \
+#    device/google/trout/product_files/vendor/etc/automotive/evs/evs_configuration_override.xml:$(TARGET_COPY_OUT_VENDOR)/etc/automotive/evs/evs_configuration_override.xml
+#endif
+#PRODUCT_COPY_FILES += $(LOCAL_EVS_PRODUCT_COPY_FILES)
 
 # A device inheriting trout can enable Vulkan support.
 TARGET_VULKAN_SUPPORT ?= false
 
 PRODUCT_PROPERTY_OVERRIDES += \
-    ro.hardware.type=automotive \
     ${LOCAL_AUDIO_PROPERTIES} \
     ${LOCAL_AUDIOCONTROL_PROPERTIES} \
-    ${LOCAL_DUMPSTATE_PROPERTIES} \
     ${LOCAL_TRACING_SERVER_PROPERTIES} \
-    ${LOCAL_VHAL_PROPERTIES} \
     ro.audio.flinger_standbytime_ms=0
 
 ifeq ($(TARGET_DISABLE_BOOT_ANIMATION),true)
