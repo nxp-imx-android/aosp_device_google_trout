@@ -110,7 +110,7 @@ PRODUCT_CHARACTERISTICS := nosdcard,automotive
 TARGET_BOARD_INFO_FILE ?= device/google/trout/board-info.txt
 
 # Keymaster HAL
-LOCAL_KEYMINT_PRODUCT_PACKAGE ?= android.hardware.keymaster@4.1-service
+LOCAL_KEYMINT_PRODUCT_PACKAGE = android.hardware.keymaster@4.1-service
 
 # Gatekeeper HAL
 LOCAL_GATEKEEPER_PRODUCT_PACKAGE ?= android.hardware.gatekeeper@1.0-service.software
