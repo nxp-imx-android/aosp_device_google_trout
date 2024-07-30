@@ -84,7 +84,7 @@ PRODUCT_COPY_FILES += \
 # WiFi configuration
 PRODUCT_ENFORCE_MAC80211_HWSIM ?= false
 ifndef DEVICE_VIRTWIFI_PORT
-DEVICE_VIRTWIFI_PORT := eth0
+DEVICE_VIRTWIFI_PORT := eth1
 endif
 PRODUCT_PROPERTY_OVERRIDES += ro.vendor.disable_rename_eth0?=true
 PRODUCT_COPY_FILES += device/google/trout/trout_arm64/wifi/virtwifi.sh:$(TARGET_COPY_OUT_VENDOR)/bin/virtwifi.sh
