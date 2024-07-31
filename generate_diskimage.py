@@ -1,5 +1,4 @@
-#!/usr/bin/env python
-
+#!/usr/bin/env python3
 import os
 import subprocess
 import parted
@@ -71,12 +70,12 @@ def parse_gpt_image(image_path):
 
     return partitions, partition_map
 
-def process_partitions(image_path, partitions, partition_map):
+def process_partitions(image_path, partitions, partition_map, image_dir):
     for partition in partitions:
         partition_name = partition.name
         logger.info(f"Processing partition: {partition_name}")
         if partition_name in partition_map:
-            partition_image_path = partition_map[partition_name]
+            partition_image_path = os.path.join(image_dir, partition_map[partition_name])
             logger.info(f"Writing {partition_image_path} to partition {partition_name}")
             write_partition_image(image_path, partition, partition_image_path)
         else:
@@ -111,9 +110,9 @@ def is_sparse_image(file_path):
         header = f.read(12)
         return header[:4] == b'\x3a\xff\x26\xed'
 
-def convert_sparse_image(sparse_file, raw_file):
+def convert_sparse_image(sparse_file, raw_file, simg2img_path):
     try:
-        subprocess.run(['simg2img', sparse_file, raw_file], check=True)
+        subprocess.run([simg2img_path, sparse_file, raw_file], check=True)
         print(f"Successfully converted {sparse_file} to {raw_file}")
     except subprocess.CalledProcessError as e:
         raise RuntimeError(f"Failed to convert {sparse_file} to {raw_file}: {e}")
@@ -122,13 +121,17 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Create and process disk image.")
     parser.add_argument('--input', required=True, help="Path to the partition description file.")
     parser.add_argument('--output', required=True, help="Path to the output disk image file.")
+    parser.add_argument('--image-dir', required=False, default='.', help="Directory containing the .img files.")
+    parser.add_argument('--simg2img-path', required=False, default='simg2img', help="Path to the simg2img tool.")
     args = parser.parse_args()
 
     partition_description_file = args.input
     output_image_path = args.output
+    image_dir = args.image_dir
+    simg2img_path = args.simg2img_path
 
-    sparse_file = 'super.img'
-    raw_file = 'super_raw.img'
+    sparse_file = os.path.join(image_dir, 'super.img')
+    raw_file = os.path.join(image_dir, 'super_raw.img')
 
     if not os.path.isfile(sparse_file):
         raise FileNotFoundError(f"No such file: '{sparse_file}'")
@@ -136,7 +139,7 @@ if __name__ == "__main__":
     if not is_sparse_image(sparse_file):
         raise ValueError(f"'{sparse_file}' is not an Android sparse image")
 
-    convert_sparse_image(sparse_file, raw_file)
+    convert_sparse_image(sparse_file, raw_file, simg2img_path)
 
     with open(partition_description_file, 'r') as f:
         partition_data = json.load(f)
@@ -147,5 +150,5 @@ if __name__ == "__main__":
 
     logger.info(f"Starting to process disk image: {output_image_path}")
     partitions, partition_map = parse_gpt_image(output_image_path)
-    process_partitions(output_image_path, partitions, partition_map)
+    process_partitions(output_image_path, partitions, partition_map, image_dir)
     logger.info("Processing completed")

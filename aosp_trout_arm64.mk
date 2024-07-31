@@ -93,3 +93,6 @@ PRODUCT_COPY_FILES += device/google/trout/trout_arm64/wifi/virtwifi.rc:$(TARGET_
 PRODUCT_NAME := aosp_trout_arm64
 PRODUCT_DEVICE := trout_arm64
 PRODUCT_MODEL := arm64 trout
+
+PRODUCT_COPY_FILES += device/google/trout/partition.bpt:$(PRODUCT_OUT)/partition.bpt
+PRODUCT_COPY_FILES += device/google/trout/generate_diskimage.py:$(PRODUCT_OUT)/generate_diskimage.py
