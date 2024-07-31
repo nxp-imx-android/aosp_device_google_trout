@@ -37,11 +37,9 @@ TROUT_KERNEL_DIR ?= $(wildcard device/google/trout-kernel/$(TARGET_KERNEL_USE)-a
 # and thus we cannot rely on it existing outside of Google-internal builds. Make sure not to try
 # and include a missing kernel image.
 ifndef TARGET_KERNEL_PATH
-# wildcard is for existence checking,
-# so TROUT_KERNEL_IMAGE is suppose to be a list that contains at most one path.
-# The foreach below is only for extracting the path from the list.
-TROUT_KERNEL_IMAGE := $(wildcard $(TROUT_KERNEL_DIR)/Image)
-$(foreach kernel_img, $(TROUT_KERNEL_IMAGE), $(eval TARGET_KERNEL_PATH := $(kernel_img)))
+TARGET_KERNEL_PATH := vendor/nxp-opensource/imx_virt_prebuilts/kernel/prebuilts/Image
+KERNEL_MODULES_PATH := vendor/nxp-opensource/imx_virt_prebuilts/kernel/prebuilts/
+SYSTEM_DLKM_SRC := vendor/nxp-opensource/imx_virt_prebuilts/kernel/prebuilts/
 endif
 
 TARGET_BOARD_PLATFORM := vsoc_arm64
