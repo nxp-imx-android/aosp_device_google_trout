@@ -34,6 +34,15 @@ TARGET_KERNEL_USE ?= 6.1
 # Select the prebuilt trout kernel if 5.10 or 5.4 is in use
 TROUT_KERNEL_DIR ?= $(wildcard device/google/trout-kernel/$(TARGET_KERNEL_USE)-arm64)
 
+# The trout kernel is provided as source to AOSP,
+# and thus we cannot rely on it existing outside of Google-internal builds. Make sure not to try
+# and include a missing kernel image.
+ifndef TARGET_KERNEL_PATH
+TARGET_KERNEL_PATH := vendor/nxp-opensource/imx_virt_prebuilts/kernel/prebuilts/Image
+KERNEL_MODULES_PATH := vendor/nxp-opensource/imx_virt_prebuilts/kernel/prebuilts/
+SYSTEM_DLKM_SRC := vendor/nxp-opensource/imx_virt_prebuilts/kernel/prebuilts/
+endif
+
 TARGET_BOARD_PLATFORM := vsoc_arm64
 TARGET_ARCH := arm64
 TARGET_ARCH_VARIANT := armv8-a
