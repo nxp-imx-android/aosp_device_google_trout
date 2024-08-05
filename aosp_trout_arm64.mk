@@ -96,3 +96,5 @@ PRODUCT_MODEL := arm64 trout
 
 PRODUCT_COPY_FILES += device/google/trout/partition.bpt:$(PRODUCT_OUT)/partition.bpt
 PRODUCT_COPY_FILES += device/google/trout/generate_diskimage.py:$(PRODUCT_OUT)/generate_diskimage.py
+
+PRODUCT_COPY_FILES += vendor/nxp-opensource/imx_virt_prebuilts/uboot/prebuilts/u-boot.bin:$(PRODUCT_OUT)/u-boot.bin
