@@ -96,7 +96,6 @@ PRODUCT_PACKAGES += android.hardware.automotive.vehicle@2.0-default-service
 TARGET_VULKAN_SUPPORT ?= false
 
 PRODUCT_PROPERTY_OVERRIDES += \
-    ${LOCAL_AUDIO_PROPERTIES} \
     ${LOCAL_AUDIOCONTROL_PROPERTIES} \
     ${LOCAL_TRACING_SERVER_PROPERTIES} \
     ro.audio.flinger_standbytime_ms=0
