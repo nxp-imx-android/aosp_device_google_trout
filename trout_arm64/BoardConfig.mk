@@ -131,3 +131,5 @@ BOARD_KERNEL_CMDLINE += androidboot.fstab_name=fstab androidboot.fstab_suffix=tr
 BOARD_KERNEL_CMDLINE += mac80211_hwsim.radios=0
 
 BOARD_KERNEL_CMDLINE += androidboot.boot_device=51712
+
+LOCAL_ENABLE_WIDEVINE := false
