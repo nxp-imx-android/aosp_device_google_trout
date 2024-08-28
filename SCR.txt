@@ -1,0 +1,6 @@
+Package:                   trout
+Outgoing License:          Apache-2.0
+License File:              NOTICE
+Release Location:          https://github.com/nxp-imx-android/aosp_device_google_trout
+Origin:                    NXP (Apache-2.0)
+                           The Android Open Source Project (Apache-2.0) - https://source.android.com/
