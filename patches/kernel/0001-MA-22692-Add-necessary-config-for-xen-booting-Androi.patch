@@ -1,0 +1,66 @@
+From 8e1fd8ae684473183b626a246007ec51c7bed51b Mon Sep 17 00:00:00 2001
+From: Haoran Wang <elven.wang@nxp.com>
+Date: Tue, 30 Jul 2024 19:46:26 +0800
+Subject: [PATCH] MA-22692 Add necessary config for xen booting Android kernel
+
+Change-Id: I0ac67fb5156b1ab92507da5919037fffb07a4999
+Signed-off-by: Haoran Wang <elven.wang@nxp.com>
+---
+ arch/arm64/configs/gki_defconfig | 6 ++++++
+ modules.bzl                      | 2 ++
+ 2 files changed, 8 insertions(+)
+
+diff --git a/arch/arm64/configs/gki_defconfig b/arch/arm64/configs/gki_defconfig
+index 38c90d04264e..697aa4dc9dc0 100644
+--- a/arch/arm64/configs/gki_defconfig
++++ b/arch/arm64/configs/gki_defconfig
+@@ -49,6 +49,7 @@ CONFIG_ARCH_QCOM=y
+ CONFIG_SCHED_MC=y
+ CONFIG_NR_CPUS=32
+ CONFIG_PARAVIRT_TIME_ACCOUNTING=y
++CONFIG_XEN=y
+ CONFIG_ARM64_SW_TTBR0_PAN=y
+ CONFIG_COMPAT=y
+ CONFIG_ARMV8_DEPRECATED=y
+@@ -312,6 +313,7 @@ CONFIG_BLK_DEV_LOOP=y
+ CONFIG_BLK_DEV_LOOP_MIN_COUNT=16
+ CONFIG_BLK_DEV_RAM=y
+ CONFIG_BLK_DEV_RAM_SIZE=8192
++CONFIG_XEN_BLKDEV_BACKEND=y
+ CONFIG_BLK_DEV_UBLK=y
+ CONFIG_BLK_DEV_NVME=y
+ CONFIG_SRAM=y
+@@ -496,6 +498,7 @@ CONFIG_USB_XHCI_PCI_RENESAS=y
+ CONFIG_USB_EHCI_HCD=y
+ CONFIG_USB_EHCI_ROOT_HUB_TT=y
+ CONFIG_USB_EHCI_HCD_PLATFORM=y
++CONFIG_USB_XEN_HCD=y
+ CONFIG_USB_ACM=m
+ CONFIG_USB_STORAGE=y
+ CONFIG_USB_UAS=y
+@@ -557,6 +560,9 @@ CONFIG_GUNYAH_IRQFD=y
+ CONFIG_GUNYAH_IOEVENTFD=y
+ CONFIG_MTK_GZVM=m
+ CONFIG_VHOST_VSOCK=y
++CONFIG_XEN_PCIDEV_STUB=y
++CONFIG_XEN_VIRTIO=y
++CONFIG_XEN_VIRTIO_FORCE_GRANT=y
+ CONFIG_STAGING=y
+ CONFIG_ASHMEM=y
+ CONFIG_COMMON_CLK_SCPI=y
+diff --git a/modules.bzl b/modules.bzl
+index 52d92225aab4..efd93f91bada 100644
+--- a/modules.bzl
++++ b/modules.bzl
+@@ -38,6 +38,8 @@ _COMMON_GKI_MODULES_LIST = [
+     "drivers/usb/class/cdc-acm.ko",
+     "drivers/usb/serial/ftdi_sio.ko",
+     "drivers/usb/serial/usbserial.ko",
++    "drivers/xen/xen-gntdev.ko",
++    "drivers/xen/xen-gntalloc.ko",
+     "kernel/kheaders.ko",
+     "lib/crypto/libarc4.ko",
+     "mm/zsmalloc.ko",
+-- 
+2.34.1
+
