@@ -1,0 +1,87 @@
+From f29875c90183119172e229b942e353c200045985 Mon Sep 17 00:00:00 2001
+From: Haoran Wang <elven.wang@nxp.com>
+Date: Tue, 30 Jul 2024 20:24:41 +0800
+Subject: [PATCH 2/2] MA-22692 necessary config change for enable trout on
+ imx95
+
+Change-Id: I35f332eb38cd60b62ea28737f5638b04128af351
+Signed-off-by: Haoran Wang <elven.wang@nxp.com>
+---
+ arm.fragment                     | 2 +-
+ configs/xenguest_arm64_defconfig | 3 +++
+ cuttlefish.fragment              | 2 +-
+ default_env.txt                  | 1 +
+ default_xen_env.txt              | 1 +
+ drivers/virtio/Kconfig           | 1 -
+ 6 files changed, 7 insertions(+), 3 deletions(-)
+
+diff --git a/arm.fragment b/arm.fragment
+index 8be7558862..14bc0a3429 100644
+--- a/arm.fragment
++++ b/arm.fragment
+@@ -3,7 +3,7 @@ CONFIG_AVB_BUF_ADDR=0
+ # U-boot network support for fastboot
+ CONFIG_NET=y
+ CONFIG_NETDEVICES=y
+-CONFIG_VIRTIO_NET=y
++#CONFIG_VIRTIO_NET=y
+ CONFIG_IPV6=y
+ CONFIG_USE_ETHPRIME=y
+ CONFIG_PROT_TCP=y
+diff --git a/configs/xenguest_arm64_defconfig b/configs/xenguest_arm64_defconfig
+index b206f71fc7..fb4e81a4eb 100644
+--- a/configs/xenguest_arm64_defconfig
++++ b/configs/xenguest_arm64_defconfig
+@@ -42,3 +42,6 @@ CONFIG_CMD_FAT=y
+ # CONFIG_MMC is not set
+ # CONFIG_REQUIRE_SERIAL_CONSOLE is not set
+ CONFIG_DM_SERIAL=y
++CONFIG_VIRTIO_MMIO=y
++CONFIG_VIRTIO_BLK=y
++CONFIG_CMD_VIRTIO=y
+diff --git a/cuttlefish.fragment b/cuttlefish.fragment
+index ccdd5d10ca..30adaa6f40 100644
+--- a/cuttlefish.fragment
++++ b/cuttlefish.fragment
+@@ -9,7 +9,7 @@ CONFIG_ANDROID_USES_RECOVERY_AS_BOOT=y
+ CONFIG_ANDROID_BOOTLOADER_OEMLOCK_CONSOLE=y
+ CONFIG_ANDROID_BOOTLOADER_KEYMINT_CONSOLE=y
+ CONFIG_ANDROID_PERSISTENT_RAW_DISK=y
+-CONFIG_ANDROID_PERSISTENT_RAW_DISK_DEVICE=1
++CONFIG_ANDROID_PERSISTENT_RAW_DISK_DEVICE=0
+ CONFIG_CMDLINE=y
+ CONFIG_CMD_AB_SELECT=y
+ CONFIG_CMD_BOOT_ANDROID=y
+diff --git a/default_env.txt b/default_env.txt
+index dbd0e14bf7..02557a876d 100644
+--- a/default_env.txt
++++ b/default_env.txt
+@@ -4,3 +4,4 @@ uenvcmd=run bootcmd_android
+ fastbootcmd=fastboot tcp -ipv6 && boot
+ netretry=yes
+ android_keymint_needed=N
++android_rootdev=/dev/xvda
+diff --git a/default_xen_env.txt b/default_xen_env.txt
+index 09e1611e43..c536f4405a 100644
+--- a/default_xen_env.txt
++++ b/default_xen_env.txt
+@@ -9,3 +9,4 @@ stderr=hypervisor
+ stdin=hypervisor
+ stdout=hypervisor
+ update_bootargs=fdt addr ${fdtcontroladdr}; fdt get value bootargs /chosen bootargs;
++android_rootdev=/dev/xvda
+diff --git a/drivers/virtio/Kconfig b/drivers/virtio/Kconfig
+index 94aaf70ab9..c7ba0fa4d2 100644
+--- a/drivers/virtio/Kconfig
++++ b/drivers/virtio/Kconfig
+@@ -71,7 +71,6 @@ config VIRTIO_BLK
+ config VIRTIO_CONSOLE
+ 	bool "virtio console driver"
+ 	depends on VIRTIO
+-	default y
+ 	help
+ 	  This is the virtual console driver for virtio. It can be used
+ 	  with QEMU based targets.
+-- 
+2.34.1
+

@@ -1,0 +1,27 @@
+From 24c6daa6854b303369115143d7ac91e9f64d3503 Mon Sep 17 00:00:00 2001
+From: "Haoran.Wang" <elven.wang@nxp.com>
+Date: Mon, 9 Sep 2024 21:29:48 +0800
+Subject: [PATCH] don't generate the AVB images
+
+Since the trout will build the AVB images itself, so no need to
+generate the AVB images. This patch prevent the GKI date check since we
+use the fixed revision for evaluating.
+
+Change-Id: Ia68ab43eff8f559eb9da2e5dcabe24cdb3348453
+Signed-off-by: Haoran.Wang <elven.wang@nxp.com>
+---
+ build.config.virtual_device.aarch64 | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/build.config.virtual_device.aarch64 b/build.config.virtual_device.aarch64
+index 31698da..c27b715 100644
+--- a/build.config.virtual_device.aarch64
++++ b/build.config.virtual_device.aarch64
+@@ -21,3 +21,4 @@ EXT_MODULES="common-modules/virtual-device"
+ 
+ # Not building/saving any kernel images. This build step is meant purely to generate the .kos.
+ FILES="arch/arm64/boot/dts/arm/fvp-base-revc.dtb"
++BUILD_GKI_BOOT_SKIP_AVB=1
+-- 
+2.36.0
+

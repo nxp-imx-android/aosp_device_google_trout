@@ -1,0 +1,62 @@
+From 86b46a2f4c872966ef68c8332d325dfd57c132e4 Mon Sep 17 00:00:00 2001
+From: Haoran Wang <elven.wang@nxp.com>
+Date: Tue, 30 Jul 2024 20:22:59 +0800
+Subject: [PATCH 1/2] xen: xenguest_arm64: map all VIRTIO MMIO region
+
+Change-Id: I26f4671de2fa9989096d76bd9b66b2569b6b1783
+Signed-off-by: Peng Fan <peng.fan@nxp.com>
+---
+ board/xen/xenguest_arm64/xenguest_arm64.c | 19 +++++++++++++++++++
+ 1 file changed, 19 insertions(+)
+
+diff --git a/board/xen/xenguest_arm64/xenguest_arm64.c b/board/xen/xenguest_arm64/xenguest_arm64.c
+index 6e10bba76b..22d885a175 100644
+--- a/board/xen/xenguest_arm64/xenguest_arm64.c
++++ b/board/xen/xenguest_arm64/xenguest_arm64.c
+@@ -26,10 +26,14 @@
+ #include <xen/gnttab.h>
+ #include <xen/hvm.h>
+ 
++#define GUEST_VIRTIO_MMIO_BASE 0x2000000
++#define GUEST_VIRTIO_MMIO_SIZE 0x100000
++
+ DECLARE_GLOBAL_DATA_PTR;
+ 
+ int board_init(void)
+ {
++
+ 	return 0;
+ }
+ 
+@@ -114,6 +118,15 @@ static int setup_mem_map(void)
+ 				PTE_BLOCK_INNER_SHARE);
+ 	i++;
+ 
++    if (CONFIG_IS_ENABLED(VIRTIO_MMIO)) {
++        xen_mem_map[i].virt = GUEST_VIRTIO_MMIO_BASE;
++        xen_mem_map[i].phys = GUEST_VIRTIO_MMIO_BASE;
++        xen_mem_map[i].size = GUEST_VIRTIO_MMIO_SIZE;
++        xen_mem_map[i].attrs = (PTE_BLOCK_MEMTYPE(MT_DEVICE_NGNRNE) |
++                PTE_BLOCK_NON_SHARE);
++        i++;
++    }
++
+ 	mem = get_next_memory_node(blob, -1);
+ 	if (mem < 0) {
+ 		printf("%s: Missing /memory node\n", __func__);
+@@ -121,6 +134,12 @@ static int setup_mem_map(void)
+ 	}
+ 
+ 	for (; i < MAX_MEM_MAP_REGIONS; i++) {
++        if (CONFIG_IS_ENABLED(VIRTIO_MMIO)) {
++            ret = fdt_node_check_compatible(blob, mem, "virtio,mmio");
++            if (!ret)
++                continue;
++        }
++
+ 		ret = fdt_get_resource(blob, mem, "reg", reg++, &res);
+ 		if (ret == -FDT_ERR_NOTFOUND) {
+ 			reg = 0;
+-- 
+2.34.1
+
