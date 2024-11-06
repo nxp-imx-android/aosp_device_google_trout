@@ -130,7 +130,8 @@ BOARD_KERNEL_CMDLINE += androidboot.fstab_name=fstab androidboot.fstab_suffix=tr
 # Prevent mac80211_hwsim from simulating any radios
 BOARD_KERNEL_CMDLINE += mac80211_hwsim.radios=0
 
-BOARD_KERNEL_CMDLINE += androidboot.boot_device=51712
+BOARD_KERNEL_CMDLINE += androidboot.boot_device=2000e00.virtio
+BOARD_KERNEL_CMDLINE += androidboot.boot_devices=2000e00.virtio
 
 LOCAL_ENABLE_WIDEVINE := false
 

@@ -64,6 +64,8 @@ def parse_gpt_image(image_path):
         'vbmeta_b': 'vbmeta.img',
         'vbmeta_system_a': 'vbmeta_system.img',
         'vbmeta_system_b': 'vbmeta_system.img',
+        'vbmeta_system_dlkm_a' : 'vbmeta_system_dlkm.img',
+        'vbmeta_system_dlkm_b' : 'vbmeta_system_dlkm.img',
         'boot_a': 'boot.img',
         'boot_b': 'boot.img'
     }
